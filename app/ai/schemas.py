@@ -94,7 +94,7 @@ class DeliveryScore(BaseModel):
     total: int = Field(ge=0, le=100)
     fillers: int = Field(ge=0, le=100)
     pace: int = Field(ge=0, le=100)
-    gaze: int = Field(ge=0, le=100)
+    gaze: int | None = Field(None, ge=0, le=100, description="null — взгляд не измерялся (нет камеры)")
     pauses: int = Field(ge=0, le=100)
     timing: int = Field(ge=0, le=100)
     pronunciation: int | None = Field(None, ge=0, le=100, description="балл Azure; входит в total на 30%")
@@ -112,7 +112,7 @@ class Metrics(BaseModel):
     fillers: int
     fillers_per_min: float
     long_pauses: int
-    gaze_on_ratio: float = Field(ge=0, le=1)
+    gaze_on_ratio: float | None = Field(None, ge=0, le=1, description="null — взгляд не измерялся")
 
 
 class TimelineEvent(BaseModel):

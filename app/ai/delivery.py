@@ -39,7 +39,18 @@ def _metrics_summary(m: Metrics) -> str:
     )
 
 
-async def assess_content(pitch: Pitch, transcript: str, metrics: Metrics) -> ContentAssessment:
+MAX_NOTES_CHARS = 2000
+
+
+def _notes_block(pitch: Pitch, notes: str) -> str:
+    """Заметки с подготовки: что игрок собирался сказать. Для своего питча текст уже передан отдельно."""
+    notes = notes.strip()[:MAX_NOTES_CHARS]
+    if not notes or notes == (pitch.own_text or "").strip():
+        return ""
+    return f'- Заметки игрока на подготовке (что он собирался сказать):\n"""\n{notes}\n"""'
+
+
+async def assess_content(pitch: Pitch, transcript: str, metrics: Metrics, notes: str = "") -> ContentAssessment:
     if not transcript:
         return ContentAssessment(criteria=[], tips=[NO_SPEECH_TIP])
     if pitch.is_warmup:
@@ -58,18 +69,19 @@ async def assess_content(pitch: Pitch, transcript: str, metrics: Metrics) -> Con
         brief=pitch.brief,
         audience=pitch.audience_ru,
         own_text=f'- Подготовленный текст игрока:\n"""\n{pitch.own_text}\n"""' if own else "",
+        notes=_notes_block(pitch, notes),
         extra_criteria="- `audience_fit` — говорит ли на языке этой аудитории и о том, что ей важно." if own else "",
         transcript=transcript,
         metrics=_metrics_summary(metrics),
     )
 
 
-async def run_delivery(round_id: str, audio: bytes, gaze: Sequence[GazePoint]) -> DeliveryResponse:
+async def run_delivery(round_id: str, audio: bytes, gaze: Sequence[GazePoint], notes: str = "") -> DeliveryResponse:
     pitch = await asyncio.to_thread(resolve_pitch, round_id)
     transcript = await transcribe(await to_wav16k(audio))
     analysis = analyze(transcript, gaze, pitch.min_sec, pitch.max_sec)
     # без LLM честной оценки содержания нет: ошибка уходит клиенту (502), повтор берёт распознавание из кэша
-    content = await assess_content(pitch, transcript.text, analysis.metrics)
+    content = await assess_content(pitch, transcript.text, analysis.metrics, notes)
 
     content_total = round(sum(c.score for c in content.criteria) / len(content.criteria)) if content.criteria else 0
     response = DeliveryResponse(

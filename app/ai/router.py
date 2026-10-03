@@ -112,12 +112,13 @@ async def delivery(
     audio: Annotated[UploadFile, File(description="запись выступления, m4a/AAC")],
     gaze: Annotated[list[GazePoint], Depends(parse_gaze)],
     use_mock: UseMock,
+    notes: Annotated[str, Form(description="заметки с подготовки, необязательно")] = "",
 ) -> DeliveryResponse:
     if use_mock:
         return mocks.delivery()
     data = await read_audio(audio)
     with ai_errors("delivery", round_id):
-        return await run_delivery(round_id, data, gaze)
+        return await run_delivery(round_id, data, gaze, notes)
 
 
 @router.post("/rounds/{round_id}/jury/questions")

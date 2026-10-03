@@ -60,7 +60,9 @@ def delivery() -> DeliveryResponse:
                 criteria=[
                     CriterionScore(name="topic", score=85, quote="Мы сделали умную таблетницу"),
                     CriterionScore(name="structure", score=70, quote="Нам нужны партнёры среди аптечных сетей"),
-                    CriterionScore(name="clarity", score=75, quote="она пищит, светится и присылает родственникам уведомление"),
+                    CriterionScore(
+                        name="clarity", score=75, quote="она пищит, светится и присылает родственникам уведомление"
+                    ),
                     CriterionScore(name="persuasion", score=60, quote="Пилот в трёх аптеках, двести семей за месяц"),
                 ],
             ),

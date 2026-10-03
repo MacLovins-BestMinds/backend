@@ -97,6 +97,7 @@ class DeliveryScore(BaseModel):
     gaze: int = Field(ge=0, le=100)
     pauses: int = Field(ge=0, le=100)
     timing: int = Field(ge=0, le=100)
+    pronunciation: int | None = Field(None, ge=0, le=100, description="балл Azure; входит в total на 30%")
 
 
 class Scores(BaseModel):
@@ -122,12 +123,41 @@ class TimelineEvent(BaseModel):
     text: str
 
 
+class PronunciationIssue(BaseModel):
+    """Слово с проблемой произношения или интонации."""
+
+    word: str
+    t: float = Field(description="секунды от начала выступления")
+    accuracy: int = Field(ge=0, le=100, description="точность звуков слова")
+    error: Literal["mispronunciation", "unexpected_break", "missing_break", "monotone"]
+    weak_syllables: list[str] = Field(default_factory=list, description="буквы слогов, звучащих хуже всего")
+
+
+class PronunciationAssessment(BaseModel):
+    """Оценка английского произношения (Azure Pronunciation Assessment, без эталонного текста).
+
+    Ударения по слогам Azure не возвращает — оно учтено в prosody_score.
+    """
+
+    overall_score: int = Field(ge=0, le=100)
+    accuracy_score: int = Field(ge=0, le=100, description="точность звуков")
+    fluency_score: int = Field(ge=0, le=100, description="беглость")
+    prosody_score: int | None = Field(None, ge=0, le=100, description="интонация, ударения, ритм")
+    words_total: int
+    mispronounced_words_count: int
+    unexpected_breaks_count: int = Field(description="паузы внутри фразы")
+    monotone: bool = Field(description="речь звучит монотонно")
+    words: list[PronunciationIssue] = Field(default_factory=list, description="проблемные слова, худшие сначала")
+    tips: list[str] = Field(default_factory=list)
+
+
 class DeliveryResponse(BaseModel):
     transcript: str
     scores: Scores
     metrics: Metrics
     events: list[TimelineEvent]
     tips: list[str] = Field(max_length=3)
+    pronunciation: PronunciationAssessment | None = Field(None, description="null — Azure не настроен или не ответил")
 
 
 # --- жюри ---

@@ -5,8 +5,9 @@ WORKDIR /app
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
+# libssl3, libasound2, ca-certificates — нативные зависимости Azure Speech SDK
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl ffmpeg \
+    curl ffmpeg ca-certificates libssl3 libasound2 \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .

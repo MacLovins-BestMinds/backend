@@ -1,6 +1,8 @@
 """Роутер /api/ai. При ?mock=1 или AI_MOCK=1 отвечает моками; нереализованное без мока — 501."""
 
 import logging
+from collections.abc import Iterator
+from contextlib import contextmanager
 from typing import Annotated
 
 from fastapi import (
@@ -9,6 +11,7 @@ from fastapi import (
     File,
     Form,
     HTTPException,
+    Path,
     Query,
     UploadFile,
     WebSocket,
@@ -23,6 +26,7 @@ from app.ai import mocks
 from app.ai.audio import AudioConversionError
 from app.ai.config import get_settings
 from app.ai.delivery import run_delivery
+from app.ai.jury import MissingResultError, run_jury_answer, run_jury_questions
 from app.ai.schemas import (
     DeliveryResponse,
     GazePoint,
@@ -38,6 +42,9 @@ router = APIRouter(prefix="/api/ai", tags=["ai"])
 PCM_BYTES_PER_SEC = 16_000 * 2  # 16 кГц, моно, 16 бит
 MOCK_LIVE_EVENT_EVERY_SEC = 5.0
 
+# round_id попадает в путь к mp3 на диске — только безопасные символы
+RoundId = Annotated[str, Path(pattern=r"^[A-Za-z0-9_-]{1,64}$")]
+
 _gaze_adapter = TypeAdapter(list[GazePoint])
 
 
@@ -51,6 +58,7 @@ def require_mock(use_mock: Annotated[bool, Depends(is_mock)]) -> None:
 
 
 MockOnly = Depends(require_mock)
+UseMock = Annotated[bool, Depends(is_mock)]
 
 
 def parse_gaze(gaze: Annotated[str, Form()] = "[]") -> list[GazePoint]:
@@ -58,11 +66,6 @@ def parse_gaze(gaze: Annotated[str, Form()] = "[]") -> list[GazePoint]:
         return _gaze_adapter.validate_json(gaze)
     except ValidationError as e:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, f"gaze: {e.errors(include_url=False)}") from e
-
-
-@router.post("/refine", dependencies=[MockOnly])
-async def refine(body: RefineRequest) -> RefineResponse:
-    return mocks.refine(body.text, body.mode)
 
 
 async def read_audio(upload: UploadFile) -> bytes:
@@ -74,40 +77,66 @@ async def read_audio(upload: UploadFile) -> bytes:
     return data
 
 
+@contextmanager
+def ai_errors(op: str, round_id: str) -> Iterator[None]:
+    """Единое отображение ошибок пайплайна в HTTP-ответы."""
+    try:
+        yield
+    except AudioConversionError as e:
+        logger.warning("%s: ffmpeg не прочитал запись, round=%s: %s", op, round_id, e)
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_CONTENT, "audio: не удалось прочитать запись, нужен m4a/AAC"
+        ) from e
+    except MissingResultError as e:
+        raise HTTPException(status.HTTP_409_CONFLICT, str(e)) from e
+    except (OpenAIError, genai_errors.APIError) as e:
+        logger.exception("%s: ошибка внешнего AI-сервиса, round=%s", op, round_id)
+        raise HTTPException(status.HTTP_502_BAD_GATEWAY, "AI-сервис недоступен, попробуйте ещё раз") from e
+
+
+@router.post("/refine", dependencies=[MockOnly])
+async def refine(body: RefineRequest) -> RefineResponse:
+    return mocks.refine(body.text, body.mode)
+
+
 @router.post("/rounds/{round_id}/delivery")
 async def delivery(
-    round_id: str,
+    round_id: RoundId,
     audio: Annotated[UploadFile, File(description="запись выступления, m4a/AAC")],
     gaze: Annotated[list[GazePoint], Depends(parse_gaze)],
-    use_mock: Annotated[bool, Depends(is_mock)],
+    use_mock: UseMock,
 ) -> DeliveryResponse:
     if use_mock:
         return mocks.delivery()
     data = await read_audio(audio)
-    try:
+    with ai_errors("delivery", round_id):
         return await run_delivery(round_id, data, gaze)
-    except AudioConversionError as e:
-        logger.warning("delivery: ffmpeg не прочитал запись, round=%s: %s", round_id, e)
-        raise HTTPException(
-            status.HTTP_422_UNPROCESSABLE_CONTENT, "audio: не удалось прочитать запись, нужен m4a/AAC"
-        ) from e
-    except (OpenAIError, genai_errors.APIError) as e:
-        logger.exception("delivery: ошибка внешнего AI-сервиса, round=%s", round_id)
-        raise HTTPException(status.HTTP_502_BAD_GATEWAY, "AI-сервис недоступен, попробуйте ещё раз") from e
 
 
-@router.post("/rounds/{round_id}/jury/questions", dependencies=[MockOnly])
-async def jury_questions(round_id: str) -> JuryQuestionsResponse:
-    return mocks.jury_questions(round_id)
+@router.post("/rounds/{round_id}/jury/questions")
+async def jury_questions(round_id: RoundId, use_mock: UseMock) -> JuryQuestionsResponse:
+    """2–3 вопроса жюри с mp3-озвучкой. Требует выполненного delivery; повторный вызов отдаёт те же вопросы."""
+    if use_mock:
+        return mocks.jury_questions(round_id)
+    with ai_errors("jury_questions", round_id):
+        return await run_jury_questions(round_id)
 
 
-@router.post("/rounds/{round_id}/jury/answer", dependencies=[MockOnly])
+@router.post("/rounds/{round_id}/jury/answer")
 async def jury_answer(
-    round_id: str,
+    round_id: RoundId,
     question_id: Annotated[str, Form()],
     audio: Annotated[UploadFile, File(description="ответ на вопрос, m4a")],
+    use_mock: UseMock,
 ) -> JuryAnswerResponse:
-    return mocks.jury_answer()
+    if use_mock:
+        return mocks.jury_answer()
+    data = await read_audio(audio)
+    with ai_errors("jury_answer", round_id):
+        try:
+            return await run_jury_answer(round_id, question_id, data)
+        except KeyError as e:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, f"Вопрос {question_id} не найден") from e
 
 
 @router.websocket("/live")

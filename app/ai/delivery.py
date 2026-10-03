@@ -2,15 +2,14 @@
 
 import asyncio
 from collections.abc import Sequence
-from dataclasses import dataclass
 
 from pydantic import BaseModel, Field
 
 from app.ai import game_api, llm
 from app.ai.audio import to_wav16k
 from app.ai.delivery_metrics import analyze
+from app.ai.pitch import Pitch, resolve_pitch
 from app.ai.schemas import (
-    Audience,
     ContentScore,
     CriterionScore,
     DeliveryResponse,
@@ -20,38 +19,13 @@ from app.ai.schemas import (
 )
 from app.ai.stt import transcribe
 
-AUDIENCE_RU = {
-    Audience.CONTEST_JURY: "жюри конкурса",
-    Audience.BUSINESS: "бизнесмены",
-    Audience.TEACHERS: "преподаватели",
-    Audience.PUBLIC: "широкая публика",
-}
 PITCH_MIN_SEC, PITCH_MAX_SEC = 60, 180
 NO_SPEECH_TIP = "Мы не услышали речь — проверь микрофон и говори громче."
-
-
-@dataclass(frozen=True, slots=True)
-class Pitch:
-    title: str
-    brief: str
-    audience: Audience
-    own_text: str | None = None
 
 
 class ContentAssessment(BaseModel):
     criteria: list[CriterionScore]
     tips: list[str] = Field(max_length=3)
-
-
-def resolve_pitch(round_id: str) -> Pitch:
-    """Тема и аудитория: для своего питча — из раунда, иначе — из кейса. Прикол сюда не берём."""
-    rnd = game_api.get_round(round_id)
-    if own := rnd.get("own"):
-        return Pitch(
-            title=own["title"], brief="Свой питч игрока", audience=Audience(own["audience"]), own_text=own["text"]
-        )
-    case = game_api.get_case(rnd["case_id"])
-    return Pitch(title=case["title"], brief=case["brief"], audience=Audience(case["audience"]))
 
 
 def _metrics_summary(m: Metrics) -> str:
@@ -66,13 +40,13 @@ def _metrics_summary(m: Metrics) -> str:
 async def assess_content(pitch: Pitch, transcript: str, metrics: Metrics) -> ContentAssessment:
     if not transcript:
         return ContentAssessment(criteria=[], tips=[NO_SPEECH_TIP])
-    own = pitch.own_text is not None
+    own = pitch.is_own
     return await llm.generate(
         "content_score",
         ContentAssessment,
         title=pitch.title,
         brief=pitch.brief,
-        audience=AUDIENCE_RU[pitch.audience],
+        audience=pitch.audience_ru,
         own_text=f'- Подготовленный текст игрока:\n"""\n{pitch.own_text}\n"""' if own else "",
         extra_criteria="- `audience_fit` — говорит ли на языке этой аудитории и о том, что ей важно." if own else "",
         transcript=transcript,

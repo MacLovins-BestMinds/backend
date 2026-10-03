@@ -15,3 +15,4 @@ build/
 backups/
 static/jury/
 .ai_cache/
+node_modules/

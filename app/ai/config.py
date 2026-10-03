@@ -19,6 +19,8 @@ class AiSettings(BaseSettings):
     deepgram_url: str = "wss://api.deepgram.com/v1/listen"
     deepgram_model: str = "nova-2"
     static_dir: str = "static"
+    ai_cache: bool = True
+    ai_cache_dir: str = ".ai_cache"
     max_audio_mb: int = 25
 
 

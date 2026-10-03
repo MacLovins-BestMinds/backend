@@ -27,6 +27,7 @@ from app.ai.audio import AudioConversionError
 from app.ai.config import get_settings
 from app.ai.delivery import run_delivery
 from app.ai.jury import MissingResultError, run_jury_answer, run_jury_questions
+from app.ai.live import PCM_BYTES_PER_SEC, run_live
 from app.ai.schemas import (
     DeliveryResponse,
     GazePoint,
@@ -39,7 +40,6 @@ from app.ai.schemas import (
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/ai", tags=["ai"])
 
-PCM_BYTES_PER_SEC = 16_000 * 2  # 16 кГц, моно, 16 бит
 MOCK_LIVE_EVENT_EVERY_SEC = 5.0
 
 # round_id попадает в путь к mp3 на диске — только безопасные символы
@@ -141,11 +141,14 @@ async def jury_answer(
 
 @router.websocket("/live")
 async def live(websocket: WebSocket, round_id: str, mock: bool = False) -> None:
-    """Приложение шлёт бинарные куски PCM по 250 мс, сервер отвечает событиями filler/long_pause/pace."""
-    if not (mock or get_settings().ai_mock):
-        await websocket.close(code=status.WS_1011_INTERNAL_ERROR, reason="not implemented, use ?mock=1")
-        return
+    """Приложение шлёт бинарные куски PCM 16 кГц по 250 мс, сервер отвечает событиями filler/long_pause/pace."""
+    if mock or get_settings().ai_mock:
+        await _live_mock(websocket)
+    else:
+        await run_live(websocket, round_id)
 
+
+async def _live_mock(websocket: WebSocket) -> None:
     await websocket.accept()
     events = mocks.live_events()
     received_bytes = 0

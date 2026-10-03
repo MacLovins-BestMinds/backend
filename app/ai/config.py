@@ -15,6 +15,9 @@ class AiSettings(BaseSettings):
     stt_model: str = "whisper-1"
     stt_language: str = "ru"
     tts_model: str = "gpt-4o-mini-tts"
+    deepgram_api_key: str = ""
+    deepgram_url: str = "wss://api.deepgram.com/v1/listen"
+    deepgram_model: str = "nova-2"
     static_dir: str = "static"
     max_audio_mb: int = 25
 

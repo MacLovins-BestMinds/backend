@@ -49,8 +49,8 @@ def auth(
 
 _MOCK_CASE = CasePublic(
     id="stoicism",
-    title="Стоицизм (Stoicism)",
-    brief="Объясни простыми словами, что такое стоицизм, и убеди преподавателей, что его стоит разбирать со студентами.",
+    title="Stoicism",
+    brief="Explain in simple words what Stoicism is and convince teachers it's worth discussing with students.",
     audience="преподаватели",
     summary="Stoicism is a philosophical movement and practical guide to living, emphasizing daily self-discipline "
     "and moral improvement.",
@@ -68,7 +68,7 @@ def spin(
     """
     if mock == 1:
         return SpinResponse(
-            category=CategoryOut(id="philosophy", title="🏛 Философия жизни"),
+            category=CategoryOut(id="philosophy", title="🏛 Philosophy for Life"),
             case=_MOCK_CASE
         )
     return service.spin_case(session)

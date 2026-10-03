@@ -28,6 +28,7 @@ from app.ai.audio import AudioConversionError
 from app.ai.clients import MissingKeyError
 from app.ai.config import get_settings
 from app.ai.delivery import run_delivery
+from app.ai.health import HealthResponse, run_health
 from app.ai.jury import RoundStateError, run_jury_answer, run_jury_questions
 from app.ai.live import PCM_BYTES_PER_SEC, run_live
 from app.ai.pitch import RoundNotFoundError
@@ -95,6 +96,12 @@ def ai_errors(op: str, round_id: str) -> Iterator[None]:
     except (OpenAIError, genai_errors.APIError, ElevenLabsApiError) as e:
         logger.exception("%s: ошибка внешнего AI-сервиса, round=%s", op, round_id)
         raise HTTPException(status.HTTP_502_BAD_GATEWAY, "AI-сервис недоступен, попробуйте ещё раз") from e
+
+
+@router.get("/health")
+async def health() -> HealthResponse:
+    """Проверка внешних AI-сервисов с текущими ключами (Gemini, ElevenLabs, Azure) — запускать перед показом."""
+    return await run_health()
 
 
 @router.post("/refine")

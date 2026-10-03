@@ -5,7 +5,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: stage_zero
-      POSTGRES_PASSWORD: stage_zero_password
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-stage_zero_password}
       POSTGRES_DB: stage_zero
     ports:
       - "5432:5432"
@@ -30,9 +30,10 @@ services:
     environment:
       - HOST=0.0.0.0
       - PORT=8000
-      - DATABASE_URL=postgresql://stage_zero:stage_zero_password@postgres:5432/stage_zero
+      - DATABASE_URL=postgresql://stage_zero:${POSTGRES_PASSWORD:-stage_zero_password}@postgres:5432/stage_zero
+      - DATABASE_SQLITE_FALLBACK=false
       - CORS_ORIGINS=*
-      - MOCK_FALLBACK=true
+      - MOCK_FALLBACK=${MOCK_FALLBACK:-false}
     depends_on:
       postgres:
         condition: service_healthy

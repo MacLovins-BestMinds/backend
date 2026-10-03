@@ -16,13 +16,16 @@ from typing import Protocol
 from urllib.parse import urlencode
 
 from fastapi import WebSocket, WebSocketDisconnect, status
+from pydantic import BaseModel, Field
 from websockets.asyncio.client import ClientConnection, connect
 from websockets.exceptions import WebSocketException
 
+from app.ai import llm
 from app.ai.clients import MissingKeyError, require
 from app.ai.config import AiSettings, get_settings
-from app.ai.delivery_metrics import PACE_RANGE_WPM, PACE_WINDOW_SEC, find_fillers
-from app.ai.schemas import FillerEvent, LiveEvent, LongPauseEvent, PaceEvent
+from app.ai.delivery_metrics import PACE_RANGE_WPM, PACE_WINDOW_SEC, find_fillers, find_profanity
+from app.ai.pitch import Pitch, resolve_pitch
+from app.ai.schemas import ContentEvent, FillerEvent, LiveEvent, LongPauseEvent, PaceEvent, ProfanityEvent
 from app.ai.stt import Word
 
 logger = logging.getLogger(__name__)
@@ -35,6 +38,21 @@ PACE_COOLDOWN_SEC = 15.0
 SESSION_TTL_SEC = 3600
 VAD_SILENCE_SEC = 1.0  # Scribe фиксирует фразу после секунды тишины → точные таймкоды для темпа
 _SENTENCE_END = (".", "!", "?", "…")
+# Оценка содержания: раз в CHECK_EVERY_SEC, когда набралось CHECK_MIN_WORDS новых слов, LLM смотрит последние слова
+CHECK_EVERY_SEC = 7.0
+CHECK_MIN_WORDS = 12
+CHECK_LATEST_WORDS = 60  # сколько последних слов оценивается
+CHECK_EARLIER_WORDS = 120  # сколько слов перед ними даётся для контекста
+# В живом потоке сразу отмечаются только однозначные паразиты («um», «э-э», «типа»).
+# «like», «so», «you know» бывают обычными словами — их по смыслу отмечает проверка содержания.
+_NO_AMBIGUOUS: dict[int, bool] = {}
+
+
+class LiveCheck(BaseModel):
+    relevance: int = Field(ge=0, le=100)
+    substance: int = Field(ge=0, le=100)
+    fillers: list[str] = Field(default_factory=list, max_length=3)
+    comment: str = ""
 
 
 class LiveSttError(RuntimeError):
@@ -53,14 +71,31 @@ class LiveAnalyzer:
     last_pace_t: float = float("-inf")
     partial_text: str = ""
     segment_fillers_sent: int = 0  # паразиты текущей фразы, уже отправленные по промежуточному тексту
+    segment_swears_sent: int = 0  # ругань текущей фразы, уже отправленная по промежуточному тексту
     filler_times: deque[float] = field(default_factory=deque)
     word_times: deque[float] = field(default_factory=deque)
+    committed: list[str] = field(default_factory=list)  # слова зафиксированных фраз за весь раунд
+    checked_words: int = 0  # сколько слов уже оценено по содержанию
+    last_check_t: float = 0.0
+    checking: bool = False
+
+    def spoken(self) -> list[str]:
+        """Всё сказанное к этому моменту: зафиксированные фразы и текущая, ещё не законченная."""
+        return self.committed + self.partial_text.split()
+
+    def check_due(self) -> bool:
+        return (
+            not self.checking
+            and self.audio_t - self.last_check_t >= CHECK_EVERY_SEC
+            and len(self.spoken()) - self.checked_words >= CHECK_MIN_WORDS
+        )
 
     def begin_stream(self) -> None:
         """Новое соединение с распознаванием: его таймкоды начинаются с нуля."""
         self.offset = self.audio_t
         self.partial_text = ""
         self.segment_fillers_sent = 0
+        self.segment_swears_sent = 0
 
     def on_audio(self, nbytes: int) -> list[LiveEvent]:
         self.audio_t += nbytes / PCM_BYTES_PER_SEC
@@ -96,10 +131,14 @@ class LiveAnalyzer:
         if self.first_word_t is None:
             self.first_word_t = self.audio_t
         self._note_speech(self.audio_t, text)
-        fillers = find_fillers([Word(w, self.audio_t, self.audio_t) for w in text.split()])
+        fillers = find_fillers([Word(w, self.audio_t, self.audio_t) for w in text.split()], _NO_AMBIGUOUS)
         new = fillers[self.segment_fillers_sent :]
         self.segment_fillers_sent = max(self.segment_fillers_sent, len(fillers))
-        return [self._filler_event(self.audio_t, word) for _, word in new]
+        partial_words = [Word(w, self.audio_t, self.audio_t) for w in text.split()]
+        swears = find_profanity(partial_words)[self.segment_swears_sent :]
+        self.segment_swears_sent += len(swears)
+        events: list[LiveEvent] = [ProfanityEvent(t=round(self.audio_t, 2), word=word) for _, word in swears]
+        return events + [self._filler_event(self.audio_t, word) for _, word in new]
 
     def on_words(self, words: list[Word], is_final: bool) -> list[LiveEvent]:
         """words — уже на шкале раунда. Промежуточные результаты двигают только «последнюю речь»."""
@@ -111,10 +150,16 @@ class LiveAnalyzer:
         if not is_final:
             return []
 
-        fillers = find_fillers(words)
+        self.committed.extend(w.text for w in words)
+        fillers = find_fillers(words, _NO_AMBIGUOUS)
         # паразиты, уже отправленные по промежуточному тексту, не дублируем
         events: list[LiveEvent] = [self._filler_event(t, w) for t, w in fillers[self.segment_fillers_sent :]]
+        # ругань, уже отправленную по промежуточному тексту, тоже не дублируем
+        events += [
+            ProfanityEvent(t=round(words[i].start, 2), word=word) for i, word in find_profanity(words)[self.segment_swears_sent :]
+        ]
         self.segment_fillers_sent = 0
+        self.segment_swears_sent = 0
         self.partial_text = ""
 
         filler_starts = {t for t, _ in fillers}
@@ -262,9 +307,56 @@ async def _app_to_stt(websocket: WebSocket, stt: ClientConnection, stream: SttSt
             await stt.send(message)
 
 
-async def _stt_to_app(websocket: WebSocket, stt: ClientConnection, stream: SttStream, analyzer: LiveAnalyzer) -> None:
-    async for message in stt:
-        await _send(websocket, stream.handle(message, analyzer))
+def content_score(check: LiveCheck) -> int:
+    """Одна цифра для зала: и не по теме, и «вода» тянут вниз — важнее слабая из двух оценок."""
+    low, high = sorted((check.relevance, check.substance))
+    return round(0.65 * low + 0.35 * high)
+
+
+async def _check_content(websocket: WebSocket, analyzer: LiveAnalyzer, pitch: Pitch) -> None:
+    """LLM оценивает последние слова: по теме ли, есть ли содержание, какие слова — паразиты по смыслу."""
+    spoken = analyzer.spoken()
+    analyzer.checking = True
+    analyzer.last_check_t = analyzer.audio_t
+    try:
+        latest = spoken[max(analyzer.checked_words, len(spoken) - CHECK_LATEST_WORDS) :]
+        earlier = spoken[: len(spoken) - len(latest)][-CHECK_EARLIER_WORDS:]
+        analyzer.checked_words = len(spoken)
+        check = await llm.generate(
+            "live_check",
+            LiveCheck,
+            title=pitch.title,
+            brief=pitch.brief,
+            earlier=" ".join(earlier) or "(nothing yet)",
+            latest=" ".join(latest),
+        )
+        t = round(analyzer.audio_t, 2)
+        events: list[LiveEvent] = [analyzer._filler_event(t, word.strip().lower()) for word in check.fillers if word.strip()]
+        events.append(ContentEvent(t=t, score=content_score(check), comment=check.comment.strip()))
+        await _send(websocket, events)
+    except (WebSocketDisconnect, RuntimeError):
+        pass  # приложение уже отключилось
+    except Exception:
+        logger.exception("live: проверка содержания не удалась")
+    finally:
+        analyzer.checking = False
+
+
+async def _stt_to_app(
+    websocket: WebSocket, stt: ClientConnection, stream: SttStream, analyzer: LiveAnalyzer, pitch: Pitch | None
+) -> None:
+    checks: set[asyncio.Task[None]] = set()
+    try:
+        async for message in stt:
+            await _send(websocket, stream.handle(message, analyzer))
+            if pitch is not None and analyzer.check_due():
+                # не ждём LLM: распознавание и остальные события идут дальше
+                task = asyncio.create_task(_check_content(websocket, analyzer, pitch))
+                checks.add(task)
+                task.add_done_callback(checks.discard)
+    finally:
+        for task in checks:
+            task.cancel()
 
 
 async def _close(websocket: WebSocket, reason: str) -> None:
@@ -286,9 +378,13 @@ async def run_live(websocket: WebSocket, round_id: str) -> None:
     analyzer = get_session(round_id)
     analyzer.begin_stream()
     try:
+        pitch: Pitch | None = await asyncio.to_thread(resolve_pitch, round_id)
+    except Exception:
+        pitch = None  # тема неизвестна (тестовый раунд) — работаем без оценки содержания
+    try:
         async with connect(stream.url, additional_headers=stream.headers) as stt:
             app_task = asyncio.create_task(_app_to_stt(websocket, stt, stream, analyzer))
-            stt_task = asyncio.create_task(_stt_to_app(websocket, stt, stream, analyzer))
+            stt_task = asyncio.create_task(_stt_to_app(websocket, stt, stream, analyzer, pitch))
             done, pending = await asyncio.wait({app_task, stt_task}, return_when=asyncio.FIRST_COMPLETED)
             for task in pending:
                 task.cancel()

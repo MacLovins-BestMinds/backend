@@ -50,6 +50,15 @@ def register(req: UserRegisterRequest, session: Session = Depends(get_session)):
 
     # Проверка уникальности ника
     existing_nick = session.exec(select(User).where(User.nick == clean_nick)).first()
+    if existing_nick and existing_nick.auth_provider == "guest" and not existing_nick.password_hash:
+        # ник заведён раньше входом без пароля — закрепляем его паролем, история раундов остаётся
+        existing_nick.password_hash = hash_password(req.password)
+        existing_nick.auth_provider = "local"
+        session.add(existing_nick)
+        session.commit()
+        session.refresh(existing_nick)
+        token = create_access_token({"sub": existing_nick.id, "nick": existing_nick.nick})
+        return TokenResponse(access_token=token, token_type="bearer", user=build_user_out(existing_nick, session))
     if existing_nick:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

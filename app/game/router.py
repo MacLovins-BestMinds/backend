@@ -18,9 +18,11 @@ from app.game.schemas import (
     RoundSummary,
     CasePublic,
     CategoryOut,
+    ProgressResponse,
+    RoundReview,
 )
 from app.game import service
-from app.auth.deps import get_current_user_optional
+from app.auth.deps import get_current_user, get_current_user_optional
 from app.game.models import User
 
 router = APIRouter(prefix="/game", tags=["game"])
@@ -95,10 +97,12 @@ def daily(
 def create_round(
     req: RoundCreateRequest,
     mock: int = Query(0, description="1 для мок-ответа"),
+    current_user: Optional[User] = Depends(get_current_user_optional),
     session: Session = Depends(get_session)
 ):
     """
     Создание раунда: training | daily | own | warmup.
+    С токеном раунд всегда создаётся от имени вошедшего пользователя, user_id из тела не используется.
     """
     if mock == 1:
         return RoundCreateResponse(
@@ -107,6 +111,8 @@ def create_round(
             pitch_min_sec=60,
             pitch_max_sec=180
         )
+    if current_user:
+        req = req.model_copy(update={"user_id": current_user.id})
     return service.create_round(session, req)
 
 
@@ -161,6 +167,26 @@ def get_profile(
     if not target_id:
         raise HTTPException(status_code=400, detail="Provide user_id or sign in")
     return service.get_user_profile(session, target_id)
+
+
+@router.get("/progress", response_model=ProgressResponse)
+def get_progress(current_user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+    """
+    История всех раундов и трекер прогресса вошедшего пользователя: баллы, привычки речи, серия дней, советы.
+    """
+    return service.get_progress(session, current_user)
+
+
+@router.get("/rounds/{round_id}/review", response_model=RoundReview)
+def get_round_review(
+    round_id: str = Path(..., description="ID раунда"),
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
+    """
+    Разбор сыгранного раунда из истории (только своего).
+    """
+    return service.get_round_review(session, current_user, round_id)
 
 
 @router.get("/leaderboard/daily", response_model=List[LeaderboardEntry])

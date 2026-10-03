@@ -18,6 +18,12 @@ from app.game.schemas import (
     CategoryOut,
     RoundCreateRequest,
     RoundCreateResponse,
+    HistoryRound,
+    SkillTrend,
+    Insight,
+    NextRank,
+    ProgressResponse,
+    RoundReview,
     RoundFinishResponse,
     RankInfo,
     ProfileResponse,
@@ -539,6 +545,203 @@ def get_daily_leaderboard(session: Session, target_date: Optional[str] = None) -
     rows = session.exec(stmt).all()
 
     return [LeaderboardEntry(nick=r[0], score=round(r[1], 1)) for r in rows]
+
+
+
+# --------------------------------------------------------------------------
+# История и прогресс
+# --------------------------------------------------------------------------
+
+RANKS = [("Novice", 0.0), ("Speaker", 40.0), ("Pitcher", 60.0), ("Orator", 75.0), ("Legend", 88.0)]
+PACE_OK = (100, 180)  # слов в минуту — тот же коридор, что в разборе подачи
+MODE_TITLES = {"daily": "Topic of the day", "warmup": "Warm-up", "own": "Own pitch", "training": "Training"}
+
+
+def _delivery_payload(session: Session, round_id: str) -> Optional[dict]:
+    res = session.exec(
+        select(AiResult).where(AiResult.round_id == round_id).where(AiResult.kind == "delivery").order_by(desc(AiResult.id))
+    ).first()
+    if not res:
+        return None
+    try:
+        return json.loads(res.payload)
+    except ValueError:
+        return None
+
+
+def _history_round(session: Session, rnd: Round, sc: RoundScore, titles: dict[str, str]) -> HistoryRound:
+    payload = _delivery_payload(session, rnd.id) or {}
+    metrics = payload.get("metrics") or {}
+    events = payload.get("events") or []
+    title = rnd.own_title or titles.get(rnd.case_id or "") or MODE_TITLES.get(rnd.mode, rnd.mode)
+    return HistoryRound(
+        id=rnd.id,
+        mode=rnd.mode,
+        title=title,
+        created_at=rnd.finished_at or rnd.created_at,
+        total=sc.total_score,
+        content=sc.content_score,
+        delivery=sc.delivery_score,
+        jury=sc.jury_score,
+        duration_sec=metrics.get("duration_sec"),
+        wpm=metrics.get("wpm"),
+        fillers_per_min=metrics.get("fillers_per_min"),
+        long_pauses=metrics.get("long_pauses"),
+        repeats=sum(1 for e in events if e.get("type") == "repeat") if payload else None,
+        gaze_on_ratio=metrics.get("gaze_on_ratio"),
+    )
+
+
+def _mean(values: list) -> Optional[float]:
+    values = [v for v in values if v is not None]
+    return round(sum(values) / len(values), 1) if values else None
+
+
+def _trend(key: str, title: str, rounds: List[HistoryRound], better: str = "higher", unit: str = "") -> SkillTrend:
+    """Среднее за последние 5 раундов против 5 предыдущих (rounds — от новых к старым)."""
+    recent = _mean([getattr(r, key) for r in rounds[:5]])
+    before = _mean([getattr(r, key) for r in rounds[5:10]])
+    delta = round(recent - before, 1) if recent is not None and before is not None else None
+    return SkillTrend(key=key, title=title, value=recent, delta=delta, better=better, unit=unit)
+
+
+def _streak_days(rounds: List[HistoryRound]) -> int:
+    """Сколько дней подряд есть хотя бы один раунд; серия жива, если последний раунд — сегодня или вчера."""
+    days = sorted({r.created_at.date() for r in rounds}, reverse=True)
+    if not days or (datetime.now(timezone.utc).date() - days[0]).days > 1:
+        return 0
+    streak = 1
+    for newer, older in zip(days, days[1:]):
+        if (newer - older).days != 1:
+            break
+        streak += 1
+    return streak
+
+
+def _insights(rounds: List[HistoryRound], skills: List[SkillTrend], habits: List[SkillTrend]) -> List[Insight]:
+    """Что получается и над чем работать — по цифрам последних раундов, без общих слов."""
+    out: List[Insight] = []
+    if not rounds:
+        return [Insight(kind="focus", title="Play your first round", text="One pitch is enough to see your pace, fillers and pauses.")]
+
+    scored = [s for s in skills if s.value is not None and (s.key != "jury" or s.value > 0)]
+    if len(scored) >= 2:
+        best, worst = max(scored, key=lambda s: s.value), min(scored, key=lambda s: s.value)
+        if best.value - worst.value >= 5:
+            out.append(Insight(kind="good", title=f"Your strong side: {best.title.lower()}", text=f"{best.value:.0f} on average over your last rounds."))
+            advice = {
+                "content": "Before you speak, decide on one main point and two reasons. Say the point first.",
+                "delivery": "Slow down at the start and keep a steady pace — delivery is where you lose the most points.",
+                "jury": "Answer the question in the first sentence, then explain. The jury scores the first ten seconds hardest.",
+            }[worst.key]
+            out.append(Insight(kind="focus", title=f"Work on: {worst.title.lower()}", text=f"{worst.value:.0f} on average. {advice}"))
+
+    by_key = {h.key: h for h in habits}
+    fillers = by_key.get("fillers_per_min")
+    if fillers and fillers.value is not None:
+        if fillers.delta is not None and fillers.delta <= -0.5:
+            out.append(Insight(kind="good", title="Fewer filler words", text=f"Down to {fillers.value:.1f} per minute from {fillers.value - fillers.delta:.1f}. Keep replacing them with a short pause."))
+        elif fillers.value >= 3:
+            out.append(Insight(kind="focus", title="Filler words", text=f"{fillers.value:.1f} per minute. When you feel one coming, close your mouth and breathe — silence sounds confident."))
+    pace = by_key.get("wpm")
+    if pace and pace.value is not None:
+        if pace.value > PACE_OK[1]:
+            out.append(Insight(kind="focus", title="You speak too fast", text=f"{pace.value:.0f} words per minute; the room follows best at 120–160. Pause after every finished thought."))
+        elif pace.value < PACE_OK[0]:
+            out.append(Insight(kind="focus", title="You speak too slowly", text=f"{pace.value:.0f} words per minute; aim for 120–160. Prepare your first two sentences so you start with energy."))
+    pauses = by_key.get("long_pauses")
+    if pauses and pauses.value is not None and pauses.value >= 1.5:
+        out.append(Insight(kind="focus", title="Long pauses mid-phrase", text=f"About {pauses.value:.0f} per pitch. Finish the sentence first, then think about the next one."))
+    repeats = by_key.get("repeats")
+    if repeats and repeats.value is not None and repeats.value >= 3:
+        out.append(Insight(kind="focus", title="Repeated phrases", text=f"About {repeats.value:.0f} per pitch. If you lose the thread, say the next point instead of restarting the sentence."))
+
+    if len(rounds) >= 3:
+        recent, first = _mean([r.total for r in rounds[:3]]), _mean([r.total for r in rounds[-3:]])
+        if recent is not None and first is not None and recent - first >= 5 and len(rounds) >= 6:
+            out.append(Insight(kind="good", title="You are improving", text=f"Your last three rounds average {recent:.0f}, your first three — {first:.0f}."))
+    return out[:5]
+
+
+def get_progress(session: Session, user: User) -> ProgressResponse:
+    """История всех раундов и трекер прогресса: баллы, привычки речи, серия дней, советы."""
+    rows = session.exec(
+        select(Round, RoundScore)
+        .where(Round.user_id == user.id)
+        .where(Round.status == "finished")
+        .join(RoundScore, Round.id == RoundScore.round_id)
+        .order_by(desc(Round.finished_at))
+        .limit(200)
+    ).all()
+    titles = {c.id: c.title for c in session.exec(select(Case)).all()}
+    history = [_history_round(session, rnd, sc, titles) for rnd, sc in rows]
+
+    rank = calculate_user_rank(session, user.id)
+    rank_score = _mean([r.total for r in history[:5]]) or 0.0
+    upcoming = next(((title, floor) for title, floor in RANKS if floor > rank_score), None)
+    skills = [
+        _trend("content", "Content", history),
+        _trend("delivery", "Delivery", history),
+        _trend("jury", "Jury answers", [r for r in history if r.mode != "warmup"]),
+    ]
+    habits = [
+        _trend("fillers_per_min", "Filler words", history, better="lower", unit="per min"),
+        _trend("wpm", "Pace", history, better="range", unit="words/min"),
+        _trend("long_pauses", "Long pauses", history, better="lower", unit="per pitch"),
+        _trend("repeats", "Repeats", history, better="lower", unit="per pitch"),
+    ]
+    return ProgressResponse(
+        nick=user.nick,
+        rank=rank,
+        rank_score=rank_score,
+        next_rank=NextRank(title=upcoming[0], points_needed=round(upcoming[1] - rank_score, 1)) if upcoming else None,
+        rounds_total=len(history),
+        minutes_total=round(sum(r.duration_sec or 0 for r in history) / 60, 1),
+        average=_mean([r.total for r in history]) or 0.0,
+        best=max((r.total for r in history), default=0.0),
+        streak_days=_streak_days(history),
+        skills=skills,
+        habits=habits,
+        insights=_insights(history, skills, habits),
+        history=history,
+    )
+
+
+def get_round_review(session: Session, user: User, round_id: str) -> RoundReview:
+    """Разбор раунда из истории. Чужой раунд открыть нельзя."""
+    rnd = session.get(Round, round_id)
+    if not rnd or rnd.user_id != user.id:
+        raise HTTPException(status_code=404, detail=f"Round {round_id} not found")
+    sc = session.exec(select(RoundScore).where(RoundScore.round_id == round_id)).first()
+    if not sc:
+        raise HTTPException(status_code=409, detail="This round was not finished")
+    titles = {c.id: c.title for c in session.exec(select(Case)).all()}
+    results = session.exec(select(AiResult).where(AiResult.round_id == round_id).order_by(AiResult.id)).all()
+    questions: list[dict] = []
+    answers: dict[str, dict] = {}
+    for res in results:
+        try:
+            data = json.loads(res.payload)
+        except ValueError:
+            continue
+        if res.kind == "jury_questions":
+            questions = data.get("questions", [])
+        elif res.kind == "jury_answer" and data.get("question_id"):
+            answers[data["question_id"]] = data  # повторный ответ на тот же вопрос заменяет прежний
+    order = [q.get("id") for q in questions]
+    return RoundReview(
+        round=_history_round(session, rnd, sc, titles),
+        result=RoundFinishResponse(
+            total=sc.total_score,
+            content=round(sc.content_score, 1),
+            delivery=round(sc.delivery_score, 1),
+            jury=round(sc.jury_score, 1),
+            rank=calculate_user_rank(session, user.id),
+        ),
+        delivery=_delivery_payload(session, round_id),
+        jury_questions=questions,
+        jury_answers=sorted(answers.values(), key=lambda a: order.index(a["question_id"]) if a["question_id"] in order else 99),
+    )
 
 
 # --------------------------------------------------------------------------

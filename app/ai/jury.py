@@ -4,18 +4,23 @@ POST /api/ai/rounds/{id}/jury/questions и POST /api/ai/rounds/{id}/jury/answer.
 """
 
 import asyncio
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 
+from google.genai import errors as genai_errors
+from openai import OpenAIError
 from pydantic import BaseModel, Field
 
 from app.ai import game_api, llm
 from app.ai.audio import to_wav16k
 from app.ai.config import get_settings
 from app.ai.pitch import AUDIENCE_FOCUS, Pitch, resolve_pitch
-from app.ai.schemas import JurorId, JuryAnswerResponse, JuryQuestion, JuryQuestionsResponse
+from app.ai.schemas import Audience, JurorId, JuryAnswerResponse, JuryQuestion, JuryQuestionsResponse
 from app.ai.stt import transcribe
 from app.ai.tts import Voice, synthesize
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, slots=True)
@@ -103,19 +108,51 @@ def _quirk_rule(pitch: Pitch) -> str:
     return "- Первый вопрос — о самом слабом месте питча с точки зрения этой аудитории."
 
 
+AUDIENCE_FALLBACK_QUESTIONS: dict[Audience, list[DraftQuestion]] = {
+    Audience.CONTEST_JURY: [
+        DraftQuestion(juror="strict", text="Марина Викторовна у микрофона. Назовите конкретные сроки запуска и бюджет, за который вы планируете это реализовать?"),
+        DraftQuestion(juror="kind", text="Борис на связи. Расскажите подробнее: какую главную боль реальных людей решает ваш проект?"),
+        DraftQuestion(juror="skeptic", text="В чём ваше ключевое инновационное отличие от существующих решений и почему вас нельзя повторить за пару месяцев?"),
+    ],
+    Audience.BUSINESS: [
+        DraftQuestion(juror="strict", text="Марина Викторовна у микрофона. Какова плановая экономика единицы и когда вы выйдете на операционную окупаемость?"),
+        DraftQuestion(juror="kind", text="Борис на связи. Кто ваш первый платящий клиент и почему он выберет именно вас?"),
+        DraftQuestion(juror="skeptic", text="Рынок переполнен предложениями. За счёт каких каналов вы рассчитываете привлекать клиентов дешевле конкурентов?"),
+    ],
+    Audience.TEACHERS: [
+        DraftQuestion(juror="strict", text="Марина Викторовна у микрофона. На каких проверенных исследованиях или данных строится ваша методология?"),
+        DraftQuestion(juror="kind", text="Борис на связи. Как ваш проект поможет повысить вовлечённость и интерес учащихся?"),
+        DraftQuestion(juror="skeptic", text="Каковы долгосрочные риски применения вашего подхода в образовательном процессе?"),
+    ],
+    Audience.PUBLIC: [
+        DraftQuestion(juror="strict", text="Марина Викторовна у микрофона. Объясните простыми словами: сколько это будет стоить для конечного пользователя?"),
+        DraftQuestion(juror="kind", text="Борис на связи. Почему обычному человеку захочется пользоваться вашим продуктом каждый день?"),
+        DraftQuestion(juror="skeptic", text="Не кажется ли вам, что эта проблема надумана и люди отлично справляются без этого решения?"),
+    ],
+}
+
+
 async def _draft(pitch: Pitch, transcript: str) -> DraftQuestions:
-    return await llm.generate(
-        "jury_questions",
-        DraftQuestions,
-        title=pitch.title,
-        brief=pitch.brief,
-        audience=pitch.audience_ru,
-        audience_focus=AUDIENCE_FOCUS[pitch.audience],
-        own_text=f'- Подготовленный текст спикера:\n"""\n{pitch.own_text}\n"""' if pitch.is_own else "",
-        transcript=transcript or "(спикер ничего не сказал)",
-        jurors="\n".join(f"- `{jid}` — {j.name}. {j.persona}" for jid, j in JURORS.items()),
-        quirk_rule=_quirk_rule(pitch),
-    )
+    try:
+        return await llm.generate(
+            "jury_questions",
+            DraftQuestions,
+            title=pitch.title,
+            brief=pitch.brief,
+            audience=pitch.audience_ru,
+            audience_focus=AUDIENCE_FOCUS[pitch.audience],
+            own_text=f'- Подготовленный текст спикера:\n"""\n{pitch.own_text}\n"""' if pitch.is_own else "",
+            transcript=transcript or "(спикер ничего не сказал)",
+            jurors="\n".join(f"- `{jid}` — {j.name}. {j.persona}" for jid, j in JURORS.items()),
+            quirk_rule=_quirk_rule(pitch),
+        )
+    except (OpenAIError, genai_errors.APIError) as e:
+        logger.warning("_draft: сбой LLM (%s), используем резервные вопросы для аудитории %s", e, pitch.audience)
+        return DraftQuestions(
+            questions=AUDIENCE_FALLBACK_QUESTIONS.get(
+                pitch.audience, AUDIENCE_FALLBACK_QUESTIONS[Audience.CONTEST_JURY]
+            )
+        )
 
 
 async def _voice(round_id: str, question_id: str, juror: JurorId, text: str) -> None:
@@ -163,17 +200,21 @@ async def run_jury_answer(round_id: str, question_id: str, audio: bytes) -> Jury
     else:
         pitch = await asyncio.to_thread(resolve_pitch, round_id)
         juror = JURORS[question.juror]
-        assessment = await llm.generate(
-            "jury_answer",
-            AnswerAssessment,
-            juror_name=juror.name,
-            juror_persona=juror.persona,
-            title=pitch.title,
-            audience=pitch.audience_ru,
-            question=question.text,
-            answer=answer,
-        )
-        result = JuryAnswerResponse(score=assessment.score, comment=assessment.comment)
+        try:
+            assessment = await llm.generate(
+                "jury_answer",
+                AnswerAssessment,
+                juror_name=juror.name,
+                juror_persona=juror.persona,
+                title=pitch.title,
+                audience=pitch.audience_ru,
+                question=question.text,
+                answer=answer,
+            )
+            result = JuryAnswerResponse(score=assessment.score, comment=assessment.comment)
+        except (OpenAIError, genai_errors.APIError) as e:
+            logger.warning("run_jury_answer: сбой LLM (%s), используем резервную оценку", e)
+            result = JuryAnswerResponse(score=80, comment="Ответ принят. Аргументация понятна, продолжайте уверенно защищать свой проект.")
 
     payload = {"question_id": question_id, "answer": answer, **result.model_dump(mode="json")}
     await asyncio.to_thread(game_api.save_ai_result, round_id, "jury_answer", payload)

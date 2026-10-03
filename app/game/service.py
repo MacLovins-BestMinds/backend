@@ -421,23 +421,17 @@ def finish_round(session: Session, round_id: str) -> RoundFinishResponse:
     """
     round_obj = session.get(Round, round_id)
     if not round_obj:
-        round_obj = Round(
-            id=round_id,
-            user_id="u_demo",
-            mode="training",
-            status="finished"
-        )
-        session.add(round_obj)
-        session.commit()
+        raise HTTPException(status_code=404, detail=f"Раунд {round_id} не найден")
 
     ai_results = session.exec(select(AiResult).where(AiResult.round_id == round_id)).all()
     content_score, delivery_score, jury_score = _collect_ai_scores(ai_results)
 
-    # Фоллбеки для автономной работы, пока раунд не прошёл через AI (моки, демо)
-    if content_score is None:
-        content_score = 74.0
-    if delivery_score is None:
-        delivery_score = 78.0
+    if content_score is None or delivery_score is None:
+        if not settings.MOCK_FALLBACK:
+            raise HTTPException(status_code=409, detail="Сначала отправьте выступление на разбор (delivery)")
+        # MOCK_FALLBACK: раунд прошёл на моках AI — условные баллы, чтобы игровой цикл работал целиком
+        content_score = 74.0 if content_score is None else content_score
+        delivery_score = 78.0 if delivery_score is None else delivery_score
 
     if round_obj.mode == "warmup":
         # в разминке нет жюри: 50% содержание + 50% подача
@@ -445,7 +439,8 @@ def finish_round(session: Session, round_id: str) -> RoundFinishResponse:
         total_score = round(0.5 * content_score + 0.5 * delivery_score, 1)
     else:
         if jury_score is None:
-            jury_score = 72.0
+            # не ответил ни на один вопрос — 0; условные 72 только на моках
+            jury_score = 72.0 if settings.MOCK_FALLBACK else 0.0
         total_score = round(0.4 * content_score + 0.4 * delivery_score + 0.2 * jury_score, 1)
 
     existing_score = session.exec(select(RoundScore).where(RoundScore.round_id == round_id)).first()

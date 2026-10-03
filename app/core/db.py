@@ -34,6 +34,8 @@ def create_db_engine():
         logger.info(f"✓ Успешное подключение к PostgreSQL: {db_url.split('@')[-1] if '@' in db_url else db_url}")
         return pg_engine
     except Exception as e:
+        if not settings.DATABASE_SQLITE_FALLBACK:
+            raise RuntimeError(f"PostgreSQL недоступен ({e}); DATABASE_SQLITE_FALLBACK=false") from e
         logger.warning(
             f"Не удалось подключиться к PostgreSQL ({e}). "
             f"Переключаемся на локальный SQLite fallback (sqlite:///stage_zero.db)."

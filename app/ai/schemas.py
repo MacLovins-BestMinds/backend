@@ -24,15 +24,25 @@ class RefineMode(StrEnum):
 # --- POST /api/ai/refine ---
 
 
+type BlockKind = Literal["hook", "problem", "solution", "why_us", "call_to_action"]
+
+
 class RefineRequest(BaseModel):
-    text: str = Field(min_length=1)
+    text: str = Field(min_length=1, max_length=5000)
     audience: Audience
     mode: RefineMode
 
 
+class PitchBlock(BaseModel):
+    kind: BlockKind
+    title: str = Field(description="подпись блока для экрана: «Хук», «Проблема», …")
+    text: str = Field(description="пусто, если такого блока в тексте нет")
+
+
 class RefineResponse(BaseModel):
-    text: str
+    text: str = Field(description="готовый текст по блокам, с подписями")
     notes: list[str]
+    blocks: list[PitchBlock] = Field(default_factory=list)
 
 
 # --- WS /api/ai/live: события сервер → приложение ---

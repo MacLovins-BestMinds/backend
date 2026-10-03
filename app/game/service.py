@@ -548,7 +548,7 @@ def get_daily_leaderboard(session: Session, target_date: Optional[str] = None) -
 
 def seed_cases_from_json(session: Session) -> None:
     """
-    Загрузка 48 тем из content/topics.json
+    Загрузка 48 тем из content/topics.json: новые добавляются, существующие обновляются.
     """
     json_path = settings.TOPICS_JSON_PATH
     if not json_path.exists():
@@ -569,7 +569,16 @@ def seed_cases_from_json(session: Session) -> None:
         trick = item.get("quirk") or item.get("trick") or ""
 
         existing = session.get(Case, item["id"])
-        if not existing:
+        if existing:
+            # контент правится в topics.json — обновляем уже засеянные темы, а не только добавляем новые
+            existing.category_id = category_id
+            existing.category_title = category_title
+            existing.title = item["title"]
+            existing.brief = item["brief"]
+            existing.audience = item["audience"]
+            existing.trick = trick
+            session.add(existing)
+        else:
             new_case = Case(
                 id=item["id"],
                 category_id=category_id,

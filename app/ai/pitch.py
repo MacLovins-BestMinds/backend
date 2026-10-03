@@ -28,6 +28,9 @@ class Pitch:
     audience: Audience
     own_text: str | None = None
     quirk: str | None = None  # только для вопросов жюри, в приложение до вопросов не уходит
+    is_warmup: bool = False
+    min_sec: int = 60
+    max_sec: int = 180
 
     @property
     def audience_ru(self) -> str:
@@ -38,9 +41,22 @@ class Pitch:
         return self.own_text is not None
 
 
+# Разминка «Представься залу»: 30 секунд, без кейса и без жюри
+WARMUP = Pitch(
+    title="Представься залу",
+    brief="За 30 секунд расскажи, кто ты, чем занимаешься и чем тебя запомнить.",
+    audience=Audience.PUBLIC,
+    is_warmup=True,
+    min_sec=20,
+    max_sec=40,
+)
+
+
 def resolve_pitch(round_id: str) -> Pitch:
-    """Для своего питча — данные из раунда, иначе — из кейса через get_case."""
+    """Разминка — фиксированное задание; свой питч — данные из раунда; иначе — кейс через get_case."""
     rnd = game_api.get_round(round_id)
+    if rnd.get("mode") == "warmup":
+        return WARMUP
     if own := rnd.get("own"):
         return Pitch(
             title=own["title"], brief="Свой питч игрока", audience=Audience(own["audience"]), own_text=own["text"]

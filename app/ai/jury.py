@@ -49,8 +49,8 @@ JURORS: dict[JurorId, Juror] = {
 }
 
 
-class MissingResultError(LookupError):
-    """Нужный предыдущий шаг раунда ещё не выполнен (например, нет delivery)."""
+class RoundStateError(RuntimeError):
+    """Действие невозможно в текущем состоянии раунда: нет delivery, нет вопросов, разминка без жюри."""
 
 
 class DraftQuestion(BaseModel):
@@ -108,10 +108,12 @@ async def run_jury_questions(round_id: str) -> JuryQuestionsResponse:
     if cached := await asyncio.to_thread(game_api.get_ai_result, round_id, "jury_questions"):
         return JuryQuestionsResponse.model_validate(cached)
 
+    pitch = await asyncio.to_thread(resolve_pitch, round_id)
+    if pitch.is_warmup:
+        raise RoundStateError("В разминке нет вопросов жюри")
     delivery = await asyncio.to_thread(game_api.get_ai_result, round_id, "delivery")
     if delivery is None:
-        raise MissingResultError("Сначала отправьте выступление в delivery")
-    pitch = await asyncio.to_thread(resolve_pitch, round_id)
+        raise RoundStateError("Сначала отправьте выступление в delivery")
     draft = await _draft(pitch, delivery["transcript"])
 
     questions = [
@@ -129,7 +131,7 @@ async def run_jury_questions(round_id: str) -> JuryQuestionsResponse:
 async def run_jury_answer(round_id: str, question_id: str, audio: bytes) -> JuryAnswerResponse:
     saved = await asyncio.to_thread(game_api.get_ai_result, round_id, "jury_questions")
     if saved is None:
-        raise MissingResultError("Сначала запросите вопросы жюри")
+        raise RoundStateError("Сначала запросите вопросы жюри")
     question = next((q for q in JuryQuestionsResponse.model_validate(saved).questions if q.id == question_id), None)
     if question is None:
         raise KeyError(question_id)

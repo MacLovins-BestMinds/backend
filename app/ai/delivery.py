@@ -1,4 +1,7 @@
-"""POST /api/ai/rounds/{id}/delivery: запись → WAV → Whisper → метрики кодом + оценка содержания Gemini."""
+"""POST /api/ai/rounds/{id}/delivery: запись → WAV → Whisper → метрики кодом + оценка содержания Gemini.
+
+Разминка (mode=warmup) идёт через тот же пайплайн: 20–40 с и упрощённая рубрика.
+"""
 
 import asyncio
 from collections.abc import Sequence
@@ -19,7 +22,6 @@ from app.ai.schemas import (
 )
 from app.ai.stt import transcribe
 
-PITCH_MIN_SEC, PITCH_MAX_SEC = 60, 180
 NO_SPEECH_TIP = "Мы не услышали речь — проверь микрофон и говори громче."
 
 
@@ -40,6 +42,14 @@ def _metrics_summary(m: Metrics) -> str:
 async def assess_content(pitch: Pitch, transcript: str, metrics: Metrics) -> ContentAssessment:
     if not transcript:
         return ContentAssessment(criteria=[], tips=[NO_SPEECH_TIP])
+    if pitch.is_warmup:
+        return await llm.generate(
+            "warmup_score",
+            ContentAssessment,
+            brief=pitch.brief,
+            transcript=transcript,
+            metrics=_metrics_summary(metrics),
+        )
     own = pitch.is_own
     return await llm.generate(
         "content_score",
@@ -57,7 +67,7 @@ async def assess_content(pitch: Pitch, transcript: str, metrics: Metrics) -> Con
 async def run_delivery(round_id: str, audio: bytes, gaze: Sequence[GazePoint]) -> DeliveryResponse:
     pitch = await asyncio.to_thread(resolve_pitch, round_id)
     transcript = await transcribe(await to_wav16k(audio))
-    analysis = analyze(transcript, gaze, PITCH_MIN_SEC, PITCH_MAX_SEC)
+    analysis = analyze(transcript, gaze, pitch.min_sec, pitch.max_sec)
     content = await assess_content(pitch, transcript.text, analysis.metrics)
 
     content_total = round(sum(c.score for c in content.criteria) / len(content.criteria)) if content.criteria else 0

@@ -28,6 +28,8 @@ except ImportError:
         }
 
     def get_round(round_id: str) -> dict[str, Any]:
+        if round_id.startswith("warmup"):  # mode: training | daily | own | warmup
+            return {"id": round_id, "mode": "warmup", "case_id": None, "own": None}
         return {"id": round_id, "mode": "training", "case_id": "health-01", "own": None}
 
     def save_ai_result(round_id: str, kind: str, payload: dict[str, Any]) -> None:

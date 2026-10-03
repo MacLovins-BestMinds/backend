@@ -27,7 +27,7 @@ from app.ai.audio import AudioConversionError
 from app.ai.clients import MissingKeyError
 from app.ai.config import get_settings
 from app.ai.delivery import run_delivery
-from app.ai.jury import MissingResultError, run_jury_answer, run_jury_questions
+from app.ai.jury import RoundStateError, run_jury_answer, run_jury_questions
 from app.ai.live import PCM_BYTES_PER_SEC, run_live
 from app.ai.refine import run_refine
 from app.ai.schemas import (
@@ -83,7 +83,7 @@ def ai_errors(op: str, round_id: str) -> Iterator[None]:
         raise HTTPException(
             status.HTTP_422_UNPROCESSABLE_CONTENT, "audio: не удалось прочитать запись, нужен m4a/AAC"
         ) from e
-    except MissingResultError as e:
+    except RoundStateError as e:
         raise HTTPException(status.HTTP_409_CONFLICT, str(e)) from e
     except MissingKeyError as e:
         logger.error("%s: %s", op, e)

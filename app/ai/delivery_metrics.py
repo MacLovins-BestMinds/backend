@@ -163,8 +163,10 @@ def analyze(transcript: Transcript, gaze: Sequence[GazePoint], min_sec: float, m
 
     events = [TimelineEvent(type="filler", t=t, text=f"«{w}»") for t, w in fillers]
     events += [TimelineEvent(type="long_pause", t=t, text=f"Пауза {d:.1f} с") for t, d in long_pauses]
+    # без камеры взгляд не измерен — не утверждаем, что он был в зале
+    good_pause_text = "Пауза с взглядом в зал" if gaze else "Удачная пауза перед следующей мыслью"
     events += [
-        TimelineEvent(type="good_pause", t=t, text="Пауза с взглядом в зал")
+        TimelineEvent(type="good_pause", t=t, text=good_pause_text)
         for t, _ in find_gaps(words, *GOOD_PAUSE_SEC)
         if _gaze_on_at(spans, t)
     ]

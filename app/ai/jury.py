@@ -110,24 +110,53 @@ def _quirk_rule(pitch: Pitch) -> str:
 
 AUDIENCE_FALLBACK_QUESTIONS: dict[Audience, list[DraftQuestion]] = {
     Audience.CONTEST_JURY: [
-        DraftQuestion(juror="strict", text="Марина Викторовна у микрофона. Назовите конкретные сроки запуска и бюджет, за который вы планируете это реализовать?"),
-        DraftQuestion(juror="kind", text="Борис на связи. Расскажите подробнее: какую главную боль реальных людей решает ваш проект?"),
-        DraftQuestion(juror="skeptic", text="В чём ваше ключевое инновационное отличие от существующих решений и почему вас нельзя повторить за пару месяцев?"),
+        DraftQuestion(
+            juror="strict",
+            text="Назовите конкретные сроки запуска и бюджет, за который вы планируете это реализовать?",
+        ),
+        DraftQuestion(
+            juror="kind",
+            text="Расскажите подробнее: какую главную боль реальных людей решает ваш проект?",
+        ),
+        DraftQuestion(
+            juror="skeptic",
+            text="В чём ваше ключевое инновационное отличие от существующих решений и почему вас нельзя повторить за пару месяцев?",
+        ),
     ],
     Audience.BUSINESS: [
-        DraftQuestion(juror="strict", text="Марина Викторовна у микрофона. Какова плановая экономика единицы и когда вы выйдете на операционную окупаемость?"),
-        DraftQuestion(juror="kind", text="Борис на связи. Кто ваш первый платящий клиент и почему он выберет именно вас?"),
-        DraftQuestion(juror="skeptic", text="Рынок переполнен предложениями. За счёт каких каналов вы рассчитываете привлекать клиентов дешевле конкурентов?"),
+        DraftQuestion(
+            juror="strict",
+            text="Какова плановая экономика единицы и когда вы выйдете на операционную окупаемость?",
+        ),
+        DraftQuestion(juror="kind", text="Кто ваш первый платящий клиент и почему он выберет именно вас?"),
+        DraftQuestion(
+            juror="skeptic",
+            text="Рынок переполнен предложениями. За счёт каких каналов вы рассчитываете привлекать клиентов дешевле конкурентов?",
+        ),
     ],
     Audience.TEACHERS: [
-        DraftQuestion(juror="strict", text="Марина Викторовна у микрофона. На каких проверенных исследованиях или данных строится ваша методология?"),
-        DraftQuestion(juror="kind", text="Борис на связи. Как ваш проект поможет повысить вовлечённость и интерес учащихся?"),
-        DraftQuestion(juror="skeptic", text="Каковы долгосрочные риски применения вашего подхода в образовательном процессе?"),
+        DraftQuestion(
+            juror="strict",
+            text="На каких проверенных исследованиях или данных строится ваша методология?",
+        ),
+        DraftQuestion(juror="kind", text="Как ваш проект поможет повысить вовлечённость и интерес учащихся?"),
+        DraftQuestion(
+            juror="skeptic", text="Каковы долгосрочные риски применения вашего подхода в образовательном процессе?"
+        ),
     ],
     Audience.PUBLIC: [
-        DraftQuestion(juror="strict", text="Марина Викторовна у микрофона. Объясните простыми словами: сколько это будет стоить для конечного пользователя?"),
-        DraftQuestion(juror="kind", text="Борис на связи. Почему обычному человеку захочется пользоваться вашим продуктом каждый день?"),
-        DraftQuestion(juror="skeptic", text="Не кажется ли вам, что эта проблема надумана и люди отлично справляются без этого решения?"),
+        DraftQuestion(
+            juror="strict",
+            text="Объясните простыми словами: сколько это будет стоить для конечного пользователя?",
+        ),
+        DraftQuestion(
+            juror="kind",
+            text="Почему обычному человеку захочется пользоваться вашим продуктом каждый день?",
+        ),
+        DraftQuestion(
+            juror="skeptic",
+            text="Не кажется ли вам, что эта проблема надумана и люди отлично справляются без этого решения?",
+        ),
     ],
 }
 
@@ -147,12 +176,16 @@ async def _draft(pitch: Pitch, transcript: str) -> DraftQuestions:
             quirk_rule=_quirk_rule(pitch),
         )
     except (OpenAIError, genai_errors.APIError) as e:
-        logger.warning("_draft: сбой LLM (%s), используем резервные вопросы для аудитории %s", e, pitch.audience)
-        return DraftQuestions(
-            questions=AUDIENCE_FALLBACK_QUESTIONS.get(
-                pitch.audience, AUDIENCE_FALLBACK_QUESTIONS[Audience.CONTEST_JURY]
-            )
-        )
+        logger.warning("_draft: сбой LLM (%s), запасные вопросы для аудитории %s", e, pitch.audience)
+        return fallback_questions(pitch)
+
+
+def fallback_questions(pitch: Pitch) -> DraftQuestions:
+    """Заготовленные вопросы по аудитории; прикол кейса, если есть, задаёт скептик — как и в LLM-версии."""
+    questions = list(AUDIENCE_FALLBACK_QUESTIONS[pitch.audience])
+    if pitch.quirk:
+        questions = [DraftQuestion(juror="skeptic", text=pitch.quirk), *(q for q in questions if q.juror != "skeptic")]
+    return DraftQuestions(questions=questions)
 
 
 async def _voice(round_id: str, question_id: str, juror: JurorId, text: str) -> None:
@@ -200,21 +233,18 @@ async def run_jury_answer(round_id: str, question_id: str, audio: bytes) -> Jury
     else:
         pitch = await asyncio.to_thread(resolve_pitch, round_id)
         juror = JURORS[question.juror]
-        try:
-            assessment = await llm.generate(
-                "jury_answer",
-                AnswerAssessment,
-                juror_name=juror.name,
-                juror_persona=juror.persona,
-                title=pitch.title,
-                audience=pitch.audience_ru,
-                question=question.text,
-                answer=answer,
-            )
-            result = JuryAnswerResponse(score=assessment.score, comment=assessment.comment)
-        except (OpenAIError, genai_errors.APIError) as e:
-            logger.warning("run_jury_answer: сбой LLM (%s), используем резервную оценку", e)
-            result = JuryAnswerResponse(score=80, comment="Ответ принят. Аргументация понятна, продолжайте уверенно защищать свой проект.")
+        # без LLM честной оценки нет: ошибка уходит клиенту (502), повтор берёт распознавание из кэша
+        assessment = await llm.generate(
+            "jury_answer",
+            AnswerAssessment,
+            juror_name=juror.name,
+            juror_persona=juror.persona,
+            title=pitch.title,
+            audience=pitch.audience_ru,
+            question=question.text,
+            answer=answer,
+        )
+        result = JuryAnswerResponse(score=assessment.score, comment=assessment.comment)
 
     payload = {"question_id": question_id, "answer": answer, **result.model_dump(mode="json")}
     await asyncio.to_thread(game_api.save_ai_result, round_id, "jury_answer", payload)

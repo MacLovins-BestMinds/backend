@@ -49,3 +49,10 @@ def test_google_mock_tokens_need_explicit_flag(monkeypatch) -> None:
     with TestClient(app) as client:
         resp = client.post("/api/auth/google", json={"id_token": "any-string-is-not-a-token"})
         assert resp.status_code == 400
+
+
+def test_spin_returns_updated_topic_content() -> None:
+    with TestClient(app) as client:
+        spin = client.get("/api/game/spin").json()
+        assert spin["case"]["brief"].startswith("Твоя идея — ")
+        assert "quirk" not in spin["case"] and "trick" not in spin["case"]

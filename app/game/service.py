@@ -10,6 +10,7 @@ from fastapi import HTTPException
 from app.core.config import settings
 from app.core.db import engine
 from app.game.models import User, Case, Round, AiResult, RoundScore, now_utc
+from app.game import content
 from app.game.schemas import (
     SpinResponse,
     DailyResponse,
@@ -254,24 +255,32 @@ def get_or_create_user(session: Session, user_identifier: str) -> User:
     return user
 
 
+def _active_cases(session: Session) -> List[Case]:
+    """Темы из текущего topics.json (старые остаются в базе ради истории раундов)."""
+    cases = [c for c in session.exec(select(Case)).all() if c.id in content.active_ids()]
+    if not cases:
+        seed_cases_from_json(session)
+        cases = [c for c in session.exec(select(Case)).all() if c.id in content.active_ids()]
+    return cases
+
+
+def _public_case(case: Case) -> CasePublic:
+    """Тема для приложения: без прикола, но с выжимкой и ссылками для подготовки."""
+    summary, sources = content.reading(case.id)
+    return CasePublic(
+        id=case.id, title=case.title, brief=case.brief, audience=case.audience, summary=summary, sources=sources
+    )
+
+
 def spin_case(session: Session) -> SpinResponse:
     """
     Колесо тем: возвращает случайный кейс БЕЗ прикола.
     """
-    cases = list(session.exec(select(Case)).all())
-    if not cases:
-        seed_cases_from_json(session)
-        cases = list(session.exec(select(Case)).all())
-
+    cases = _active_cases(session)
     chosen = random.choice(cases)
     return SpinResponse(
         category=CategoryOut(id=chosen.category_id, title=chosen.category_title),
-        case=CasePublic(
-            id=chosen.id,
-            title=chosen.title,
-            brief=chosen.brief,
-            audience=chosen.audience
-        )
+        case=_public_case(chosen),
     )
 
 
@@ -282,24 +291,11 @@ def get_daily_case(session: Session, target_date: Optional[str] = None) -> Daily
     if not target_date:
         target_date = date.today().isoformat()
 
-    cases = list(session.exec(select(Case)).all())
-    if not cases:
-        seed_cases_from_json(session)
-        cases = list(session.exec(select(Case)).all())
-
-    cases_sorted = sorted(cases, key=lambda c: c.id)
+    cases_sorted = sorted(_active_cases(session), key=lambda c: c.id)
     date_hash = int(hashlib.md5(target_date.encode("utf-8")).hexdigest(), 16)
     chosen = cases_sorted[date_hash % len(cases_sorted)]
 
-    return DailyResponse(
-        date=target_date,
-        case=CasePublic(
-            id=chosen.id,
-            title=chosen.title,
-            brief=chosen.brief,
-            audience=chosen.audience
-        )
-    )
+    return DailyResponse(date=target_date, case=_public_case(chosen))
 
 
 def create_round(session: Session, req: RoundCreateRequest) -> RoundCreateResponse:

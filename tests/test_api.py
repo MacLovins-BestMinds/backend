@@ -80,7 +80,7 @@ def test_round_flow(client):
     round_resp = client.post("/api/game/rounds", json={
         "user_id": user_id,
         "mode": "training",
-        "case_id": "health-01"
+        "case_id": "stoicism"
     })
     assert round_resp.status_code == 200
     round_data = round_resp.json()

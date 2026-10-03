@@ -1,6 +1,6 @@
 """Прогрев демо: прогоняет записи через весь раунд на запущенном сервере, чтобы на показе ответы шли из кэша.
 
-    python tools/demo_warmup.py pitch.m4a --answer answer.m4a --case stoicism
+    python tools/demo_warmup.py pitch.m4a --answer answer.m4a --case favourite_food
 
 Первый прогон ходит в AI-сервисы и наполняет кэш (.ai_cache); повторный с теми же файлами отвечает мгновенно.
 Перед показом запустите дважды и убедитесь, что второй прогон быстрый.
@@ -69,7 +69,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("pitch", type=Path, help="запись выступления (m4a)")
     parser.add_argument("--answer", type=Path, help="запись ответа на первый вопрос жюри (m4a)")
-    parser.add_argument("--case", default="stoicism", help="id темы из content/topics.json")
+    parser.add_argument("--case", default="favourite_food", help="id темы из content/topics.json")
     parser.add_argument("--nick", default="demo_stage")
     parser.add_argument("--base", default="http://127.0.0.1:8000")
     args = parser.parse_args()

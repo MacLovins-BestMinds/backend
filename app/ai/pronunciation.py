@@ -151,12 +151,12 @@ def _tips(issues: list[PronunciationIssue], prosody: int | None, monotone: bool,
     tips = []
     worst = list(dict.fromkeys(i.word for i in issues if i.error == "mispronunciation"))[:3]
     if worst:
-        tips.append(f"Потренируй произношение слов: {', '.join(worst)} — послушай их в словаре и повтори вслух.")
+        tips.append(f"Practise these words: {', '.join(worst)} — listen to them in a dictionary and repeat out loud.")
     if monotone or (prosody is not None and prosody < MONOTONE_PROSODY):
-        tips.append("Речь звучит ровно: выделяй голосом ключевые слова и цифры, понижай тон в конце утверждений.")
+        tips.append("Your speech sounds flat: stress key words and numbers, and drop your tone at the end of statements.")
     if breaks >= 2:
-        tips.append("Есть паузы посреди фраз — договаривай мысль до конца, паузу делай после неё.")
-    return tips or ["Произношение уверенное — так держать."]
+        tips.append("There are pauses in the middle of phrases — finish the thought, then pause.")
+    return tips or ["Confident pronunciation — keep it up."]
 
 
 def aggregate(chunks: list[tuple[float, list[dict[str, Any]]]]) -> PronunciationAssessment | None:

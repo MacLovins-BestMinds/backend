@@ -37,7 +37,7 @@ def test_register_success(client):
     assert data["user"]["nick"] == "alex_speaker_auth"
     assert data["user"]["email"] == "alex@example.com"
     assert data["user"]["auth_provider"] == "local"
-    assert data["user"]["rank"]["title"] == "Новичок"
+    assert data["user"]["rank"]["title"] == "Novice"
 
 
 def test_register_duplicate_nick(client):
@@ -46,7 +46,7 @@ def test_register_duplicate_nick(client):
         "password": "AnotherPassword456"
     })
     assert response.status_code == 400
-    assert "уже существует" in response.json()["detail"]
+    assert "already exists" in response.json()["detail"]
 
 
 def test_login_success(client):
@@ -66,7 +66,7 @@ def test_login_wrong_password(client):
         "password": "WrongPassword"
     })
     assert response.status_code == 401
-    assert "Неверный логин или пароль" in response.json()["detail"]
+    assert "Wrong login or password" in response.json()["detail"]
 
 
 def test_get_me_authorized(client):

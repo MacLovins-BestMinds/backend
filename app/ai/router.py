@@ -70,9 +70,9 @@ def parse_gaze(gaze: Annotated[str, Form()] = "[]") -> list[GazePoint]:
 async def read_audio(upload: UploadFile) -> bytes:
     data = await upload.read()
     if not data:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "audio: пустой файл")
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "audio: empty file")
     if len(data) > get_settings().max_audio_mb * 1024 * 1024:
-        raise HTTPException(status.HTTP_413_CONTENT_TOO_LARGE, "audio: файл слишком большой")
+        raise HTTPException(status.HTTP_413_CONTENT_TOO_LARGE, "audio: file is too large")
     return data
 
 
@@ -84,7 +84,7 @@ def ai_errors(op: str, round_id: str) -> Iterator[None]:
     except AudioConversionError as e:
         logger.warning("%s: ffmpeg не прочитал запись, round=%s: %s", op, round_id, e)
         raise HTTPException(
-            status.HTTP_422_UNPROCESSABLE_CONTENT, "audio: не удалось прочитать запись, нужен m4a/AAC"
+            status.HTTP_422_UNPROCESSABLE_CONTENT, "audio: could not read the recording, m4a/AAC is expected"
         ) from e
     except RoundNotFoundError as e:
         raise HTTPException(status.HTTP_404_NOT_FOUND, str(e)) from e
@@ -95,7 +95,7 @@ def ai_errors(op: str, round_id: str) -> Iterator[None]:
         raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, str(e)) from e
     except (OpenAIError, genai_errors.APIError, ElevenLabsApiError) as e:
         logger.exception("%s: ошибка внешнего AI-сервиса, round=%s", op, round_id)
-        raise HTTPException(status.HTTP_502_BAD_GATEWAY, "AI-сервис недоступен, попробуйте ещё раз") from e
+        raise HTTPException(status.HTTP_502_BAD_GATEWAY, "The AI service is unavailable, please try again") from e
 
 
 @router.get("/health")
@@ -151,7 +151,7 @@ async def jury_answer(
         try:
             return await run_jury_answer(round_id, question_id, data)
         except KeyError as e:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, f"Вопрос {question_id} не найден") from e
+            raise HTTPException(status.HTTP_404_NOT_FOUND, f"Question {question_id} not found") from e
 
 
 @router.websocket("/live")

@@ -118,9 +118,12 @@ class Metrics(BaseModel):
 class TimelineEvent(BaseModel):
     """Маркер на таймлайне разбора."""
 
-    type: Literal["filler", "long_pause", "hesitation", "pace", "gaze_off", "good_pause"]
+    # good_pause больше не выдаётся (паузу «после фразы» нельзя отличить от смеха или заминки), тип оставлен для старых записей
+    type: Literal["filler", "repeat", "long_pause", "hesitation", "pace", "gaze_off", "good_pause"]
     t: float
     text: str
+    start: int | None = Field(None, description="позиция в transcript (символы): начало отмеченного места")
+    end: int | None = Field(None, description="конец отмеченного места; равен start, если это точка между словами (пауза, темп)")
 
 
 class PronunciationIssue(BaseModel):

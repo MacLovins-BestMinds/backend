@@ -29,7 +29,7 @@ RECORDINGS = {
         "expect": {
             "long_pause_mid_phrase": 3,
             "hesitation_mid_phrase": 3,
-            "good_pause_after_sentence": 2,
+            "pause_after_sentence_not_marked": 2,
             "pause_4s_after_sentence_not_penalized": 1,
         },
         "text": (
@@ -68,7 +68,7 @@ RECORDINGS = {
     "bad_slow": {"rate": 175, "expect": {"pace": "slow (<100 wpm)"}, "text": pause(350).join((_SLOW * 2).split())},
     "good": {
         "rate": 140,
-        "expect": {"fillers": 0, "long_pause": 0, "hesitation": 0, "good_pause_after_sentence": 3},
+        "expect": {"fillers": 0, "long_pause": 0, "hesitation": 0, "repeat": 0, "pause_after_sentence_not_marked": 3},
         "text": (
             "Imagine you fail an important exam."
             + pause(1500)

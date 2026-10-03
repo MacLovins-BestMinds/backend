@@ -15,18 +15,18 @@ logger = logging.getLogger(__name__)
 
 BLOCK_KINDS: tuple[BlockKind, ...] = get_args(BlockKind.__value__)
 BLOCK_TITLES: dict[BlockKind, str] = {
-    "hook": "Хук",
-    "problem": "Проблема",
-    "solution": "Решение",
-    "why_us": "Почему мы",
-    "call_to_action": "Призыв",
+    "hook": "Hook",
+    "problem": "Problem",
+    "solution": "Solution",
+    "why_us": "Why us",
+    "call_to_action": "Call to action",
 }
 MISSING_HINTS: dict[BlockKind, str] = {
-    "hook": "Нет хука — начни с фразы, которая зацепит зал с первых секунд.",
-    "problem": "Нет проблемы — скажи, чья это боль и почему она важна.",
-    "solution": "Нет решения — объясни, что за продукт и как он помогает.",
-    "why_us": "Нет блока «почему мы» — добавь результат, цифру или отличие от других.",
-    "call_to_action": "Нет призыва — скажи, что слушатель должен сделать после питча.",
+    "hook": "No hook — open with a line that grabs the audience in the first seconds.",
+    "problem": "No problem — say whose pain this is and why it matters.",
+    "solution": "No solution — explain what the product is and how it helps.",
+    "why_us": "No \"why us\" — add a result, a number or what sets you apart.",
+    "call_to_action": "No call to action — say what the listener should do after the pitch.",
 }
 
 
@@ -81,7 +81,7 @@ async def run_refine(req: RefineRequest) -> RefineResponse:
             )
             blocks = to_blocks(draft.blocks)
             missing = [MISSING_HINTS[b.kind] for b in blocks if not b.text]
-            notes = missing or ["Текст разложен по пяти блокам, слова почти не менялись."]
+            notes = missing or ["The text is sorted into five blocks; your words are almost unchanged."]
         else:
             draft = await llm.generate(
                 "refine_improve",
@@ -91,10 +91,10 @@ async def run_refine(req: RefineRequest) -> RefineResponse:
                 audience_focus=AUDIENCE_FOCUS[req.audience],
             )
             blocks = to_blocks(draft.blocks)
-            notes = [f"Слабое место: {w}" for w in draft.weaknesses] + [f"Изменено: {c}" for c in draft.changes]
+            notes = [f"Weak spot: {w}" for w in draft.weaknesses] + [f"Changed: {c}" for c in draft.changes]
         return RefineResponse(text=render(blocks), notes=notes, blocks=blocks)
     except (OpenAIError, genai_errors.APIError) as e:
         logger.warning("run_refine: сбой LLM (%s), используем резервную разметку блоков", e)
         blocks = _fallback_blocks(req.text)
-        notes = ["ИИ сейчас недоступен: текст разложен по абзацам без правок — проверь блоки сам или попробуй позже."]
+        notes = ["AI is unavailable right now: the text was split by paragraphs without edits — check the blocks yourself or try again later."]
         return RefineResponse(text=render(blocks), notes=notes, blocks=blocks)

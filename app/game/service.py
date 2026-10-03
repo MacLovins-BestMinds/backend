@@ -38,15 +38,15 @@ def get_rank_title(avg_score: float) -> str:
     - Легенда: от 88 (>= 88)
     """
     if avg_score < 40.0:
-        return "Новичок"
+        return "Novice"
     elif avg_score < 60.0:
-        return "Спикер"
+        return "Speaker"
     elif avg_score < 75.0:
-        return "Питчер"
+        return "Pitcher"
     elif avg_score < 88.0:
-        return "Оратор"
+        return "Orator"
     else:
-        return "Легенда"
+        return "Legend"
 
 
 def calculate_user_rank(session: Session, user_id: str) -> RankInfo:
@@ -62,7 +62,7 @@ def calculate_user_rank(session: Session, user_id: str) -> RankInfo:
     scores = list(session.exec(stmt).all())
 
     if not scores:
-        return RankInfo(title="Новичок", trend="flat")
+        return RankInfo(title="Novice", trend="flat")
 
     recent_5 = scores[:5]
     avg_recent = sum(s.total_score for s in recent_5) / len(recent_5)
@@ -98,6 +98,9 @@ AUDIENCE_RU_TO_EN = {
     "жюри конкурса": "contest_jury",
     "преподаватели": "teachers",
     "широкая публика": "public",
+    "business people": "business",
+    "contest jury": "contest_jury",
+    "general public": "public",
     "business": "business",
     "contest_jury": "contest_jury",
     "teachers": "teachers",
@@ -317,7 +320,7 @@ def create_round(session: Session, req: RoundCreateRequest) -> RoundCreateRespon
         if recent_daily_count >= 5:
             raise HTTPException(
                 status_code=429,
-                detail="Лимит попыток Темы дня: не более 5 раз в час. Попробуйте режим «Тренировка» или повторите позже."
+                detail="Topic of the day is limited to 5 attempts per hour. Try Training mode or come back later."
             )
 
     round_id = f"rnd_{hashlib.md5(f'{user.id}_{datetime.now(timezone.utc).isoformat()}_{random.random()}'.encode()).hexdigest()[:12]}"
@@ -417,14 +420,14 @@ def finish_round(session: Session, round_id: str) -> RoundFinishResponse:
     """
     round_obj = session.get(Round, round_id)
     if not round_obj:
-        raise HTTPException(status_code=404, detail=f"Раунд {round_id} не найден")
+        raise HTTPException(status_code=404, detail=f"Round {round_id} not found")
 
     ai_results = session.exec(select(AiResult).where(AiResult.round_id == round_id)).all()
     content_score, delivery_score, jury_score = _collect_ai_scores(ai_results)
 
     if content_score is None or delivery_score is None:
         if not settings.MOCK_FALLBACK:
-            raise HTTPException(status_code=409, detail="Сначала отправьте выступление на разбор (delivery)")
+            raise HTTPException(status_code=409, detail="Send the pitch for review (delivery) first")
         # MOCK_FALLBACK: раунд прошёл на моках AI — условные баллы, чтобы игровой цикл работал целиком
         content_score = 74.0 if content_score is None else content_score
         delivery_score = 78.0 if delivery_score is None else delivery_score
@@ -557,7 +560,7 @@ def seed_cases_from_json(session: Session) -> None:
         cat = item.get("category", "")
         if isinstance(cat, dict):
             category_id = cat.get("id", "general")
-            category_title = cat.get("title", item.get("category_title", "Общее"))
+            category_title = cat.get("title", item.get("category_title", "General"))
         else:
             category_id = str(cat)
             category_title = item.get("category_title", category_id.replace("_", " ").title())

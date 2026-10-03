@@ -27,13 +27,13 @@ class HealthResponse(BaseModel):
 
 async def _gemini() -> str:
     model = await gemini_client().aio.models.get(model=get_settings().gemini_model)
-    return f"модель {model.name}"
+    return f"model {model.name}"
 
 
 async def _elevenlabs() -> str:
     s = get_settings()
     voice = await elevenlabs_client().voices.get(s.elevenlabs_voice_id)
-    return f"голос «{voice.name}»; STT {s.stt_model} + {s.live_stt_model}, TTS {s.tts_model}"
+    return f"voice \"{voice.name}\"; STT {s.stt_model} + {s.live_stt_model}, TTS {s.tts_model}"
 
 
 async def _azure() -> str:
@@ -42,7 +42,7 @@ async def _azure() -> str:
     async with httpx.AsyncClient(timeout=CHECK_TIMEOUT_SEC) as client:
         response = await client.post(url, headers={"Ocp-Apim-Subscription-Key": s.azure_speech_key})
     response.raise_for_status()
-    return f"регион {s.azure_speech_region}, {s.azure_speech_locale}"
+    return f"region {s.azure_speech_region}, {s.azure_speech_locale}"
 
 
 async def _run(check: Callable[[], Awaitable[str]]) -> ServiceCheck:

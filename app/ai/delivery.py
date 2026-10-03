@@ -24,7 +24,7 @@ from app.ai.schemas import (
 )
 from app.ai.stt import transcribe
 
-NO_SPEECH_TIP = "Мы не услышали речь — проверь микрофон и говори громче."
+NO_SPEECH_TIP = "We didn't hear any speech — check the microphone and speak louder."
 
 
 class ContentAssessment(BaseModel):
@@ -34,10 +34,14 @@ class ContentAssessment(BaseModel):
 
 def _metrics_summary(m: Metrics) -> str:
     return (
-        f"- длительность: {m.duration_sec:.0f} с, темп: {m.wpm} слов/мин\n"
-        f"- слова-паразиты: {m.fillers} ({m.fillers_per_min} в минуту)\n"
-        f"- паузы дольше 3 с: {m.long_pauses}\n"
-        + (f"- взгляд в зал: {m.gaze_on_ratio:.0%} времени" if m.gaze_on_ratio is not None else "- взгляд не измерялся")
+        f"- duration: {m.duration_sec:.0f} s, pace: {m.wpm} words/min\n"
+        f"- filler words: {m.fillers} ({m.fillers_per_min} per minute)\n"
+        f"- pauses longer than 3 s: {m.long_pauses}\n"
+        + (
+            f"- eye contact with the audience: {m.gaze_on_ratio:.0%} of the time"
+            if m.gaze_on_ratio is not None
+            else "- eye contact was not measured"
+        )
     )
 
 
@@ -49,7 +53,7 @@ def _notes_block(pitch: Pitch, notes: str) -> str:
     notes = notes.strip()[:MAX_NOTES_CHARS]
     if not notes or notes == (pitch.own_text or "").strip():
         return ""
-    return f'- Заметки игрока на подготовке (что он собирался сказать):\n"""\n{notes}\n"""'
+    return f'- Preparation notes of the player (what they planned to say):\n"""\n{notes}\n"""'
 
 
 async def assess_content(pitch: Pitch, transcript: str, metrics: Metrics, notes: str = "") -> ContentAssessment:
@@ -70,9 +74,9 @@ async def assess_content(pitch: Pitch, transcript: str, metrics: Metrics, notes:
         title=pitch.title,
         brief=pitch.brief,
         audience=pitch.audience_ru,
-        own_text=f'- Подготовленный текст игрока:\n"""\n{pitch.own_text}\n"""' if own else "",
+        own_text=f'- Prepared text of the player:\n"""\n{pitch.own_text}\n"""' if own else "",
         notes=_notes_block(pitch, notes),
-        extra_criteria="- `audience_fit` — говорит ли на языке этой аудитории и о том, что ей важно." if own else "",
+        extra_criteria="- `audience_fit` — does the speaker talk in this audience's language and about what matters to it." if own else "",
         transcript=transcript,
         metrics=_metrics_summary(metrics),
     )

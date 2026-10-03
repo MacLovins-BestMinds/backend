@@ -1,1190 +1,626 @@
 [
   {
-    "id": "stoicism",
-    "category": "philosophy",
-    "category_title": "🏛 Philosophy for Life",
-    "title": "Stoicism",
-    "brief": "Explain in simple words what Stoicism is and convince teachers it's worth discussing with students.",
-    "audience": "преподаватели",
-    "audience_id": "teachers",
-    "quirk": "Isn't Stoicism just about suppressing your emotions?",
-    "trick": "Isn't Stoicism just about suppressing your emotions?",
-    "summary": "Stoicism is a philosophical movement and practical guide to living, emphasizing daily self-discipline and moral improvement, which originated in the Hellenistic period of ancient Greece and continued well into the Roman Imperial period.",
-    "sources": [
-      {
-        "title": "Wikipedia: Stoicism",
-        "url": "https://en.wikipedia.org/wiki/Stoicism"
-      },
-      {
-        "title": "Britannica: Stoicism",
-        "url": "https://www.britannica.com/topic/Stoicism"
-      },
-      {
-        "title": "Simple English Wikipedia: Stoicism (easy English)",
-        "url": "https://simple.wikipedia.org/wiki/Stoicism"
-      }
-    ]
-  },
-  {
-    "id": "utilitarianism",
-    "category": "philosophy",
-    "category_title": "🏛 Philosophy for Life",
-    "title": "Utilitarianism",
-    "brief": "Explain the idea of \"the greatest good for the greatest number\" and convince the jury it helps people make decisions.",
-    "audience": "жюри конкурса",
-    "audience_id": "contest_jury",
-    "quirk": "So it's fine to sacrifice one person to save five?",
-    "trick": "So it's fine to sacrifice one person to save five?",
-    "summary": "Utilitarianism is a family of theories in normative ethics that prescribe actions that maximize happiness and well-being for all affected individuals. In other words, utilitarian ideas encourage actions that lead to the greatest good for the greatest number.",
-    "sources": [
-      {
-        "title": "Wikipedia: Utilitarianism",
-        "url": "https://en.wikipedia.org/wiki/Utilitarianism"
-      },
-      {
-        "title": "Britannica: Utilitarianism",
-        "url": "https://www.britannica.com/topic/utilitarianism-philosophy"
-      },
-      {
-        "title": "Simple English Wikipedia: Utilitarianism (easy English)",
-        "url": "https://simple.wikipedia.org/wiki/Utilitarianism"
-      }
-    ]
-  },
-  {
-    "id": "existentialism",
-    "category": "philosophy",
-    "category_title": "🏛 Philosophy for Life",
-    "title": "Existentialism",
-    "brief": "Explain what \"existence precedes essence\" means and convince ordinary people that this idea brings freedom, not despair.",
-    "audience": "широкая публика",
+    "id": "my_morning",
+    "category": "about_me",
+    "category_title": "🙋 About Me",
+    "title": "My Morning",
+    "brief": "Tell the room how your morning usually goes and what makes it a good one.",
+    "audience": "general public",
     "audience_id": "public",
-    "quirk": "If life has no given meaning, why do anything at all?",
-    "trick": "If life has no given meaning, why do anything at all?",
-    "summary": "Existentialism is a family of philosophical views and inquiry that explore the human individual's struggle to lead an authentic life despite the apparent absurdity or incomprehensibility of existence.",
-    "sources": [
-      {
-        "title": "Wikipedia: Existentialism",
-        "url": "https://en.wikipedia.org/wiki/Existentialism"
-      },
-      {
-        "title": "Britannica: Existentialism",
-        "url": "https://www.britannica.com/topic/existentialism"
-      },
-      {
-        "title": "Simple English Wikipedia: Existentialism (easy English)",
-        "url": "https://simple.wikipedia.org/wiki/Existentialism"
-      }
-    ]
+    "quirk": "What would you change about your morning if you could?",
+    "trick": "What would you change about your morning if you could?",
+    "summary": "Say when you wake up, name two or three things you always do, and finish with the part of the morning you like most.",
+    "sources": []
   },
   {
-    "id": "ikigai",
-    "category": "philosophy",
-    "category_title": "🏛 Philosophy for Life",
-    "title": "Ikigai",
-    "brief": "Explain the Japanese idea of ikigai and convince business people it helps keep employees.",
-    "audience": "бизнесмены",
-    "audience_id": "business",
-    "quirk": "Isn't the four-circle diagram a Western invention rather than a Japanese tradition?",
-    "trick": "Isn't the four-circle diagram a Western invention rather than a Japanese tradition?",
-    "summary": "Ikigai  is a Japanese concept of an individual's definition of the meaning of their life.",
-    "sources": [
-      {
-        "title": "Wikipedia: Ikigai",
-        "url": "https://en.wikipedia.org/wiki/Ikigai"
-      },
-      {
-        "title": "BBC Worklife: Ikigai — a Japanese concept to improve work and life",
-        "url": "https://www.bbc.com/worklife/article/20170807-ikigai-a-japanese-concept-to-improve-work-and-life"
-      }
-    ]
-  },
-  {
-    "id": "dunning_kruger",
-    "category": "thinking_traps",
-    "category_title": "🧠 Thinking Traps",
-    "title": "The Dunning–Kruger Effect",
-    "brief": "Explain why beginners overestimate themselves and convince teachers to take this into account when grading.",
-    "audience": "преподаватели",
-    "audience_id": "teachers",
-    "quirk": "Some say this effect is just a statistical artifact. Does it even exist?",
-    "trick": "Some say this effect is just a statistical artifact. Does it even exist?",
-    "summary": "The Dunning–Kruger effect is a cognitive bias that describes the systematic tendency of people with low ability in a specific area to give overly positive assessments of their ability. The term may also refer to the tendency of high performers to underestimate their skills.",
-    "sources": [
-      {
-        "title": "Wikipedia: Dunning–Kruger effect",
-        "url": "https://en.wikipedia.org/wiki/Dunning%E2%80%93Kruger_effect"
-      },
-      {
-        "title": "Britannica: Dunning–Kruger effect",
-        "url": "https://www.britannica.com/science/Dunning-Kruger-effect"
-      },
-      {
-        "title": "Simple English Wikipedia: Dunning–Kruger effect (easy English)",
-        "url": "https://simple.wikipedia.org/wiki/Dunning%E2%80%93Kruger_effect"
-      }
-    ]
-  },
-  {
-    "id": "sunk_cost",
-    "category": "thinking_traps",
-    "category_title": "🧠 Thinking Traps",
-    "title": "The Sunk Cost Fallacy",
-    "brief": "Explain the sunk cost trap with an example and convince business people to shut down failing projects in time.",
-    "audience": "бизнесмены",
-    "audience_id": "business",
-    "quirk": "Isn't persistence the most important quality of an entrepreneur?",
-    "trick": "Isn't persistence the most important quality of an entrepreneur?",
-    "summary": "In economics and business decision-making, a sunk cost is a cost that has already been incurred and cannot be recovered. Sunk costs are contrasted with prospective costs, which are future costs that may be avoided if action is taken.",
-    "sources": [
-      {
-        "title": "Wikipedia: Sunk cost",
-        "url": "https://en.wikipedia.org/wiki/Sunk_cost"
-      },
-      {
-        "title": "Investopedia: Sunk cost",
-        "url": "https://www.investopedia.com/terms/s/sunkcost.asp"
-      }
-    ]
-  },
-  {
-    "id": "confirmation_bias",
-    "category": "thinking_traps",
-    "category_title": "🧠 Thinking Traps",
-    "title": "Confirmation Bias",
-    "brief": "Explain why we only notice what we already believe and convince people to fact-check the news.",
-    "audience": "широкая публика",
+    "id": "my_best_friend",
+    "category": "about_me",
+    "category_title": "🙋 About Me",
+    "title": "My Best Friend",
+    "brief": "Tell the room about your best friend and why this person matters to you.",
+    "audience": "general public",
     "audience_id": "public",
-    "quirk": "How do you know you're not the biased one right now?",
-    "trick": "How do you know you're not the biased one right now?",
-    "summary": "Confirmation bias is the tendency to search for, interpret, favor and recall information in a way that confirms or supports one's prior beliefs, values, or decisions.",
-    "sources": [
-      {
-        "title": "Wikipedia: Confirmation bias",
-        "url": "https://en.wikipedia.org/wiki/Confirmation_bias"
-      },
-      {
-        "title": "Britannica: Confirmation bias",
-        "url": "https://www.britannica.com/science/confirmation-bias"
-      }
-    ]
+    "quirk": "What is the one thing you two always argue about?",
+    "trick": "What is the one thing you two always argue about?",
+    "summary": "Say who your friend is and how you met, give one short story about them, and finish with why you are glad to have them.",
+    "sources": []
   },
   {
-    "id": "impostor_syndrome",
-    "category": "thinking_traps",
-    "category_title": "🧠 Thinking Traps",
-    "title": "Impostor Syndrome",
-    "brief": "Explain what impostor syndrome is and convince the jury we need to talk about it openly.",
-    "audience": "жюри конкурса",
-    "audience_id": "contest_jury",
-    "quirk": "What if the person really isn't good enough and we just call it a syndrome?",
-    "trick": "What if the person really isn't good enough and we just call it a syndrome?",
-    "summary": "Impostor syndrome, also known as impostor phenomenon, impostorism, or impostor thoughts, is a psychological experience in which a person suffers from feelings of intellectual and/or professional fraudulence.",
-    "sources": [
-      {
-        "title": "Wikipedia: Impostor syndrome",
-        "url": "https://en.wikipedia.org/wiki/Impostor_syndrome"
-      },
-      {
-        "title": "Verywell Mind: Impostor syndrome",
-        "url": "https://www.verywellmind.com/imposter-syndrome-and-social-anxiety-disorder-4156469"
-      }
-    ]
-  },
-  {
-    "id": "first_principles",
-    "category": "mental_models",
-    "category_title": "💡 Mental Models",
-    "title": "First Principles Thinking",
-    "brief": "Explain how to break a problem down to basic facts and convince business people to think this way instead of copying competitors.",
-    "audience": "бизнесмены",
-    "audience_id": "business",
-    "quirk": "That takes forever — why reinvent the wheel?",
-    "trick": "That takes forever — why reinvent the wheel?",
-    "summary": "In philosophy and science, a first principle is a basic proposition or assumption that cannot be deduced from any other proposition or assumption. First principles in philosophy are from first cause attitudes and taught by Aristotelians, and nuanced versions of first principles are referred to as postulates by Kantians.",
-    "sources": [
-      {
-        "title": "Wikipedia: First principle",
-        "url": "https://en.wikipedia.org/wiki/First_principle"
-      },
-      {
-        "title": "Farnam Street: First principle",
-        "url": "https://fs.blog/first-principles/"
-      }
-    ]
-  },
-  {
-    "id": "occams_razor",
-    "category": "mental_models",
-    "category_title": "💡 Mental Models",
-    "title": "Occam's Razor",
-    "brief": "Explain the principle \"don't multiply entities beyond necessity\" and convince teachers to teach it to students.",
-    "audience": "преподаватели",
-    "audience_id": "teachers",
-    "quirk": "The world is complex — isn't the simplest explanation often wrong?",
-    "trick": "The world is complex — isn't the simplest explanation often wrong?",
-    "summary": "In philosophy, Occam's razor is the problem-solving principle that recommends searching for explanations constructed with the smallest possible set of elements. It is also known as the principle of parsimony or the law of parsimony.",
-    "sources": [
-      {
-        "title": "Wikipedia: Occam's razor",
-        "url": "https://en.wikipedia.org/wiki/Occam's_razor"
-      },
-      {
-        "title": "Britannica: Occam's razor",
-        "url": "https://www.britannica.com/topic/Occams-razor"
-      },
-      {
-        "title": "Simple English Wikipedia: Occam's razor (easy English)",
-        "url": "https://simple.wikipedia.org/wiki/Occam's_razor"
-      }
-    ]
-  },
-  {
-    "id": "pareto",
-    "category": "mental_models",
-    "category_title": "💡 Mental Models",
-    "title": "The Pareto Principle (80/20 Rule)",
-    "brief": "Explain the 80/20 rule with everyday examples and convince people to apply it to their own lives.",
-    "audience": "широкая публика",
+    "id": "my_hometown",
+    "category": "about_me",
+    "category_title": "🙋 About Me",
+    "title": "My Hometown",
+    "brief": "Tell the room about the place you come from and what you like about it.",
+    "audience": "general public",
     "audience_id": "public",
-    "quirk": "Why exactly 80 and 20 — is it a law of nature or just curve-fitting?",
-    "trick": "Why exactly 80 and 20 — is it a law of nature or just curve-fitting?",
-    "summary": "The Pareto principle states that, for many outcomes, roughly 80% of consequences come from 20% of causes.",
-    "sources": [
-      {
-        "title": "Wikipedia: Pareto principle",
-        "url": "https://en.wikipedia.org/wiki/Pareto_principle"
-      },
-      {
-        "title": "Investopedia: Pareto principle",
-        "url": "https://www.investopedia.com/terms/p/paretoprinciple.asp"
-      },
-      {
-        "title": "Simple English Wikipedia: Pareto principle (easy English)",
-        "url": "https://simple.wikipedia.org/wiki/Pareto_principle"
-      }
-    ]
+    "quirk": "Would you tell a friend to move there? Why?",
+    "trick": "Would you tell a friend to move there? Why?",
+    "summary": "Say where it is, name two things you love there, and finish with one place everybody should see.",
+    "sources": []
   },
   {
-    "id": "hanlons_razor",
-    "category": "mental_models",
-    "category_title": "💡 Mental Models",
-    "title": "Hanlon's Razor",
-    "brief": "Explain the rule \"never attribute to malice what is adequately explained by stupidity\" and convince the jury it reduces conflict.",
-    "audience": "жюри конкурса",
-    "audience_id": "contest_jury",
-    "quirk": "And what if someone really is acting with bad intentions?",
-    "trick": "And what if someone really is acting with bad intentions?",
-    "summary": "Hanlon's razor is an adage or rule of thumb that states, \"Never attribute to malice that which is adequately explained by stupidity.\" It is a philosophical razor that promotes a way of eliminating unlikely explanations for human behavior, purportedly named after the American writer Robert J.",
-    "sources": [
-      {
-        "title": "Wikipedia: Hanlon's razor",
-        "url": "https://en.wikipedia.org/wiki/Hanlon's_razor"
-      },
-      {
-        "title": "Farnam Street: Hanlon's razor",
-        "url": "https://fs.blog/mental-model-hanlons-razor/"
-      },
-      {
-        "title": "Simple English Wikipedia: Hanlon's razor (easy English)",
-        "url": "https://simple.wikipedia.org/wiki/Hanlon's_razor"
-      }
-    ]
-  },
-  {
-    "id": "opportunity_cost",
-    "category": "economics",
-    "category_title": "💸 Economics Made Simple",
-    "title": "Opportunity Cost",
-    "brief": "Explain that every choice has a hidden price and convince people to consider it when shopping or choosing a job.",
-    "audience": "широкая публика",
+    "id": "my_skill",
+    "category": "about_me",
+    "category_title": "🙋 About Me",
+    "title": "Something I Am Good At",
+    "brief": "Tell the room about one thing you do well and how you learned it.",
+    "audience": "general public",
     "audience_id": "public",
-    "quirk": "If you keep counting what you missed, how can you ever enjoy your choice?",
-    "trick": "If you keep counting what you missed, how can you ever enjoy your choice?",
-    "summary": "In microeconomic theory, the opportunity cost of a choice is the value of the best alternative forgone where, given limited resources, a choice needs to be made between several mutually exclusive alternatives.",
-    "sources": [
-      {
-        "title": "Wikipedia: Opportunity cost",
-        "url": "https://en.wikipedia.org/wiki/Opportunity_cost"
-      },
-      {
-        "title": "Investopedia: Opportunity cost",
-        "url": "https://www.investopedia.com/terms/o/opportunitycost.asp"
-      },
-      {
-        "title": "Simple English Wikipedia: Opportunity cost (easy English)",
-        "url": "https://simple.wikipedia.org/wiki/Opportunity_cost"
-      }
-    ]
+    "quirk": "What was the hardest part of learning it?",
+    "trick": "What was the hardest part of learning it?",
+    "summary": "Name the skill, say how you started, tell one moment when it helped you, and finish with a tip for a beginner.",
+    "sources": []
   },
   {
-    "id": "inflation",
-    "category": "economics",
-    "category_title": "💸 Economics Made Simple",
-    "title": "Inflation",
-    "brief": "Explain why money loses value and convince teachers to teach financial literacy from school age.",
-    "audience": "преподаватели",
-    "audience_id": "teachers",
-    "quirk": "Why should kids learn this if they don't have their own money yet?",
-    "trick": "Why should kids learn this if they don't have their own money yet?",
-    "summary": "In economics, inflation is an increase in the average price of goods and services in terms of money, though it originally referred to the increase of the money supply that can cause such a universal shift. This increase is measured using a price index, typically a consumer price index (CPI).",
-    "sources": [
-      {
-        "title": "Wikipedia: Inflation",
-        "url": "https://en.wikipedia.org/wiki/Inflation"
-      },
-      {
-        "title": "Investopedia: Inflation",
-        "url": "https://www.investopedia.com/terms/i/inflation.asp"
-      },
-      {
-        "title": "Simple English Wikipedia: Inflation (easy English)",
-        "url": "https://simple.wikipedia.org/wiki/Inflation"
-      }
-    ]
-  },
-  {
-    "id": "tragedy_of_commons",
-    "category": "economics",
-    "category_title": "💸 Economics Made Simple",
-    "title": "The Tragedy of the Commons",
-    "brief": "Explain why shared resources get depleted and propose to the jury how to stop it.",
-    "audience": "жюри конкурса",
-    "audience_id": "contest_jury",
-    "quirk": "Elinor Ostrom showed communities can manage shared resources. So is there even a problem?",
-    "trick": "Elinor Ostrom showed communities can manage shared resources. So is there even a problem?",
-    "summary": "The tragedy of the commons is the idea that when a resource is shared and can benefit the individual at a cost to the community, it is rational for the individual to overuse the resource, even though this collectively leads to the depletion of the resource for everyone.",
-    "sources": [
-      {
-        "title": "Wikipedia: Tragedy of the commons",
-        "url": "https://en.wikipedia.org/wiki/Tragedy_of_the_commons"
-      },
-      {
-        "title": "Britannica: Tragedy of the commons",
-        "url": "https://www.britannica.com/topic/tragedy-of-the-commons"
-      },
-      {
-        "title": "Simple English Wikipedia: Tragedy of the commons (easy English)",
-        "url": "https://simple.wikipedia.org/wiki/Tragedy_of_the_commons"
-      }
-    ]
-  },
-  {
-    "id": "ubi",
-    "category": "economics",
-    "category_title": "💸 Economics Made Simple",
-    "title": "Universal Basic Income",
-    "brief": "Explain the idea of universal basic income, take a side for or against, and convince business people.",
-    "audience": "бизнесмены",
-    "audience_id": "business",
-    "quirk": "Who will work if money is given away for free?",
-    "trick": "Who will work if money is given away for free?",
-    "summary": "Universal basic income (UBI) is a social welfare proposal in which all members of a given population regularly receive a minimum income in the form of an unconditional transfer payment, i.e., without a means test or need to perform work.",
-    "sources": [
-      {
-        "title": "Wikipedia: Universal basic income",
-        "url": "https://en.wikipedia.org/wiki/Universal_basic_income"
-      },
-      {
-        "title": "Investopedia: Universal basic income",
-        "url": "https://www.investopedia.com/terms/b/basic-income.asp"
-      },
-      {
-        "title": "Simple English Wikipedia: Basic income (easy English)",
-        "url": "https://simple.wikipedia.org/wiki/Basic_income"
-      }
-    ]
-  },
-  {
-    "id": "crispr",
-    "category": "science",
-    "category_title": "🧬 Science That Changes the World",
-    "title": "CRISPR Gene Editing",
-    "brief": "Explain how CRISPR \"cuts\" genes and convince people it's an opportunity, not a threat.",
-    "audience": "широкая публика",
+    "id": "favourite_food",
+    "category": "food",
+    "category_title": "🍕 Food",
+    "title": "My Favourite Food",
+    "brief": "Tell the room about the food you love most and make them hungry.",
+    "audience": "general public",
     "audience_id": "public",
-    "quirk": "What if people start making \"designer babies\"?",
-    "trick": "What if people start making \"designer babies\"?",
-    "summary": "CRISPR is a family of DNA sequences found in the genomes of prokaryotic organisms such as bacteria and archaea. Each sequence within an individual prokaryotic CRISPR is derived from a DNA fragment of a bacteriophage that had previously infected the prokaryote or one of its ancestors.",
-    "sources": [
-      {
-        "title": "Wikipedia: CRISPR",
-        "url": "https://en.wikipedia.org/wiki/CRISPR"
-      },
-      {
-        "title": "Britannica: CRISPR",
-        "url": "https://www.britannica.com/technology/CRISPR"
-      },
-      {
-        "title": "Simple English Wikipedia: CRISPR (easy English)",
-        "url": "https://simple.wikipedia.org/wiki/CRISPR"
-      }
-    ]
+    "quirk": "Could you eat it every day for a month?",
+    "trick": "Could you eat it every day for a month?",
+    "summary": "Say what the food is, describe how it tastes, tell when you last had it, and finish with why everybody should try it.",
+    "sources": []
   },
   {
-    "id": "herd_immunity",
-    "category": "science",
-    "category_title": "🧬 Science That Changes the World",
-    "title": "Herd Immunity",
-    "brief": "Explain how one person's vaccination protects others and convince teachers to tell children about it.",
-    "audience": "преподаватели",
-    "audience_id": "teachers",
-    "quirk": "If almost everyone around me is vaccinated, why should I get vaccinated?",
-    "trick": "If almost everyone around me is vaccinated, why should I get vaccinated?",
-    "summary": "Herd immunity is a form of indirect protection that applies only to contagious diseases.",
-    "sources": [
-      {
-        "title": "Wikipedia: Herd immunity",
-        "url": "https://en.wikipedia.org/wiki/Herd_immunity"
-      },
-      {
-        "title": "Britannica: Herd immunity",
-        "url": "https://www.britannica.com/science/herd-immunity"
-      },
-      {
-        "title": "Simple English Wikipedia: Herd immunity (easy English)",
-        "url": "https://simple.wikipedia.org/wiki/Herd_immunity"
-      }
-    ]
-  },
-  {
-    "id": "quantum_computing",
-    "category": "science",
-    "category_title": "🧬 Science That Changes the World",
-    "title": "Quantum Computing",
-    "brief": "Explain in simple words how a quantum computer differs from a regular one and convince business people to keep an eye on this technology.",
-    "audience": "бизнесмены",
-    "audience_id": "business",
-    "quirk": "They've been promised for 20 years — isn't it always \"ten years away\"?",
-    "trick": "They've been promised for 20 years — isn't it always \"ten years away\"?",
-    "summary": "A quantum computer is a computer that represents and processes information using quantum states. Quantum computations exploit phenomena such as superposition, interference, and entanglement. Quantum computers have the potential to complete some calculations exponentially faster than classical computers.",
-    "sources": [
-      {
-        "title": "Wikipedia: Quantum computing",
-        "url": "https://en.wikipedia.org/wiki/Quantum_computing"
-      },
-      {
-        "title": "IBM: Quantum computing",
-        "url": "https://www.ibm.com/think/topics/quantum-computing"
-      },
-      {
-        "title": "Simple English Wikipedia: Quantum computer (easy English)",
-        "url": "https://simple.wikipedia.org/wiki/Quantum_computer"
-      }
-    ]
-  },
-  {
-    "id": "microbiome",
-    "category": "science",
-    "category_title": "🧬 Science That Changes the World",
-    "title": "The Human Microbiome",
-    "brief": "Explain how the bacteria inside us affect health and mood and convince the jury it's one of the biggest discoveries in medicine.",
-    "audience": "жюри конкурса",
-    "audience_id": "contest_jury",
-    "quirk": "Aren't these big claims based mostly on studies in mice?",
-    "trick": "Aren't these big claims based mostly on studies in mice?",
-    "summary": "The human microbiome is the aggregate of all microbiota that reside on or within human tissues and biofluids along with the corresponding anatomical sites in which they reside, including the gastrointestinal tract, skin, mammary glands, seminal fluid, uterus, ovarian follicles, lung, saliva, oral mucosa, ocular surface, and the biliary tract.",
-    "sources": [
-      {
-        "title": "Wikipedia: Human microbiome",
-        "url": "https://en.wikipedia.org/wiki/Human_microbiome"
-      },
-      {
-        "title": "Simple English Wikipedia: Human microbiome (easy English)",
-        "url": "https://simple.wikipedia.org/wiki/Human_microbiome"
-      }
-    ]
-  },
-  {
-    "id": "fermi_paradox",
-    "category": "space",
-    "category_title": "🚀 Space and the Universe",
-    "title": "The Fermi Paradox",
-    "brief": "Explain why we still haven't met aliens and convince the audience of your answer.",
-    "audience": "широкая публика",
+    "id": "best_breakfast",
+    "category": "food",
+    "category_title": "🍕 Food",
+    "title": "The Best Breakfast",
+    "brief": "Describe your perfect breakfast and explain why it is the best start to a day.",
+    "audience": "general public",
     "audience_id": "public",
-    "quirk": "Maybe we're just not looking hard enough?",
-    "trick": "Maybe we're just not looking hard enough?",
-    "summary": "The Fermi paradox is the seeming inconsistency between the lack of evidence of extraterrestrial civilizations and the apparently high likelihood of their existence.",
-    "sources": [
-      {
-        "title": "Wikipedia: Fermi paradox",
-        "url": "https://en.wikipedia.org/wiki/Fermi_paradox"
-      },
-      {
-        "title": "Britannica: Fermi paradox",
-        "url": "https://www.britannica.com/science/Fermi-paradox"
-      },
-      {
-        "title": "Simple English Wikipedia: Fermi paradox (easy English)",
-        "url": "https://simple.wikipedia.org/wiki/Fermi_paradox"
-      }
-    ]
+    "quirk": "What do you eat when you only have two minutes?",
+    "trick": "What do you eat when you only have two minutes?",
+    "summary": "Say what is on the plate, give two reasons you like it, and finish with who you would share it with.",
+    "sources": []
   },
   {
-    "id": "black_holes",
-    "category": "space",
-    "category_title": "🚀 Space and the Universe",
-    "title": "Black Holes",
-    "brief": "Explain what a black hole is without formulas and convince teachers it's worth discussing at school.",
-    "audience": "преподаватели",
-    "audience_id": "teachers",
-    "quirk": "How can you study something you can't see?",
-    "trick": "How can you study something you can't see?",
-    "summary": "A black hole is an astronomical body so compact that its gravity prevents anything, including light, from escaping. Albert Einstein's theory of general relativity, which describes gravitation as the curvature of spacetime, predicts that any sufficiently compact mass will form a black hole.",
-    "sources": [
-      {
-        "title": "Wikipedia: Black hole",
-        "url": "https://en.wikipedia.org/wiki/Black_hole"
-      },
-      {
-        "title": "NASA: Black hole",
-        "url": "https://science.nasa.gov/universe/black-holes/"
-      },
-      {
-        "title": "Simple English Wikipedia: Black hole (easy English)",
-        "url": "https://simple.wikipedia.org/wiki/Black_hole"
-      }
-    ]
-  },
-  {
-    "id": "terraforming_mars",
-    "category": "space",
-    "category_title": "🚀 Space and the Universe",
-    "title": "Terraforming Mars",
-    "brief": "Explain how Mars could be made habitable and convince business people it's worth investing in now.",
-    "audience": "бизнесмены",
-    "audience_id": "business",
-    "quirk": "Wouldn't it be easier to save Earth than to build a second one?",
-    "trick": "Wouldn't it be easier to save Earth than to build a second one?",
-    "summary": "The terraforming of Mars is a hypothetical procedure that would consist of a planetary engineering project or concurrent projects aspiring to transform Mars from a planet hostile to life to one that could sustainably host humans and other lifeforms free of protection or mediation.",
-    "sources": [
-      {
-        "title": "Wikipedia: Terraforming of Mars",
-        "url": "https://en.wikipedia.org/wiki/Terraforming_of_Mars"
-      },
-      {
-        "title": "Simple English Wikipedia: Terraforming of Mars (easy English)",
-        "url": "https://simple.wikipedia.org/wiki/Terraforming_of_Mars"
-      }
-    ]
-  },
-  {
-    "id": "kessler_syndrome",
-    "category": "space",
-    "category_title": "🚀 Space and the Universe",
-    "title": "Space Debris and the Kessler Syndrome",
-    "brief": "Explain how debris in orbit could trap us on Earth and propose a solution to the jury.",
-    "audience": "жюри конкурса",
-    "audience_id": "contest_jury",
-    "quirk": "Space is huge — why does it matter how much junk is up there?",
-    "trick": "Space is huge — why does it matter how much junk is up there?",
-    "summary": "The Kessler syndrome, also known as the Kessler effect, collisional cascading, or ablation cascade, is a scenario proposed by NASA scientists Donald J. Kessler and Burton G. Cour-Palais in 1978.",
-    "sources": [
-      {
-        "title": "Wikipedia: Kessler syndrome",
-        "url": "https://en.wikipedia.org/wiki/Kessler_syndrome"
-      },
-      {
-        "title": "ESA: Kessler syndrome",
-        "url": "https://www.esa.int/Space_Safety/Space_Debris"
-      }
-    ]
-  },
-  {
-    "id": "turing_test",
-    "category": "ai_future",
-    "category_title": "🤖 AI and the Future",
-    "title": "The Turing Test",
-    "brief": "Explain what the Turing test is and convince teachers whether modern chatbots have passed it.",
-    "audience": "преподаватели",
-    "audience_id": "teachers",
-    "quirk": "If a bot passes the test, does that mean it thinks?",
-    "trick": "If a bot passes the test, does that mean it thinks?",
-    "summary": "The Turing test was designed by Alan Turing to assess a machine's ability to exhibit intelligent behaviour equivalent to that of a human by imitating interactive dialogue. In the modern version, a human evaluator judges a text transcript of a natural-language conversation between a human and a machine.",
-    "sources": [
-      {
-        "title": "Wikipedia: Turing test",
-        "url": "https://en.wikipedia.org/wiki/Turing_test"
-      },
-      {
-        "title": "Britannica: Turing test",
-        "url": "https://www.britannica.com/technology/Turing-test"
-      },
-      {
-        "title": "Simple English Wikipedia: Turing test (easy English)",
-        "url": "https://simple.wikipedia.org/wiki/Turing_test"
-      }
-    ]
-  },
-  {
-    "id": "llm",
-    "category": "ai_future",
-    "category_title": "🤖 AI and the Future",
-    "title": "Large Language Models",
-    "brief": "Explain how ChatGPT \"predicts\" the next word and convince people to use it wisely.",
-    "audience": "широкая публика",
+    "id": "pizza_or_burger",
+    "category": "food",
+    "category_title": "🍕 Food",
+    "title": "Pizza or Burgers",
+    "brief": "Pick a side — pizza or burgers — and convince the room you are right.",
+    "audience": "general public",
     "audience_id": "public",
-    "quirk": "If it just predicts words, why should we trust it?",
-    "trick": "If it just predicts words, why should we trust it?",
-    "summary": "A large language model (LLM) is an AI model trained on a vast amount of text for natural language processing tasks, especially language generation. LLMs can typically generate, summarize, translate, and analyze text in many contexts.",
-    "sources": [
-      {
-        "title": "Wikipedia: Large language model",
-        "url": "https://en.wikipedia.org/wiki/Large_language_model"
-      },
-      {
-        "title": "IBM: Large language model",
-        "url": "https://www.ibm.com/think/topics/large-language-models"
-      },
-      {
-        "title": "Simple English Wikipedia: Large language model (easy English)",
-        "url": "https://simple.wikipedia.org/wiki/Large_language_model"
-      }
-    ]
+    "quirk": "What is the one good thing about the other side?",
+    "trick": "What is the one good thing about the other side?",
+    "summary": "Say your choice first, give three simple reasons, and finish by inviting the room to agree.",
+    "sources": []
   },
   {
-    "id": "singularity",
-    "category": "ai_future",
-    "category_title": "🤖 AI and the Future",
-    "title": "The Technological Singularity",
-    "brief": "Explain the idea of the singularity and convince the jury that it's near — or that it's a myth.",
-    "audience": "жюри конкурса",
-    "audience_id": "contest_jury",
-    "quirk": "Is this science or science fiction?",
-    "trick": "Is this science or science fiction?",
-    "summary": "The technological singularity, often simply called the singularity, is a hypothetical event in which technological growth accelerates beyond human control, producing unpredictable changes in human civilization. According to the most popular version of the singularity hypothesis, I. J.",
-    "sources": [
-      {
-        "title": "Wikipedia: Technological singularity",
-        "url": "https://en.wikipedia.org/wiki/Technological_singularity"
-      },
-      {
-        "title": "Simple English Wikipedia: Technological singularity (easy English)",
-        "url": "https://simple.wikipedia.org/wiki/Technological_singularity"
-      }
-    ]
-  },
-  {
-    "id": "deepfake",
-    "category": "ai_future",
-    "category_title": "🤖 AI and the Future",
-    "title": "Deepfakes",
-    "brief": "Explain how deepfakes are made and convince business people to protect their company from them.",
-    "audience": "бизнесмены",
-    "audience_id": "business",
-    "quirk": "Can't we just ban deepfakes by law?",
-    "trick": "Can't we just ban deepfakes by law?",
-    "summary": "Deepfakes are images, videos, or audio that have been edited or generated using artificial intelligence, AI-based tools or audio-video editing software.",
-    "sources": [
-      {
-        "title": "Wikipedia: Deepfake",
-        "url": "https://en.wikipedia.org/wiki/Deepfake"
-      },
-      {
-        "title": "Britannica: Deepfake",
-        "url": "https://www.britannica.com/technology/deepfake"
-      },
-      {
-        "title": "Simple English Wikipedia: Deepfake (easy English)",
-        "url": "https://simple.wikipedia.org/wiki/Deepfake"
-      }
-    ]
-  },
-  {
-    "id": "growth_mindset",
-    "category": "psychology",
-    "category_title": "🌱 Psychology and Habits",
-    "title": "Growth Mindset",
-    "brief": "Explain the difference between a fixed and a growth mindset and convince teachers to praise effort, not talent.",
-    "audience": "преподаватели",
-    "audience_id": "teachers",
-    "quirk": "Recent studies show a small effect — isn't it just a motivational slogan?",
-    "trick": "Recent studies show a small effect — isn't it just a motivational slogan?",
-    "summary": "A mindset refers to an established set of attitudes of a person or group concerning culture, values, philosophy, frame of reference, outlook, or disposition. Person A is said to have a theory of mind (ToM) about person B, relating mindset research to ToM.",
-    "sources": [
-      {
-        "title": "Wikipedia: Mindset",
-        "url": "https://en.wikipedia.org/wiki/Mindset"
-      },
-      {
-        "title": "Verywell Mind: Mindset",
-        "url": "https://www.verywellmind.com/what-is-a-mindset-2795025"
-      },
-      {
-        "title": "Simple English Wikipedia: Mindset (easy English)",
-        "url": "https://simple.wikipedia.org/wiki/Mindset"
-      }
-    ]
-  },
-  {
-    "id": "flow",
-    "category": "psychology",
-    "category_title": "🌱 Psychology and Habits",
-    "title": "Flow State",
-    "brief": "Explain what a flow state is and convince business people to organize work so employees can reach it.",
-    "audience": "бизнесмены",
-    "audience_id": "business",
-    "quirk": "Artists get into flow, but how do you get there in accounting?",
-    "trick": "Artists get into flow, but how do you get there in accounting?",
-    "summary": "Flow in positive psychology, also known colloquially as being in the zone or focused, is the mental state in which a person performing some activity is fully immersed in a feeling of energized focus, full involvement, and enjoyment in the process of the activity.",
-    "sources": [
-      {
-        "title": "Wikipedia: Flow (psychology)",
-        "url": "https://en.wikipedia.org/wiki/Flow_(psychology)"
-      },
-      {
-        "title": "Verywell Mind: Flow (psychology)",
-        "url": "https://www.verywellmind.com/what-is-flow-2794768"
-      },
-      {
-        "title": "Simple English Wikipedia: Flow (psychology) (easy English)",
-        "url": "https://simple.wikipedia.org/wiki/Flow_(psychology)"
-      }
-    ]
-  },
-  {
-    "id": "placebo",
-    "category": "psychology",
-    "category_title": "🌱 Psychology and Habits",
-    "title": "The Placebo Effect",
-    "brief": "Explain why a \"sugar pill\" can heal and convince people it shows the power of the brain, not a trick.",
-    "audience": "широкая публика",
+    "id": "dish_i_cook",
+    "category": "food",
+    "category_title": "🍕 Food",
+    "title": "A Dish I Can Cook",
+    "brief": "Tell the room about a dish you can cook and explain how to make it in simple steps.",
+    "audience": "general public",
     "audience_id": "public",
-    "quirk": "Then why do we need real medicine at all?",
-    "trick": "Then why do we need real medicine at all?",
-    "summary": "A placebo is a medicine or treatment intended to appear genuine to its recipient, but which has no pharmaceutical effect. Common placebos include inert tablets, inert injections, sham surgery, and other procedures.",
-    "sources": [
-      {
-        "title": "Wikipedia: Placebo",
-        "url": "https://en.wikipedia.org/wiki/Placebo"
-      },
-      {
-        "title": "Britannica: Placebo",
-        "url": "https://www.britannica.com/science/placebo"
-      },
-      {
-        "title": "Simple English Wikipedia: Placebo (easy English)",
-        "url": "https://simple.wikipedia.org/wiki/Placebo"
-      }
-    ]
+    "quirk": "What went wrong the first time you cooked it?",
+    "trick": "What went wrong the first time you cooked it?",
+    "summary": "Name the dish, list what you need, explain three steps, and finish with when you usually cook it.",
+    "sources": []
   },
   {
-    "id": "procrastination",
-    "category": "psychology",
-    "category_title": "🌱 Psychology and Habits",
-    "title": "Procrastination",
-    "brief": "Explain why we procrastinate and convince the jury it's an emotional problem, not laziness.",
-    "audience": "жюри конкурса",
-    "audience_id": "contest_jury",
-    "quirk": "Maybe it really is just laziness and you need to pull yourself together?",
-    "trick": "Maybe it really is just laziness and you need to pull yourself together?",
-    "summary": "Procrastination is an avoidance coping behavior that involves unnecessarily delaying or postponing something despite knowing that there could be negative consequences for doing so.",
-    "sources": [
-      {
-        "title": "Wikipedia: Procrastination",
-        "url": "https://en.wikipedia.org/wiki/Procrastination"
-      },
-      {
-        "title": "Verywell Mind: Procrastination",
-        "url": "https://www.verywellmind.com/the-psychology-of-procrastination-2795944"
-      },
-      {
-        "title": "Simple English Wikipedia: Procrastination (easy English)",
-        "url": "https://simple.wikipedia.org/wiki/Procrastination"
-      }
-    ]
-  },
-  {
-    "id": "four_day_week",
-    "category": "society",
-    "category_title": "🗳 Society and Debates",
-    "title": "The Four-Day Work Week",
-    "brief": "Convince business people to switch to a four-day work week — or prove that it's a mistake.",
-    "audience": "бизнесмены",
-    "audience_id": "business",
-    "quirk": "Who will answer customers on Fridays?",
-    "trick": "Who will answer customers on Fridays?",
-    "summary": "A four-day workweek is an arrangement where a workplace or place of education has its employees or students work or attend school, college or university over the course of four days per week rather than the more customary five-day workweek.",
-    "sources": [
-      {
-        "title": "Wikipedia: Four-day workweek",
-        "url": "https://en.wikipedia.org/wiki/Four-day_workweek"
-      },
-      {
-        "title": "4 Day Week Global — advocates of the 4-day week",
-        "url": "https://www.4dayweek.com/"
-      }
-    ]
-  },
-  {
-    "id": "filter_bubble",
-    "category": "society",
-    "category_title": "🗳 Society and Debates",
-    "title": "Filter Bubbles",
-    "brief": "Explain how algorithms lock us into a bubble of opinions and convince people to break out of it.",
-    "audience": "широкая публика",
+    "id": "cats_or_dogs",
+    "category": "animals",
+    "category_title": "🐶 Animals",
+    "title": "Cats or Dogs",
+    "brief": "Pick a side — cats or dogs — and convince the room you are right.",
+    "audience": "general public",
     "audience_id": "public",
-    "quirk": "What's wrong with my feed showing me what I'm interested in?",
-    "trick": "What's wrong with my feed showing me what I'm interested in?",
-    "summary": "A filter bubble is a state of intellectual isolation that arises when personalized searches, recommendation systems, and algorithmic curation selectively presents information to each user; the search results are based on information about the user, such as their location, past click-behavior, and search history.",
-    "sources": [
-      {
-        "title": "Wikipedia: Filter bubble",
-        "url": "https://en.wikipedia.org/wiki/Filter_bubble"
-      },
-      {
-        "title": "TED: Eli Pariser — Beware online filter bubbles (9 min)",
-        "url": "https://www.ted.com/talks/eli_pariser_beware_online_filter_bubbles"
-      },
-      {
-        "title": "Farnam Street: How Filter Bubbles Distort Reality",
-        "url": "https://fs.blog/filter-bubbles/"
-      }
-    ]
+    "quirk": "What is the best thing about the animal you did not pick?",
+    "trick": "What is the best thing about the animal you did not pick?",
+    "summary": "Say your choice first, give three simple reasons, tell one funny story, and finish with a clear last line.",
+    "sources": []
   },
   {
-    "id": "effective_altruism",
-    "category": "society",
-    "category_title": "🗳 Society and Debates",
-    "title": "Effective Altruism",
-    "brief": "Explain how to help others \"smartly\" using data and convince the jury that charity should be effective.",
-    "audience": "жюри конкурса",
-    "audience_id": "contest_jury",
-    "quirk": "Can you really measure other people's suffering in numbers?",
-    "trick": "Can you really measure other people's suffering in numbers?",
-    "summary": "Effective altruism (EA) is a 21st-century philosophical and social movement that advocates impartially calculating benefits and prioritizing causes to provide the greatest good.",
-    "sources": [
-      {
-        "title": "Wikipedia: Effective altruism",
-        "url": "https://en.wikipedia.org/wiki/Effective_altruism"
-      },
-      {
-        "title": "Britannica: Effective altruism",
-        "url": "https://www.britannica.com/topic/effective-altruism"
-      }
-    ]
-  },
-  {
-    "id": "minimalism",
-    "category": "society",
-    "category_title": "🗳 Society and Debates",
-    "title": "Minimalism",
-    "brief": "Explain the idea of \"fewer things, more life\" and convince teachers it's worth teaching young people.",
-    "audience": "преподаватели",
-    "audience_id": "teachers",
-    "quirk": "Isn't minimalism just an expensive style for people who already have everything?",
-    "trick": "Isn't minimalism just an expensive style for people who already have everything?",
-    "summary": "Simple living refers to practices that promote simplicity in one's lifestyle. Common practices of simple living include reducing the number of possessions one owns, depending less on technology and services, ascetism, and spending less money.",
-    "sources": [
-      {
-        "title": "Wikipedia: Simple living",
-        "url": "https://en.wikipedia.org/wiki/Simple_living"
-      },
-      {
-        "title": "Simple English Wikipedia: Simple living (easy English)",
-        "url": "https://simple.wikipedia.org/wiki/Simple_living"
-      }
-    ]
-  },
-  {
-    "id": "wabi_sabi",
-    "category": "culture",
-    "category_title": "🎨 Culture and Creativity",
-    "title": "Wabi-Sabi",
-    "brief": "Explain the Japanese beauty of imperfection and convince people to stop chasing perfection.",
-    "audience": "широкая публика",
+    "id": "why_have_a_pet",
+    "category": "animals",
+    "category_title": "🐶 Animals",
+    "title": "Why Everyone Needs a Pet",
+    "brief": "Convince the room that having a pet makes life better.",
+    "audience": "general public",
     "audience_id": "public",
-    "quirk": "Isn't that just an excuse for sloppy work?",
-    "trick": "Isn't that just an excuse for sloppy work?",
-    "summary": "In traditional Japanese aesthetics, wabi-sabi (侘び寂び) centers on the acceptance of transience and imperfection. It is often described as the appreciation of beauty that is \"imperfect, impermanent, and incomplete\". It is prevalent in many forms of Japanese art.",
-    "sources": [
-      {
-        "title": "Wikipedia: Wabi-sabi",
-        "url": "https://en.wikipedia.org/wiki/Wabi-sabi"
-      },
-      {
-        "title": "Simple English Wikipedia: Wabi-sabi (easy English)",
-        "url": "https://simple.wikipedia.org/wiki/Wabi-sabi"
-      }
-    ]
+    "quirk": "Who should not get a pet?",
+    "trick": "Who should not get a pet?",
+    "summary": "Say your main idea, give two good things a pet brings, tell one short example, and repeat your idea at the end.",
+    "sources": []
   },
   {
-    "id": "heros_journey",
-    "category": "culture",
-    "category_title": "🎨 Culture and Creativity",
-    "title": "The Hero's Journey",
-    "brief": "Explain the hero's journey structure and convince business people to build ads and pitches around it.",
-    "audience": "бизнесмены",
-    "audience_id": "business",
-    "quirk": "If every story follows the same template, isn't that boring?",
-    "trick": "If every story follows the same template, isn't that boring?",
-    "summary": "In narratology and comparative mythology, the hero's quest or hero's journey, also known as the monomyth, is the common template of stories that involve a hero who goes on an adventure, is victorious in a decisive crisis, and comes home changed or transformed.",
-    "sources": [
-      {
-        "title": "Wikipedia: Hero's journey",
-        "url": "https://en.wikipedia.org/wiki/Hero's_journey"
-      },
-      {
-        "title": "MasterClass: What Is the Hero's Journey?",
-        "url": "https://www.masterclass.com/articles/writing-101-what-is-the-heros-journey"
-      }
-    ]
-  },
-  {
-    "id": "golden_ratio",
-    "category": "culture",
-    "category_title": "🎨 Culture and Creativity",
-    "title": "The Golden Ratio",
-    "brief": "Explain what the golden ratio is and convince teachers where it really appears and where it's a myth.",
-    "audience": "преподаватели",
-    "audience_id": "teachers",
-    "quirk": "Isn't \"the golden ratio in the Parthenon\" just fitting the data to the answer?",
-    "trick": "Isn't \"the golden ratio in the Parthenon\" just fitting the data to the answer?",
-    "summary": "In mathematics, two quantities are in the golden ratio if their ratio is the same as the ratio of their sum to the larger of the two quantities. Expressed algebraically, for quantities ⁠⁠ and ⁠⁠ with ⁠⁠, ⁠⁠ is in a golden ratio to ⁠⁠ if\n\nwhere the Greek letter phi denotes the golden ratio.",
-    "sources": [
-      {
-        "title": "Wikipedia: Golden ratio",
-        "url": "https://en.wikipedia.org/wiki/Golden_ratio"
-      },
-      {
-        "title": "Britannica: Golden ratio",
-        "url": "https://www.britannica.com/science/golden-ratio"
-      },
-      {
-        "title": "Simple English Wikipedia: Golden ratio (easy English)",
-        "url": "https://simple.wikipedia.org/wiki/Golden_ratio"
-      }
-    ]
-  },
-  {
-    "id": "bauhaus",
-    "category": "culture",
-    "category_title": "🎨 Culture and Creativity",
-    "title": "Bauhaus",
-    "brief": "Explain the principle \"form follows function\" and convince the jury that Bauhaus still shapes the design around us.",
-    "audience": "жюри конкурса",
-    "audience_id": "contest_jury",
-    "quirk": "Didn't this style make cities gray and all the same?",
-    "trick": "Didn't this style make cities gray and all the same?",
-    "summary": "The Staatliches Bauhaus, commonly known as the Bauhaus, was a German art school operational from 1919 to 1933 that combined crafts and the fine arts. The school became famous for its approach to design, which attempted to unify individual artistic vision with the principles of mass production and emphasis on function.",
-    "sources": [
-      {
-        "title": "Wikipedia: Bauhaus",
-        "url": "https://en.wikipedia.org/wiki/Bauhaus"
-      },
-      {
-        "title": "Britannica: Bauhaus",
-        "url": "https://www.britannica.com/topic/Bauhaus"
-      },
-      {
-        "title": "Simple English Wikipedia: Bauhaus (easy English)",
-        "url": "https://simple.wikipedia.org/wiki/Bauhaus"
-      }
-    ]
-  },
-  {
-    "id": "printing_press",
-    "category": "history_ideas",
-    "category_title": "📜 Ideas That Changed History",
-    "title": "The Printing Press",
-    "brief": "Explain how the printing press changed the world and convince people the internet is its continuation.",
-    "audience": "широкая публика",
+    "id": "favourite_animal",
+    "category": "animals",
+    "category_title": "🐶 Animals",
+    "title": "My Favourite Animal",
+    "brief": "Tell the room about the animal you like most and what makes it special.",
+    "audience": "general public",
     "audience_id": "public",
-    "quirk": "The printing press spread lies too — isn't it the same with the internet?",
-    "trick": "The printing press spread lies too — isn't it the same with the internet?",
-    "summary": "A printing press is a machine that applies pressure to transfer ink onto a surface made of paper, cloth, or a similar material. Its workers are known as printing press operators. It marked a significant improvement on earlier methods, in which the paper was rubbed by hand to transfer applied ink to the printing surface.",
-    "sources": [
-      {
-        "title": "Wikipedia: Printing press",
-        "url": "https://en.wikipedia.org/wiki/Printing_press"
-      },
-      {
-        "title": "Britannica: Printing press",
-        "url": "https://www.britannica.com/technology/printing-press"
-      },
-      {
-        "title": "Simple English Wikipedia: Printing press (easy English)",
-        "url": "https://simple.wikipedia.org/wiki/Printing_press"
-      }
-    ]
+    "quirk": "If you could ask this animal one question, what would it be?",
+    "trick": "If you could ask this animal one question, what would it be?",
+    "summary": "Name the animal, describe how it looks and lives, share one fact you like, and finish with why you chose it.",
+    "sources": []
   },
   {
-    "id": "enlightenment",
-    "category": "history_ideas",
-    "category_title": "📜 Ideas That Changed History",
-    "title": "The Age of Enlightenment",
-    "brief": "Explain the main ideas of the Enlightenment and convince teachers we still need them today.",
-    "audience": "преподаватели",
-    "audience_id": "teachers",
-    "quirk": "Aren't 18th-century ideas outdated in the age of social media?",
-    "trick": "Aren't 18th-century ideas outdated in the age of social media?",
-    "summary": "The Age of Enlightenment, also known as the Age of Reason or simply the Enlightenment, was a period of intellectual and cultural flourishing in Europe and Western civilization, emerging in the late 17th century in Western Europe.",
-    "sources": [
-      {
-        "title": "Wikipedia: Age of Enlightenment",
-        "url": "https://en.wikipedia.org/wiki/Age_of_Enlightenment"
-      },
-      {
-        "title": "Britannica: Age of Enlightenment",
-        "url": "https://www.britannica.com/event/Enlightenment-European-history"
-      },
-      {
-        "title": "Simple English Wikipedia: Age of Enlightenment (easy English)",
-        "url": "https://simple.wikipedia.org/wiki/Age_of_Enlightenment"
-      }
-    ]
-  },
-  {
-    "id": "silk_road",
-    "category": "history_ideas",
-    "category_title": "📜 Ideas That Changed History",
-    "title": "The Silk Road",
-    "brief": "Explain what the Silk Road was and convince business people what it teaches us about trade today.",
-    "audience": "бизнесмены",
-    "audience_id": "business",
-    "quirk": "What can camel caravans teach us about modern trade?",
-    "trick": "What can camel caravans teach us about modern trade?",
-    "summary": "The Silk Road was a network of Asian trade routes active from the second century BCE until the mid-15th century. Spanning over 6,400 km (4,000 mi) on land, it played a central role in facilitating economic, cultural, political, and religious interactions between the Eastern and Western worlds.",
-    "sources": [
-      {
-        "title": "Wikipedia: Silk Road",
-        "url": "https://en.wikipedia.org/wiki/Silk_Road"
-      },
-      {
-        "title": "Britannica: Silk Road",
-        "url": "https://www.britannica.com/topic/Silk-Road-trade-route"
-      },
-      {
-        "title": "Simple English Wikipedia: Silk Road (easy English)",
-        "url": "https://simple.wikipedia.org/wiki/Silk_Road"
-      }
-    ]
-  },
-  {
-    "id": "scientific_method",
-    "category": "history_ideas",
-    "category_title": "📜 Ideas That Changed History",
-    "title": "The Scientific Method",
-    "brief": "Explain how the scientific method works and convince the jury to apply it to everyday decisions.",
-    "audience": "жюри конкурса",
-    "audience_id": "contest_jury",
-    "quirk": "Science makes mistakes too — why should we trust it?",
-    "trick": "Science makes mistakes too — why should we trust it?",
-    "summary": "The scientific method is an empirical method for acquiring knowledge through careful observation, rigorous skepticism, hypothesis testing, and experimental validation. Developed from ancient and medieval practices, it acknowledges that cognitive assumptions can distort the interpretation of the observation.",
-    "sources": [
-      {
-        "title": "Wikipedia: Scientific method",
-        "url": "https://en.wikipedia.org/wiki/Scientific_method"
-      },
-      {
-        "title": "Britannica: Scientific method",
-        "url": "https://www.britannica.com/science/scientific-method"
-      },
-      {
-        "title": "Simple English Wikipedia: Scientific method (easy English)",
-        "url": "https://simple.wikipedia.org/wiki/Scientific_method"
-      }
-    ]
-  },
-  {
-    "id": "prisoners_dilemma",
-    "category": "game_theory",
-    "category_title": "🎲 Game Theory and Decisions",
-    "title": "The Prisoner's Dilemma",
-    "brief": "Explain the prisoner's dilemma and convince business people when cooperating pays off more than competing.",
-    "audience": "бизнесмены",
-    "audience_id": "business",
-    "quirk": "In real business the tough ones win — why trust competitors?",
-    "trick": "In real business the tough ones win — why trust competitors?",
-    "summary": "In game theory, the prisoner's dilemma is a thought experiment involving two rational agents, each of whom can either cooperate for mutual benefit or betray their partner (\"defect\") for individual gain. The dilemma arises from the fact that while defecting is rational for each agent, cooperation yields a higher payoff for each.",
-    "sources": [
-      {
-        "title": "Wikipedia: Prisoner's dilemma",
-        "url": "https://en.wikipedia.org/wiki/Prisoner's_dilemma"
-      },
-      {
-        "title": "Britannica: Prisoner's dilemma",
-        "url": "https://www.britannica.com/topic/prisoners-dilemma"
-      },
-      {
-        "title": "Simple English Wikipedia: Prisoner's dilemma (easy English)",
-        "url": "https://simple.wikipedia.org/wiki/Prisoner's_dilemma"
-      }
-    ]
-  },
-  {
-    "id": "nash_equilibrium",
-    "category": "game_theory",
-    "category_title": "🎲 Game Theory and Decisions",
-    "title": "Nash Equilibrium",
-    "brief": "Explain Nash equilibrium with a real-life example and convince teachers that game theory isn't just for mathematicians.",
-    "audience": "преподаватели",
-    "audience_id": "teachers",
-    "quirk": "People aren't rational — does this work outside the textbook?",
-    "trick": "People aren't rational — does this work outside the textbook?",
-    "summary": "In game theory, a Nash equilibrium is a situation where no player could gain more by changing their own strategy in a game. A Nash equilibrium is the most commonly used solution concept for non-cooperative games.",
-    "sources": [
-      {
-        "title": "Wikipedia: Nash equilibrium",
-        "url": "https://en.wikipedia.org/wiki/Nash_equilibrium"
-      },
-      {
-        "title": "Investopedia: Nash equilibrium",
-        "url": "https://www.investopedia.com/terms/n/nash-equilibrium.asp"
-      },
-      {
-        "title": "Simple English Wikipedia: Nash equilibrium (easy English)",
-        "url": "https://simple.wikipedia.org/wiki/Nash_equilibrium"
-      }
-    ]
-  },
-  {
-    "id": "gamification",
-    "category": "game_theory",
-    "category_title": "🎲 Game Theory and Decisions",
-    "title": "Gamification",
-    "brief": "Explain how game mechanics change behavior and convince the jury to use them in learning or work.",
-    "audience": "жюри конкурса",
-    "audience_id": "contest_jury",
-    "quirk": "Doesn't it turn everything into chasing points instead of meaning?",
-    "trick": "Doesn't it turn everything into chasing points instead of meaning?",
-    "summary": "Gamification is the process of integrating game design elements and principles into non-game contexts in order to increase user engagement and motivation. It is a component of system design.",
-    "sources": [
-      {
-        "title": "Wikipedia: Gamification",
-        "url": "https://en.wikipedia.org/wiki/Gamification"
-      },
-      {
-        "title": "Simple English Wikipedia: Gamification (easy English)",
-        "url": "https://simple.wikipedia.org/wiki/Gamification"
-      }
-    ]
-  },
-  {
-    "id": "butterfly_effect",
-    "category": "game_theory",
-    "category_title": "🎲 Game Theory and Decisions",
-    "title": "The Butterfly Effect",
-    "brief": "Explain how small things lead to big consequences and convince people to value small decisions.",
-    "audience": "широкая публика",
+    "id": "animal_i_would_be",
+    "category": "animals",
+    "category_title": "🐶 Animals",
+    "title": "If I Were an Animal",
+    "brief": "Tell the room which animal you would like to be for one day and why.",
+    "audience": "general public",
     "audience_id": "public",
-    "quirk": "If everything is unpredictable, why plan anything at all?",
-    "trick": "If everything is unpredictable, why plan anything at all?",
-    "summary": "In chaos theory, the butterfly effect is the sensitive dependence on initial conditions in which a small change in one state of a deterministic nonlinear system can result in large differences in a later state.",
-    "sources": [
-      {
-        "title": "Wikipedia: Butterfly effect",
-        "url": "https://en.wikipedia.org/wiki/Butterfly_effect"
-      },
-      {
-        "title": "Britannica: Butterfly effect",
-        "url": "https://www.britannica.com/science/butterfly-effect"
-      },
-      {
-        "title": "Simple English Wikipedia: Butterfly effect (easy English)",
-        "url": "https://simple.wikipedia.org/wiki/Butterfly_effect"
-      }
-    ]
+    "quirk": "What would be the worst part of that day?",
+    "trick": "What would be the worst part of that day?",
+    "summary": "Name the animal, say what you would do in the morning and in the evening, and finish with what you would learn.",
+    "sources": []
+  },
+  {
+    "id": "my_hobby",
+    "category": "free_time",
+    "category_title": "🎮 Free Time",
+    "title": "My Hobby",
+    "brief": "Tell the room about your hobby and why they might enjoy it too.",
+    "audience": "general public",
+    "audience_id": "public",
+    "quirk": "How much time and money does a beginner need?",
+    "trick": "How much time and money does a beginner need?",
+    "summary": "Say what your hobby is, how you started, what you like about it, and finish with how to try it this week.",
+    "sources": []
+  },
+  {
+    "id": "perfect_weekend",
+    "category": "free_time",
+    "category_title": "🎮 Free Time",
+    "title": "My Perfect Weekend",
+    "brief": "Describe your perfect weekend from Saturday morning to Sunday night.",
+    "audience": "general public",
+    "audience_id": "public",
+    "quirk": "What would ruin this weekend?",
+    "trick": "What would ruin this weekend?",
+    "summary": "Go in order: Saturday morning, Saturday evening, Sunday. Finish with the best moment of the whole weekend.",
+    "sources": []
+  },
+  {
+    "id": "film_to_watch",
+    "category": "free_time",
+    "category_title": "🎮 Free Time",
+    "title": "A Film Everyone Should Watch",
+    "brief": "Tell the room about a film you love and convince them to watch it — without spoilers.",
+    "audience": "general public",
+    "audience_id": "public",
+    "quirk": "Who would not like this film?",
+    "trick": "Who would not like this film?",
+    "summary": "Name the film, say what it is about in two sentences, give two reasons to watch it, and finish with when to watch it.",
+    "sources": []
+  },
+  {
+    "id": "favourite_game",
+    "category": "free_time",
+    "category_title": "🎮 Free Time",
+    "title": "My Favourite Game",
+    "brief": "Tell the room about a game you love — a video game, a board game or a sport — and explain how it works.",
+    "audience": "general public",
+    "audience_id": "public",
+    "quirk": "What do you do when you lose?",
+    "trick": "What do you do when you lose?",
+    "summary": "Name the game, explain the rules in three sentences, say why it is fun, and finish with who you play it with.",
+    "sources": []
+  },
+  {
+    "id": "best_place",
+    "category": "travel",
+    "category_title": "✈️ Travel",
+    "title": "The Best Place I Have Been",
+    "brief": "Tell the room about the best place you have visited and what you did there.",
+    "audience": "general public",
+    "audience_id": "public",
+    "quirk": "What was the one thing you did not like there?",
+    "trick": "What was the one thing you did not like there?",
+    "summary": "Say where it was and when, describe what you saw, tell one small story, and finish with whether you would go back.",
+    "sources": []
+  },
+  {
+    "id": "sea_or_mountains",
+    "category": "travel",
+    "category_title": "✈️ Travel",
+    "title": "Sea or Mountains",
+    "brief": "Pick a side — a holiday by the sea or in the mountains — and convince the room.",
+    "audience": "general public",
+    "audience_id": "public",
+    "quirk": "What would make you choose the other one?",
+    "trick": "What would make you choose the other one?",
+    "summary": "Say your choice first, give three simple reasons, and finish with a picture of your perfect day there.",
+    "sources": []
+  },
+  {
+    "id": "dream_trip",
+    "category": "travel",
+    "category_title": "✈️ Travel",
+    "title": "My Dream Trip",
+    "brief": "Tell the room where you would go if you could travel anywhere, and what you would do.",
+    "audience": "general public",
+    "audience_id": "public",
+    "quirk": "What is stopping you from going right now?",
+    "trick": "What is stopping you from going right now?",
+    "summary": "Name the place, say why you chose it, list three things you would do, and finish with who you would take.",
+    "sources": []
+  },
+  {
+    "id": "visit_my_city",
+    "category": "travel",
+    "category_title": "✈️ Travel",
+    "title": "Why You Should Visit My City",
+    "brief": "Convince the room to spend a weekend in your city or town.",
+    "audience": "general public",
+    "audience_id": "public",
+    "quirk": "What is the worst season to come?",
+    "trick": "What is the worst season to come?",
+    "summary": "Start with one thing your city is known for, add two places to see and one thing to eat, and finish with an invitation.",
+    "sources": []
+  },
+  {
+    "id": "favourite_subject",
+    "category": "school",
+    "category_title": "🎒 School and Work",
+    "title": "My Favourite Subject",
+    "brief": "Tell the room which school subject you like most and why.",
+    "audience": "teachers",
+    "audience_id": "teachers",
+    "quirk": "Which subject do you like least, and is that fair?",
+    "trick": "Which subject do you like least, and is that fair?",
+    "summary": "Name the subject, give two reasons you like it, tell about one good lesson, and finish with how it helps you.",
+    "sources": []
+  },
+  {
+    "id": "dream_job",
+    "category": "school",
+    "category_title": "🎒 School and Work",
+    "title": "My Dream Job",
+    "brief": "Tell the room what job you would love to have and what a day at this job looks like.",
+    "audience": "teachers",
+    "audience_id": "teachers",
+    "quirk": "What is the boring part of this job?",
+    "trick": "What is the boring part of this job?",
+    "summary": "Name the job, describe one working day, say why it fits you, and finish with your first step towards it.",
+    "sources": []
+  },
+  {
+    "id": "best_teacher",
+    "category": "school",
+    "category_title": "🎒 School and Work",
+    "title": "The Best Teacher I Had",
+    "brief": "Tell the room about a teacher you remember and what made them good.",
+    "audience": "teachers",
+    "audience_id": "teachers",
+    "quirk": "What did this teacher do when students did not listen?",
+    "trick": "What did this teacher do when students did not listen?",
+    "summary": "Say who the teacher was, tell one story from a lesson, name what you learned, and finish with a thank you.",
+    "sources": []
+  },
+  {
+    "id": "homework",
+    "category": "school",
+    "category_title": "🎒 School and Work",
+    "title": "Is Homework Useful?",
+    "brief": "Take a side — homework is useful or not — and convince the room.",
+    "audience": "teachers",
+    "audience_id": "teachers",
+    "quirk": "What would students do with the free time?",
+    "trick": "What would students do with the free time?",
+    "summary": "Say your opinion first, give two reasons and one example from your own life, and repeat your opinion at the end.",
+    "sources": []
+  },
+  {
+    "id": "early_bird_or_owl",
+    "category": "everyday",
+    "category_title": "☕ Everyday Life",
+    "title": "Early Bird or Night Owl",
+    "brief": "Say whether you are a morning person or a night person and convince the room your way is better.",
+    "audience": "general public",
+    "audience_id": "public",
+    "quirk": "What do you miss because of it?",
+    "trick": "What do you miss because of it?",
+    "summary": "Say which one you are, describe your best hours, give two reasons it works, and finish with one tip.",
+    "sources": []
+  },
+  {
+    "id": "why_sleep",
+    "category": "everyday",
+    "category_title": "☕ Everyday Life",
+    "title": "Why Sleep Matters",
+    "brief": "Convince the room to go to bed earlier tonight.",
+    "audience": "general public",
+    "audience_id": "public",
+    "quirk": "What do you do when you cannot fall asleep?",
+    "trick": "What do you do when you cannot fall asleep?",
+    "summary": "Say your main idea, tell how you feel after a bad night and after a good one, and finish with one simple rule.",
+    "sources": []
+  },
+  {
+    "id": "day_without_phone",
+    "category": "everyday",
+    "category_title": "☕ Everyday Life",
+    "title": "A Day Without My Phone",
+    "brief": "Tell the room what a day without your phone would look like — good and bad.",
+    "audience": "general public",
+    "audience_id": "public",
+    "quirk": "How long before you would give up?",
+    "trick": "How long before you would give up?",
+    "summary": "Go through the day: morning, afternoon, evening. Say what would be hard and what would be nice, then finish with your verdict.",
+    "sources": []
+  },
+  {
+    "id": "walking",
+    "category": "everyday",
+    "category_title": "☕ Everyday Life",
+    "title": "Why Walking Is Great",
+    "brief": "Convince the room to walk more every day.",
+    "audience": "general public",
+    "audience_id": "public",
+    "quirk": "What do you do when it rains?",
+    "trick": "What do you do when it rains?",
+    "summary": "Say your main idea, give three simple reasons, tell about your favourite walk, and finish with a small challenge for the room.",
+    "sources": []
+  },
+  {
+    "id": "favourite_app",
+    "category": "gadgets",
+    "category_title": "📱 Gadgets",
+    "title": "My Favourite App",
+    "brief": "Tell the room about the app you use most and why it is worth installing.",
+    "audience": "general public",
+    "audience_id": "public",
+    "quirk": "What annoys you about this app?",
+    "trick": "What annoys you about this app?",
+    "summary": "Name the app, say what it does in one sentence, show how you use it, and finish with who it is for.",
+    "sources": []
+  },
+  {
+    "id": "no_internet",
+    "category": "gadgets",
+    "category_title": "📱 Gadgets",
+    "title": "A Week Without the Internet",
+    "brief": "Tell the room what you would do if the internet stopped working for a week.",
+    "audience": "general public",
+    "audience_id": "public",
+    "quirk": "What would you miss the most?",
+    "trick": "What would you miss the most?",
+    "summary": "Say how you would feel on day one, list three things you would do instead, and finish with what you would learn.",
+    "sources": []
+  },
+  {
+    "id": "video_games_good",
+    "category": "gadgets",
+    "category_title": "📱 Gadgets",
+    "title": "Video Games Are Good for You",
+    "brief": "Convince the room that playing video games can be good for you.",
+    "audience": "general public",
+    "audience_id": "public",
+    "quirk": "How many hours a day is too many?",
+    "trick": "How many hours a day is too many?",
+    "summary": "Say your main idea, give two good things games teach, add one example, and finish with a fair rule for playing.",
+    "sources": []
+  },
+  {
+    "id": "thing_i_use_daily",
+    "category": "gadgets",
+    "category_title": "📱 Gadgets",
+    "title": "A Thing I Use Every Day",
+    "brief": "Pick one thing you use every day and tell the room why you could not live without it.",
+    "audience": "general public",
+    "audience_id": "public",
+    "quirk": "What did you use before you had it?",
+    "trick": "What did you use before you had it?",
+    "summary": "Name the thing, say when you got it, describe how you use it in a day, and finish with why it matters to you.",
+    "sources": []
+  },
+  {
+    "id": "favourite_sport",
+    "category": "sport_health",
+    "category_title": "⚽ Sport and Health",
+    "title": "My Favourite Sport",
+    "brief": "Tell the room about the sport you like most — to play or to watch.",
+    "audience": "general public",
+    "audience_id": "public",
+    "quirk": "Why do some people find this sport boring?",
+    "trick": "Why do some people find this sport boring?",
+    "summary": "Name the sport, explain it in two sentences, tell about one great moment, and finish with how to start.",
+    "sources": []
+  },
+  {
+    "id": "morning_exercise",
+    "category": "sport_health",
+    "category_title": "⚽ Sport and Health",
+    "title": "Ten Minutes of Exercise",
+    "brief": "Convince the room to do ten minutes of exercise every morning.",
+    "audience": "general public",
+    "audience_id": "public",
+    "quirk": "What is your excuse on lazy days?",
+    "trick": "What is your excuse on lazy days?",
+    "summary": "Say your main idea, give two simple reasons, show what the ten minutes look like, and finish with a challenge.",
+    "sources": []
+  },
+  {
+    "id": "drink_water",
+    "category": "sport_health",
+    "category_title": "⚽ Sport and Health",
+    "title": "Drink More Water",
+    "brief": "Convince the room to drink more water every day.",
+    "audience": "general public",
+    "audience_id": "public",
+    "quirk": "How do you remember to drink it?",
+    "trick": "How do you remember to drink it?",
+    "summary": "Say your main idea, tell how you feel when you forget to drink, give two simple tips, and finish with one clear ask.",
+    "sources": []
+  },
+  {
+    "id": "team_or_solo",
+    "category": "sport_health",
+    "category_title": "⚽ Sport and Health",
+    "title": "Team Sport or Solo Sport",
+    "brief": "Pick a side — playing in a team or training alone — and convince the room.",
+    "audience": "general public",
+    "audience_id": "public",
+    "quirk": "When is the other way better?",
+    "trick": "When is the other way better?",
+    "summary": "Say your choice first, give three simple reasons, tell one story, and finish with a clear last line.",
+    "sources": []
+  },
+  {
+    "id": "summer_or_winter",
+    "category": "seasons",
+    "category_title": "🌦 Seasons and Holidays",
+    "title": "Summer or Winter",
+    "brief": "Pick a side — summer or winter — and convince the room you are right.",
+    "audience": "general public",
+    "audience_id": "public",
+    "quirk": "What is the best thing about the season you did not pick?",
+    "trick": "What is the best thing about the season you did not pick?",
+    "summary": "Say your choice first, give three simple reasons, describe one perfect day, and finish with a clear last line.",
+    "sources": []
+  },
+  {
+    "id": "favourite_holiday",
+    "category": "seasons",
+    "category_title": "🌦 Seasons and Holidays",
+    "title": "My Favourite Holiday",
+    "brief": "Tell the room about the holiday you like most and how you celebrate it.",
+    "audience": "general public",
+    "audience_id": "public",
+    "quirk": "What would you change about this holiday?",
+    "trick": "What would you change about this holiday?",
+    "summary": "Name the holiday, say who you spend it with, describe what you eat and do, and finish with your best memory.",
+    "sources": []
+  },
+  {
+    "id": "rainy_day",
+    "category": "seasons",
+    "category_title": "🌦 Seasons and Holidays",
+    "title": "What To Do on a Rainy Day",
+    "brief": "Give the room your best plan for a rainy day at home.",
+    "audience": "general public",
+    "audience_id": "public",
+    "quirk": "What if the rain lasts a whole week?",
+    "trick": "What if the rain lasts a whole week?",
+    "summary": "Start with how a rainy day feels, list three things to do, and finish with your favourite one.",
+    "sources": []
+  },
+  {
+    "id": "best_gift",
+    "category": "seasons",
+    "category_title": "🌦 Seasons and Holidays",
+    "title": "The Best Gift I Ever Got",
+    "brief": "Tell the room about the best gift you have received and why it was special.",
+    "audience": "general public",
+    "audience_id": "public",
+    "quirk": "What is the best gift you have given to someone?",
+    "trick": "What is the best gift you have given to someone?",
+    "summary": "Say what the gift was and who gave it, tell the story of that day, and finish with where the gift is now.",
+    "sources": []
+  },
+  {
+    "id": "favourite_book",
+    "category": "things_i_love",
+    "category_title": "🎁 Things I Love",
+    "title": "A Book I Love",
+    "brief": "Tell the room about a book you love and convince them to read it — without spoilers.",
+    "audience": "general public",
+    "audience_id": "public",
+    "quirk": "Who would not like this book?",
+    "trick": "Who would not like this book?",
+    "summary": "Name the book, say what it is about in two sentences, give two reasons to read it, and finish with who it is for.",
+    "sources": []
+  },
+  {
+    "id": "favourite_song",
+    "category": "things_i_love",
+    "category_title": "🎁 Things I Love",
+    "title": "My Favourite Song",
+    "brief": "Tell the room about a song you love and how it makes you feel.",
+    "audience": "general public",
+    "audience_id": "public",
+    "quirk": "Will you still like it in ten years?",
+    "trick": "Will you still like it in ten years?",
+    "summary": "Name the song, say when you first heard it, describe the feeling, and finish with the best moment to listen to it.",
+    "sources": []
+  },
+  {
+    "id": "favourite_place_at_home",
+    "category": "things_i_love",
+    "category_title": "🎁 Things I Love",
+    "title": "My Favourite Place at Home",
+    "brief": "Describe your favourite corner at home and what you do there.",
+    "audience": "general public",
+    "audience_id": "public",
+    "quirk": "What would you add to this place?",
+    "trick": "What would you add to this place?",
+    "summary": "Say where the place is, describe what is around you, say what you do there, and finish with why you feel good in it.",
+    "sources": []
+  },
+  {
+    "id": "favourite_colour",
+    "category": "things_i_love",
+    "category_title": "🎁 Things I Love",
+    "title": "My Favourite Colour",
+    "brief": "Tell the room about your favourite colour and where it shows up in your life.",
+    "audience": "general public",
+    "audience_id": "public",
+    "quirk": "Has your favourite colour ever changed?",
+    "trick": "Has your favourite colour ever changed?",
+    "summary": "Name the colour, list three things you own in it, say how it makes you feel, and finish with one fun fact.",
+    "sources": []
+  },
+  {
+    "id": "superpower",
+    "category": "what_if",
+    "category_title": "💭 What If",
+    "title": "My Superpower",
+    "brief": "Tell the room which superpower you would choose and what you would do with it.",
+    "audience": "general public",
+    "audience_id": "public",
+    "quirk": "What could go wrong with this power?",
+    "trick": "What could go wrong with this power?",
+    "summary": "Name the power, say what you would do on the first day, give one way it helps other people, and finish with a rule for yourself.",
+    "sources": []
+  },
+  {
+    "id": "million",
+    "category": "what_if",
+    "category_title": "💭 What If",
+    "title": "If I Had a Million",
+    "brief": "Tell the room what you would do if you suddenly had a million.",
+    "audience": "general public",
+    "audience_id": "public",
+    "quirk": "What would you never spend it on?",
+    "trick": "What would you never spend it on?",
+    "summary": "Say your first purchase, then one thing for other people and one thing for the future, and finish with what would stay the same.",
+    "sources": []
+  },
+  {
+    "id": "dinner_guest",
+    "category": "what_if",
+    "category_title": "💭 What If",
+    "title": "Dinner With Anyone",
+    "brief": "Tell the room which person — real or from a story — you would invite to dinner and why.",
+    "audience": "general public",
+    "audience_id": "public",
+    "quirk": "What would you be afraid to ask them?",
+    "trick": "What would you be afraid to ask them?",
+    "summary": "Name the person, say why you chose them, list two questions you would ask, and finish with what you would cook.",
+    "sources": []
+  },
+  {
+    "id": "one_rule",
+    "category": "what_if",
+    "category_title": "💭 What If",
+    "title": "One Rule for Everyone",
+    "brief": "If everybody had to follow one new rule, what should it be? Convince the room.",
+    "audience": "general public",
+    "audience_id": "public",
+    "quirk": "Who would hate this rule?",
+    "trick": "Who would hate this rule?",
+    "summary": "Say the rule first, give two reasons it helps, show one example, and repeat the rule at the end.",
+    "sources": []
   }
 ]

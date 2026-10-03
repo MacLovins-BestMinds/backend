@@ -2,13 +2,13 @@
   {
     "id": "stoicism",
     "category": "philosophy",
-    "category_title": "🏛 Философия жизни",
-    "title": "Стоицизм (Stoicism)",
-    "brief": "Объясни простыми словами, что такое стоицизм, и убеди преподавателей, что его стоит разбирать со студентами.",
+    "category_title": "🏛 Philosophy for Life",
+    "title": "Stoicism",
+    "brief": "Explain in simple words what Stoicism is and convince teachers it's worth discussing with students.",
     "audience": "преподаватели",
     "audience_id": "teachers",
-    "quirk": "Разве стоицизм — это не просто подавлять эмоции?",
-    "trick": "Разве стоицизм — это не просто подавлять эмоции?",
+    "quirk": "Isn't Stoicism just about suppressing your emotions?",
+    "trick": "Isn't Stoicism just about suppressing your emotions?",
     "summary": "Stoicism is a philosophical movement and practical guide to living, emphasizing daily self-discipline and moral improvement, which originated in the Hellenistic period of ancient Greece and continued well into the Roman Imperial period.",
     "sources": [
       {
@@ -20,7 +20,7 @@
         "url": "https://www.britannica.com/topic/Stoicism"
       },
       {
-        "title": "Simple English Wikipedia: Stoicism (простой английский)",
+        "title": "Simple English Wikipedia: Stoicism (easy English)",
         "url": "https://simple.wikipedia.org/wiki/Stoicism"
       }
     ]
@@ -28,13 +28,13 @@
   {
     "id": "utilitarianism",
     "category": "philosophy",
-    "category_title": "🏛 Философия жизни",
-    "title": "Утилитаризм (Utilitarianism)",
-    "brief": "Объясни идею «наибольшего блага для наибольшего числа людей» и убеди жюри, что она помогает принимать решения.",
+    "category_title": "🏛 Philosophy for Life",
+    "title": "Utilitarianism",
+    "brief": "Explain the idea of \"the greatest good for the greatest number\" and convince the jury it helps people make decisions.",
     "audience": "жюри конкурса",
     "audience_id": "contest_jury",
-    "quirk": "Значит, можно пожертвовать одним человеком ради пятерых?",
-    "trick": "Значит, можно пожертвовать одним человеком ради пятерых?",
+    "quirk": "So it's fine to sacrifice one person to save five?",
+    "trick": "So it's fine to sacrifice one person to save five?",
     "summary": "Utilitarianism is a family of theories in normative ethics that prescribe actions that maximize happiness and well-being for all affected individuals. In other words, utilitarian ideas encourage actions that lead to the greatest good for the greatest number.",
     "sources": [
       {
@@ -46,7 +46,7 @@
         "url": "https://www.britannica.com/topic/utilitarianism-philosophy"
       },
       {
-        "title": "Simple English Wikipedia: Utilitarianism (простой английский)",
+        "title": "Simple English Wikipedia: Utilitarianism (easy English)",
         "url": "https://simple.wikipedia.org/wiki/Utilitarianism"
       }
     ]
@@ -54,13 +54,13 @@
   {
     "id": "existentialism",
     "category": "philosophy",
-    "category_title": "🏛 Философия жизни",
-    "title": "Экзистенциализм (Existentialism)",
-    "brief": "Объясни, что значит «существование предшествует сущности», и убеди обычных людей, что эта идея даёт свободу, а не тоску.",
+    "category_title": "🏛 Philosophy for Life",
+    "title": "Existentialism",
+    "brief": "Explain what \"existence precedes essence\" means and convince ordinary people that this idea brings freedom, not despair.",
     "audience": "широкая публика",
     "audience_id": "public",
-    "quirk": "Если у жизни нет заданного смысла, зачем вообще что-то делать?",
-    "trick": "Если у жизни нет заданного смысла, зачем вообще что-то делать?",
+    "quirk": "If life has no given meaning, why do anything at all?",
+    "trick": "If life has no given meaning, why do anything at all?",
     "summary": "Existentialism is a family of philosophical views and inquiry that explore the human individual's struggle to lead an authentic life despite the apparent absurdity or incomprehensibility of existence.",
     "sources": [
       {
@@ -72,7 +72,7 @@
         "url": "https://www.britannica.com/topic/existentialism"
       },
       {
-        "title": "Simple English Wikipedia: Existentialism (простой английский)",
+        "title": "Simple English Wikipedia: Existentialism (easy English)",
         "url": "https://simple.wikipedia.org/wiki/Existentialism"
       }
     ]
@@ -80,13 +80,13 @@
   {
     "id": "ikigai",
     "category": "philosophy",
-    "category_title": "🏛 Философия жизни",
-    "title": "Икигай (Ikigai)",
-    "brief": "Объясни японскую идею икигай и убеди бизнесменов, что она помогает удерживать сотрудников.",
+    "category_title": "🏛 Philosophy for Life",
+    "title": "Ikigai",
+    "brief": "Explain the Japanese idea of ikigai and convince business people it helps keep employees.",
     "audience": "бизнесмены",
     "audience_id": "business",
-    "quirk": "Разве схема из четырёх кругов — не западная выдумка, а не японская традиция?",
-    "trick": "Разве схема из четырёх кругов — не западная выдумка, а не японская традиция?",
+    "quirk": "Isn't the four-circle diagram a Western invention rather than a Japanese tradition?",
+    "trick": "Isn't the four-circle diagram a Western invention rather than a Japanese tradition?",
     "summary": "Ikigai  is a Japanese concept of an individual's definition of the meaning of their life.",
     "sources": [
       {
@@ -102,13 +102,13 @@
   {
     "id": "dunning_kruger",
     "category": "thinking_traps",
-    "category_title": "🧠 Ловушки мышления",
-    "title": "Эффект Даннинга — Крюгера (Dunning–Kruger effect)",
-    "brief": "Объясни, почему новички переоценивают себя, и убеди преподавателей учитывать это при оценивании.",
+    "category_title": "🧠 Thinking Traps",
+    "title": "The Dunning–Kruger Effect",
+    "brief": "Explain why beginners overestimate themselves and convince teachers to take this into account when grading.",
     "audience": "преподаватели",
     "audience_id": "teachers",
-    "quirk": "Говорят, этот эффект — статистический артефакт. Он вообще существует?",
-    "trick": "Говорят, этот эффект — статистический артефакт. Он вообще существует?",
+    "quirk": "Some say this effect is just a statistical artifact. Does it even exist?",
+    "trick": "Some say this effect is just a statistical artifact. Does it even exist?",
     "summary": "The Dunning–Kruger effect is a cognitive bias that describes the systematic tendency of people with low ability in a specific area to give overly positive assessments of their ability. The term may also refer to the tendency of high performers to underestimate their skills.",
     "sources": [
       {
@@ -120,7 +120,7 @@
         "url": "https://www.britannica.com/science/Dunning-Kruger-effect"
       },
       {
-        "title": "Simple English Wikipedia: Dunning–Kruger effect (простой английский)",
+        "title": "Simple English Wikipedia: Dunning–Kruger effect (easy English)",
         "url": "https://simple.wikipedia.org/wiki/Dunning%E2%80%93Kruger_effect"
       }
     ]
@@ -128,13 +128,13 @@
   {
     "id": "sunk_cost",
     "category": "thinking_traps",
-    "category_title": "🧠 Ловушки мышления",
-    "title": "Ошибка невозвратных затрат (Sunk cost fallacy)",
-    "brief": "Объясни на примере, что такое ловушка невозвратных затрат, и убеди бизнесменов вовремя закрывать провальные проекты.",
+    "category_title": "🧠 Thinking Traps",
+    "title": "The Sunk Cost Fallacy",
+    "brief": "Explain the sunk cost trap with an example and convince business people to shut down failing projects in time.",
     "audience": "бизнесмены",
     "audience_id": "business",
-    "quirk": "А разве упорство — не главное качество предпринимателя?",
-    "trick": "А разве упорство — не главное качество предпринимателя?",
+    "quirk": "Isn't persistence the most important quality of an entrepreneur?",
+    "trick": "Isn't persistence the most important quality of an entrepreneur?",
     "summary": "In economics and business decision-making, a sunk cost is a cost that has already been incurred and cannot be recovered. Sunk costs are contrasted with prospective costs, which are future costs that may be avoided if action is taken.",
     "sources": [
       {
@@ -150,13 +150,13 @@
   {
     "id": "confirmation_bias",
     "category": "thinking_traps",
-    "category_title": "🧠 Ловушки мышления",
-    "title": "Предвзятость подтверждения (Confirmation bias)",
-    "brief": "Объясни, почему мы замечаем только то, во что уже верим, и убеди людей проверять новости.",
+    "category_title": "🧠 Thinking Traps",
+    "title": "Confirmation Bias",
+    "brief": "Explain why we only notice what we already believe and convince people to fact-check the news.",
     "audience": "широкая публика",
     "audience_id": "public",
-    "quirk": "А как понять, что сейчас предвзят не ты сам?",
-    "trick": "А как понять, что сейчас предвзят не ты сам?",
+    "quirk": "How do you know you're not the biased one right now?",
+    "trick": "How do you know you're not the biased one right now?",
     "summary": "Confirmation bias is the tendency to search for, interpret, favor and recall information in a way that confirms or supports one's prior beliefs, values, or decisions.",
     "sources": [
       {
@@ -172,13 +172,13 @@
   {
     "id": "impostor_syndrome",
     "category": "thinking_traps",
-    "category_title": "🧠 Ловушки мышления",
-    "title": "Синдром самозванца (Impostor syndrome)",
-    "brief": "Объясни, что такое синдром самозванца, и убеди жюри, что о нём нужно говорить открыто.",
+    "category_title": "🧠 Thinking Traps",
+    "title": "Impostor Syndrome",
+    "brief": "Explain what impostor syndrome is and convince the jury we need to talk about it openly.",
     "audience": "жюри конкурса",
     "audience_id": "contest_jury",
-    "quirk": "Может, человек и правда не дотягивает, а мы называем это синдромом?",
-    "trick": "Может, человек и правда не дотягивает, а мы называем это синдромом?",
+    "quirk": "What if the person really isn't good enough and we just call it a syndrome?",
+    "trick": "What if the person really isn't good enough and we just call it a syndrome?",
     "summary": "Impostor syndrome, also known as impostor phenomenon, impostorism, or impostor thoughts, is a psychological experience in which a person suffers from feelings of intellectual and/or professional fraudulence.",
     "sources": [
       {
@@ -194,13 +194,13 @@
   {
     "id": "first_principles",
     "category": "mental_models",
-    "category_title": "💡 Ментальные модели",
-    "title": "Мышление от первых принципов (First principles)",
-    "brief": "Объясни, как разбирать проблему до базовых фактов, и убеди бизнесменов думать так вместо копирования конкурентов.",
+    "category_title": "💡 Mental Models",
+    "title": "First Principles Thinking",
+    "brief": "Explain how to break a problem down to basic facts and convince business people to think this way instead of copying competitors.",
     "audience": "бизнесмены",
     "audience_id": "business",
-    "quirk": "Это же долго — зачем изобретать велосипед?",
-    "trick": "Это же долго — зачем изобретать велосипед?",
+    "quirk": "That takes forever — why reinvent the wheel?",
+    "trick": "That takes forever — why reinvent the wheel?",
     "summary": "In philosophy and science, a first principle is a basic proposition or assumption that cannot be deduced from any other proposition or assumption. First principles in philosophy are from first cause attitudes and taught by Aristotelians, and nuanced versions of first principles are referred to as postulates by Kantians.",
     "sources": [
       {
@@ -216,13 +216,13 @@
   {
     "id": "occams_razor",
     "category": "mental_models",
-    "category_title": "💡 Ментальные модели",
-    "title": "Бритва Оккама (Occam's razor)",
-    "brief": "Объясни принцип «не умножай сущности без необходимости» и убеди преподавателей учить ему студентов.",
+    "category_title": "💡 Mental Models",
+    "title": "Occam's Razor",
+    "brief": "Explain the principle \"don't multiply entities beyond necessity\" and convince teachers to teach it to students.",
     "audience": "преподаватели",
     "audience_id": "teachers",
-    "quirk": "Но мир сложный — разве самое простое объяснение не бывает неверным?",
-    "trick": "Но мир сложный — разве самое простое объяснение не бывает неверным?",
+    "quirk": "The world is complex — isn't the simplest explanation often wrong?",
+    "trick": "The world is complex — isn't the simplest explanation often wrong?",
     "summary": "In philosophy, Occam's razor is the problem-solving principle that recommends searching for explanations constructed with the smallest possible set of elements. It is also known as the principle of parsimony or the law of parsimony.",
     "sources": [
       {
@@ -234,7 +234,7 @@
         "url": "https://www.britannica.com/topic/Occams-razor"
       },
       {
-        "title": "Simple English Wikipedia: Occam's razor (простой английский)",
+        "title": "Simple English Wikipedia: Occam's razor (easy English)",
         "url": "https://simple.wikipedia.org/wiki/Occam's_razor"
       }
     ]
@@ -242,13 +242,13 @@
   {
     "id": "pareto",
     "category": "mental_models",
-    "category_title": "💡 Ментальные модели",
-    "title": "Принцип Парето 80/20 (Pareto principle)",
-    "brief": "Объясни правило 80/20 на примерах из жизни и убеди людей применять его к своим делам.",
+    "category_title": "💡 Mental Models",
+    "title": "The Pareto Principle (80/20 Rule)",
+    "brief": "Explain the 80/20 rule with everyday examples and convince people to apply it to their own lives.",
     "audience": "широкая публика",
     "audience_id": "public",
-    "quirk": "Откуда именно 80 и 20 — это закон природы или подгонка?",
-    "trick": "Откуда именно 80 и 20 — это закон природы или подгонка?",
+    "quirk": "Why exactly 80 and 20 — is it a law of nature or just curve-fitting?",
+    "trick": "Why exactly 80 and 20 — is it a law of nature or just curve-fitting?",
     "summary": "The Pareto principle states that, for many outcomes, roughly 80% of consequences come from 20% of causes.",
     "sources": [
       {
@@ -260,7 +260,7 @@
         "url": "https://www.investopedia.com/terms/p/paretoprinciple.asp"
       },
       {
-        "title": "Simple English Wikipedia: Pareto principle (простой английский)",
+        "title": "Simple English Wikipedia: Pareto principle (easy English)",
         "url": "https://simple.wikipedia.org/wiki/Pareto_principle"
       }
     ]
@@ -268,13 +268,13 @@
   {
     "id": "hanlons_razor",
     "category": "mental_models",
-    "category_title": "💡 Ментальные модели",
-    "title": "Бритва Хэнлона (Hanlon's razor)",
-    "brief": "Объясни правило «не ищи злой умысел там, где хватит глупости» и убеди жюри, что оно снижает конфликты.",
+    "category_title": "💡 Mental Models",
+    "title": "Hanlon's Razor",
+    "brief": "Explain the rule \"never attribute to malice what is adequately explained by stupidity\" and convince the jury it reduces conflict.",
     "audience": "жюри конкурса",
     "audience_id": "contest_jury",
-    "quirk": "А если человек действительно действует со злым умыслом?",
-    "trick": "А если человек действительно действует со злым умыслом?",
+    "quirk": "And what if someone really is acting with bad intentions?",
+    "trick": "And what if someone really is acting with bad intentions?",
     "summary": "Hanlon's razor is an adage or rule of thumb that states, \"Never attribute to malice that which is adequately explained by stupidity.\" It is a philosophical razor that promotes a way of eliminating unlikely explanations for human behavior, purportedly named after the American writer Robert J.",
     "sources": [
       {
@@ -286,7 +286,7 @@
         "url": "https://fs.blog/mental-model-hanlons-razor/"
       },
       {
-        "title": "Simple English Wikipedia: Hanlon's razor (простой английский)",
+        "title": "Simple English Wikipedia: Hanlon's razor (easy English)",
         "url": "https://simple.wikipedia.org/wiki/Hanlon's_razor"
       }
     ]
@@ -294,13 +294,13 @@
   {
     "id": "opportunity_cost",
     "category": "economics",
-    "category_title": "💸 Экономика простыми словами",
-    "title": "Альтернативные издержки (Opportunity cost)",
-    "brief": "Объясни, что у любого выбора есть скрытая цена, и убеди людей учитывать её при покупках и выборе работы.",
+    "category_title": "💸 Economics Made Simple",
+    "title": "Opportunity Cost",
+    "brief": "Explain that every choice has a hidden price and convince people to consider it when shopping or choosing a job.",
     "audience": "широкая публика",
     "audience_id": "public",
-    "quirk": "Если всё время считать упущенное, как вообще радоваться своему выбору?",
-    "trick": "Если всё время считать упущенное, как вообще радоваться своему выбору?",
+    "quirk": "If you keep counting what you missed, how can you ever enjoy your choice?",
+    "trick": "If you keep counting what you missed, how can you ever enjoy your choice?",
     "summary": "In microeconomic theory, the opportunity cost of a choice is the value of the best alternative forgone where, given limited resources, a choice needs to be made between several mutually exclusive alternatives.",
     "sources": [
       {
@@ -312,7 +312,7 @@
         "url": "https://www.investopedia.com/terms/o/opportunitycost.asp"
       },
       {
-        "title": "Simple English Wikipedia: Opportunity cost (простой английский)",
+        "title": "Simple English Wikipedia: Opportunity cost (easy English)",
         "url": "https://simple.wikipedia.org/wiki/Opportunity_cost"
       }
     ]
@@ -320,13 +320,13 @@
   {
     "id": "inflation",
     "category": "economics",
-    "category_title": "💸 Экономика простыми словами",
-    "title": "Инфляция (Inflation)",
-    "brief": "Объясни, почему деньги дешевеют, и убеди преподавателей учить финансовой грамотности со школы.",
+    "category_title": "💸 Economics Made Simple",
+    "title": "Inflation",
+    "brief": "Explain why money loses value and convince teachers to teach financial literacy from school age.",
     "audience": "преподаватели",
     "audience_id": "teachers",
-    "quirk": "Зачем школьникам это знать, если у них ещё нет своих денег?",
-    "trick": "Зачем школьникам это знать, если у них ещё нет своих денег?",
+    "quirk": "Why should kids learn this if they don't have their own money yet?",
+    "trick": "Why should kids learn this if they don't have their own money yet?",
     "summary": "In economics, inflation is an increase in the average price of goods and services in terms of money, though it originally referred to the increase of the money supply that can cause such a universal shift. This increase is measured using a price index, typically a consumer price index (CPI).",
     "sources": [
       {
@@ -338,7 +338,7 @@
         "url": "https://www.investopedia.com/terms/i/inflation.asp"
       },
       {
-        "title": "Simple English Wikipedia: Inflation (простой английский)",
+        "title": "Simple English Wikipedia: Inflation (easy English)",
         "url": "https://simple.wikipedia.org/wiki/Inflation"
       }
     ]
@@ -346,13 +346,13 @@
   {
     "id": "tragedy_of_commons",
     "category": "economics",
-    "category_title": "💸 Экономика простыми словами",
-    "title": "Трагедия общин (Tragedy of the commons)",
-    "brief": "Объясни, почему общие ресурсы истощаются, и предложи жюри, как это остановить.",
+    "category_title": "💸 Economics Made Simple",
+    "title": "The Tragedy of the Commons",
+    "brief": "Explain why shared resources get depleted and propose to the jury how to stop it.",
     "audience": "жюри конкурса",
     "audience_id": "contest_jury",
-    "quirk": "Элинор Остром показала, что общины умеют договариваться. Так проблема вообще есть?",
-    "trick": "Элинор Остром показала, что общины умеют договариваться. Так проблема вообще есть?",
+    "quirk": "Elinor Ostrom showed communities can manage shared resources. So is there even a problem?",
+    "trick": "Elinor Ostrom showed communities can manage shared resources. So is there even a problem?",
     "summary": "The tragedy of the commons is the idea that when a resource is shared and can benefit the individual at a cost to the community, it is rational for the individual to overuse the resource, even though this collectively leads to the depletion of the resource for everyone.",
     "sources": [
       {
@@ -364,7 +364,7 @@
         "url": "https://www.britannica.com/topic/tragedy-of-the-commons"
       },
       {
-        "title": "Simple English Wikipedia: Tragedy of the commons (простой английский)",
+        "title": "Simple English Wikipedia: Tragedy of the commons (easy English)",
         "url": "https://simple.wikipedia.org/wiki/Tragedy_of_the_commons"
       }
     ]
@@ -372,13 +372,13 @@
   {
     "id": "ubi",
     "category": "economics",
-    "category_title": "💸 Экономика простыми словами",
-    "title": "Безусловный базовый доход (Universal basic income)",
-    "brief": "Объясни идею безусловного базового дохода, займи позицию за или против и убеди бизнесменов.",
+    "category_title": "💸 Economics Made Simple",
+    "title": "Universal Basic Income",
+    "brief": "Explain the idea of universal basic income, take a side for or against, and convince business people.",
     "audience": "бизнесмены",
     "audience_id": "business",
-    "quirk": "Кто будет работать, если деньги дают просто так?",
-    "trick": "Кто будет работать, если деньги дают просто так?",
+    "quirk": "Who will work if money is given away for free?",
+    "trick": "Who will work if money is given away for free?",
     "summary": "Universal basic income (UBI) is a social welfare proposal in which all members of a given population regularly receive a minimum income in the form of an unconditional transfer payment, i.e., without a means test or need to perform work.",
     "sources": [
       {
@@ -390,7 +390,7 @@
         "url": "https://www.investopedia.com/terms/b/basic-income.asp"
       },
       {
-        "title": "Simple English Wikipedia: Basic income (простой английский)",
+        "title": "Simple English Wikipedia: Basic income (easy English)",
         "url": "https://simple.wikipedia.org/wiki/Basic_income"
       }
     ]
@@ -398,13 +398,13 @@
   {
     "id": "crispr",
     "category": "science",
-    "category_title": "🧬 Наука, которая меняет мир",
-    "title": "Генная редактура (CRISPR)",
-    "brief": "Объясни, как CRISPR «вырезает» гены, и убеди людей, что это шанс, а не угроза.",
+    "category_title": "🧬 Science That Changes the World",
+    "title": "CRISPR Gene Editing",
+    "brief": "Explain how CRISPR \"cuts\" genes and convince people it's an opportunity, not a threat.",
     "audience": "широкая публика",
     "audience_id": "public",
-    "quirk": "А если начнут делать «дизайнерских детей»?",
-    "trick": "А если начнут делать «дизайнерских детей»?",
+    "quirk": "What if people start making \"designer babies\"?",
+    "trick": "What if people start making \"designer babies\"?",
     "summary": "CRISPR is a family of DNA sequences found in the genomes of prokaryotic organisms such as bacteria and archaea. Each sequence within an individual prokaryotic CRISPR is derived from a DNA fragment of a bacteriophage that had previously infected the prokaryote or one of its ancestors.",
     "sources": [
       {
@@ -416,7 +416,7 @@
         "url": "https://www.britannica.com/technology/CRISPR"
       },
       {
-        "title": "Simple English Wikipedia: CRISPR (простой английский)",
+        "title": "Simple English Wikipedia: CRISPR (easy English)",
         "url": "https://simple.wikipedia.org/wiki/CRISPR"
       }
     ]
@@ -424,13 +424,13 @@
   {
     "id": "herd_immunity",
     "category": "science",
-    "category_title": "🧬 Наука, которая меняет мир",
-    "title": "Коллективный иммунитет (Herd immunity)",
-    "brief": "Объясни, как прививка одного защищает других, и убеди преподавателей рассказывать об этом детям.",
+    "category_title": "🧬 Science That Changes the World",
+    "title": "Herd Immunity",
+    "brief": "Explain how one person's vaccination protects others and convince teachers to tell children about it.",
     "audience": "преподаватели",
     "audience_id": "teachers",
-    "quirk": "Если почти все вокруг привиты, зачем прививаться мне?",
-    "trick": "Если почти все вокруг привиты, зачем прививаться мне?",
+    "quirk": "If almost everyone around me is vaccinated, why should I get vaccinated?",
+    "trick": "If almost everyone around me is vaccinated, why should I get vaccinated?",
     "summary": "Herd immunity is a form of indirect protection that applies only to contagious diseases.",
     "sources": [
       {
@@ -442,7 +442,7 @@
         "url": "https://www.britannica.com/science/herd-immunity"
       },
       {
-        "title": "Simple English Wikipedia: Herd immunity (простой английский)",
+        "title": "Simple English Wikipedia: Herd immunity (easy English)",
         "url": "https://simple.wikipedia.org/wiki/Herd_immunity"
       }
     ]
@@ -450,13 +450,13 @@
   {
     "id": "quantum_computing",
     "category": "science",
-    "category_title": "🧬 Наука, которая меняет мир",
-    "title": "Квантовые компьютеры (Quantum computing)",
-    "brief": "Объясни простыми словами, чем квантовый компьютер отличается от обычного, и убеди бизнесменов следить за этой технологией.",
+    "category_title": "🧬 Science That Changes the World",
+    "title": "Quantum Computing",
+    "brief": "Explain in simple words how a quantum computer differs from a regular one and convince business people to keep an eye on this technology.",
     "audience": "бизнесмены",
     "audience_id": "business",
-    "quirk": "Их обещают уже 20 лет — может, это вечное «через десять лет»?",
-    "trick": "Их обещают уже 20 лет — может, это вечное «через десять лет»?",
+    "quirk": "They've been promised for 20 years — isn't it always \"ten years away\"?",
+    "trick": "They've been promised for 20 years — isn't it always \"ten years away\"?",
     "summary": "A quantum computer is a computer that represents and processes information using quantum states. Quantum computations exploit phenomena such as superposition, interference, and entanglement. Quantum computers have the potential to complete some calculations exponentially faster than classical computers.",
     "sources": [
       {
@@ -468,7 +468,7 @@
         "url": "https://www.ibm.com/think/topics/quantum-computing"
       },
       {
-        "title": "Simple English Wikipedia: Quantum computer (простой английский)",
+        "title": "Simple English Wikipedia: Quantum computer (easy English)",
         "url": "https://simple.wikipedia.org/wiki/Quantum_computer"
       }
     ]
@@ -476,13 +476,13 @@
   {
     "id": "microbiome",
     "category": "science",
-    "category_title": "🧬 Наука, которая меняет мир",
-    "title": "Микробиом человека (Human microbiome)",
-    "brief": "Объясни, как бактерии внутри нас влияют на здоровье и настроение, и убеди жюри, что это одно из главных открытий медицины.",
+    "category_title": "🧬 Science That Changes the World",
+    "title": "The Human Microbiome",
+    "brief": "Explain how the bacteria inside us affect health and mood and convince the jury it's one of the biggest discoveries in medicine.",
     "audience": "жюри конкурса",
     "audience_id": "contest_jury",
-    "quirk": "Не слишком ли громкие выводы делают из исследований на мышах?",
-    "trick": "Не слишком ли громкие выводы делают из исследований на мышах?",
+    "quirk": "Aren't these big claims based mostly on studies in mice?",
+    "trick": "Aren't these big claims based mostly on studies in mice?",
     "summary": "The human microbiome is the aggregate of all microbiota that reside on or within human tissues and biofluids along with the corresponding anatomical sites in which they reside, including the gastrointestinal tract, skin, mammary glands, seminal fluid, uterus, ovarian follicles, lung, saliva, oral mucosa, ocular surface, and the biliary tract.",
     "sources": [
       {
@@ -490,7 +490,7 @@
         "url": "https://en.wikipedia.org/wiki/Human_microbiome"
       },
       {
-        "title": "Simple English Wikipedia: Human microbiome (простой английский)",
+        "title": "Simple English Wikipedia: Human microbiome (easy English)",
         "url": "https://simple.wikipedia.org/wiki/Human_microbiome"
       }
     ]
@@ -498,13 +498,13 @@
   {
     "id": "fermi_paradox",
     "category": "space",
-    "category_title": "🚀 Космос и Вселенная",
-    "title": "Парадокс Ферми (Fermi paradox)",
-    "brief": "Объясни, почему мы до сих пор не встретили инопланетян, и убеди зал в своей версии ответа.",
+    "category_title": "🚀 Space and the Universe",
+    "title": "The Fermi Paradox",
+    "brief": "Explain why we still haven't met aliens and convince the audience of your answer.",
     "audience": "широкая публика",
     "audience_id": "public",
-    "quirk": "А может, мы просто плохо ищем?",
-    "trick": "А может, мы просто плохо ищем?",
+    "quirk": "Maybe we're just not looking hard enough?",
+    "trick": "Maybe we're just not looking hard enough?",
     "summary": "The Fermi paradox is the seeming inconsistency between the lack of evidence of extraterrestrial civilizations and the apparently high likelihood of their existence.",
     "sources": [
       {
@@ -516,7 +516,7 @@
         "url": "https://www.britannica.com/science/Fermi-paradox"
       },
       {
-        "title": "Simple English Wikipedia: Fermi paradox (простой английский)",
+        "title": "Simple English Wikipedia: Fermi paradox (easy English)",
         "url": "https://simple.wikipedia.org/wiki/Fermi_paradox"
       }
     ]
@@ -524,13 +524,13 @@
   {
     "id": "black_holes",
     "category": "space",
-    "category_title": "🚀 Космос и Вселенная",
-    "title": "Чёрные дыры (Black hole)",
-    "brief": "Объясни без формул, что такое чёрная дыра, и убеди преподавателей, что о ней стоит говорить в школе.",
+    "category_title": "🚀 Space and the Universe",
+    "title": "Black Holes",
+    "brief": "Explain what a black hole is without formulas and convince teachers it's worth discussing at school.",
     "audience": "преподаватели",
     "audience_id": "teachers",
-    "quirk": "Как изучать то, что невозможно увидеть?",
-    "trick": "Как изучать то, что невозможно увидеть?",
+    "quirk": "How can you study something you can't see?",
+    "trick": "How can you study something you can't see?",
     "summary": "A black hole is an astronomical body so compact that its gravity prevents anything, including light, from escaping. Albert Einstein's theory of general relativity, which describes gravitation as the curvature of spacetime, predicts that any sufficiently compact mass will form a black hole.",
     "sources": [
       {
@@ -542,7 +542,7 @@
         "url": "https://science.nasa.gov/universe/black-holes/"
       },
       {
-        "title": "Simple English Wikipedia: Black hole (простой английский)",
+        "title": "Simple English Wikipedia: Black hole (easy English)",
         "url": "https://simple.wikipedia.org/wiki/Black_hole"
       }
     ]
@@ -550,13 +550,13 @@
   {
     "id": "terraforming_mars",
     "category": "space",
-    "category_title": "🚀 Космос и Вселенная",
-    "title": "Терраформирование Марса (Terraforming of Mars)",
-    "brief": "Объясни, как Марс можно сделать пригодным для жизни, и убеди бизнесменов, что в это стоит вкладываться уже сейчас.",
+    "category_title": "🚀 Space and the Universe",
+    "title": "Terraforming Mars",
+    "brief": "Explain how Mars could be made habitable and convince business people it's worth investing in now.",
     "audience": "бизнесмены",
     "audience_id": "business",
-    "quirk": "Не проще ли спасти Землю, чем строить вторую?",
-    "trick": "Не проще ли спасти Землю, чем строить вторую?",
+    "quirk": "Wouldn't it be easier to save Earth than to build a second one?",
+    "trick": "Wouldn't it be easier to save Earth than to build a second one?",
     "summary": "The terraforming of Mars is a hypothetical procedure that would consist of a planetary engineering project or concurrent projects aspiring to transform Mars from a planet hostile to life to one that could sustainably host humans and other lifeforms free of protection or mediation.",
     "sources": [
       {
@@ -564,7 +564,7 @@
         "url": "https://en.wikipedia.org/wiki/Terraforming_of_Mars"
       },
       {
-        "title": "Simple English Wikipedia: Terraforming of Mars (простой английский)",
+        "title": "Simple English Wikipedia: Terraforming of Mars (easy English)",
         "url": "https://simple.wikipedia.org/wiki/Terraforming_of_Mars"
       }
     ]
@@ -572,13 +572,13 @@
   {
     "id": "kessler_syndrome",
     "category": "space",
-    "category_title": "🚀 Космос и Вселенная",
-    "title": "Космический мусор (Kessler syndrome)",
-    "brief": "Объясни, как обломки на орбите могут запереть нас на Земле, и предложи жюри решение.",
+    "category_title": "🚀 Space and the Universe",
+    "title": "Space Debris and the Kessler Syndrome",
+    "brief": "Explain how debris in orbit could trap us on Earth and propose a solution to the jury.",
     "audience": "жюри конкурса",
     "audience_id": "contest_jury",
-    "quirk": "Космос огромный — какая разница, сколько там мусора?",
-    "trick": "Космос огромный — какая разница, сколько там мусора?",
+    "quirk": "Space is huge — why does it matter how much junk is up there?",
+    "trick": "Space is huge — why does it matter how much junk is up there?",
     "summary": "The Kessler syndrome, also known as the Kessler effect, collisional cascading, or ablation cascade, is a scenario proposed by NASA scientists Donald J. Kessler and Burton G. Cour-Palais in 1978.",
     "sources": [
       {
@@ -594,13 +594,13 @@
   {
     "id": "turing_test",
     "category": "ai_future",
-    "category_title": "🤖 ИИ и будущее",
-    "title": "Тест Тьюринга (Turing test)",
-    "brief": "Объясни, что такое тест Тьюринга, и убеди преподавателей, прошли ли его современные чат-боты.",
+    "category_title": "🤖 AI and the Future",
+    "title": "The Turing Test",
+    "brief": "Explain what the Turing test is and convince teachers whether modern chatbots have passed it.",
     "audience": "преподаватели",
     "audience_id": "teachers",
-    "quirk": "Если бот прошёл тест, значит, он думает?",
-    "trick": "Если бот прошёл тест, значит, он думает?",
+    "quirk": "If a bot passes the test, does that mean it thinks?",
+    "trick": "If a bot passes the test, does that mean it thinks?",
     "summary": "The Turing test was designed by Alan Turing to assess a machine's ability to exhibit intelligent behaviour equivalent to that of a human by imitating interactive dialogue. In the modern version, a human evaluator judges a text transcript of a natural-language conversation between a human and a machine.",
     "sources": [
       {
@@ -612,7 +612,7 @@
         "url": "https://www.britannica.com/technology/Turing-test"
       },
       {
-        "title": "Simple English Wikipedia: Turing test (простой английский)",
+        "title": "Simple English Wikipedia: Turing test (easy English)",
         "url": "https://simple.wikipedia.org/wiki/Turing_test"
       }
     ]
@@ -620,13 +620,13 @@
   {
     "id": "llm",
     "category": "ai_future",
-    "category_title": "🤖 ИИ и будущее",
-    "title": "Большие языковые модели (Large language model)",
-    "brief": "Объясни, как ChatGPT «угадывает» следующее слово, и убеди людей пользоваться им с умом.",
+    "category_title": "🤖 AI and the Future",
+    "title": "Large Language Models",
+    "brief": "Explain how ChatGPT \"predicts\" the next word and convince people to use it wisely.",
     "audience": "широкая публика",
     "audience_id": "public",
-    "quirk": "Если он просто угадывает слова, почему ему можно доверять?",
-    "trick": "Если он просто угадывает слова, почему ему можно доверять?",
+    "quirk": "If it just predicts words, why should we trust it?",
+    "trick": "If it just predicts words, why should we trust it?",
     "summary": "A large language model (LLM) is an AI model trained on a vast amount of text for natural language processing tasks, especially language generation. LLMs can typically generate, summarize, translate, and analyze text in many contexts.",
     "sources": [
       {
@@ -638,7 +638,7 @@
         "url": "https://www.ibm.com/think/topics/large-language-models"
       },
       {
-        "title": "Simple English Wikipedia: Large language model (простой английский)",
+        "title": "Simple English Wikipedia: Large language model (easy English)",
         "url": "https://simple.wikipedia.org/wiki/Large_language_model"
       }
     ]
@@ -646,13 +646,13 @@
   {
     "id": "singularity",
     "category": "ai_future",
-    "category_title": "🤖 ИИ и будущее",
-    "title": "Технологическая сингулярность (Technological singularity)",
-    "brief": "Объясни идею сингулярности и убеди жюри, что она близко — или что это миф.",
+    "category_title": "🤖 AI and the Future",
+    "title": "The Technological Singularity",
+    "brief": "Explain the idea of the singularity and convince the jury that it's near — or that it's a myth.",
     "audience": "жюри конкурса",
     "audience_id": "contest_jury",
-    "quirk": "Это наука или научная фантастика?",
-    "trick": "Это наука или научная фантастика?",
+    "quirk": "Is this science or science fiction?",
+    "trick": "Is this science or science fiction?",
     "summary": "The technological singularity, often simply called the singularity, is a hypothetical event in which technological growth accelerates beyond human control, producing unpredictable changes in human civilization. According to the most popular version of the singularity hypothesis, I. J.",
     "sources": [
       {
@@ -660,7 +660,7 @@
         "url": "https://en.wikipedia.org/wiki/Technological_singularity"
       },
       {
-        "title": "Simple English Wikipedia: Technological singularity (простой английский)",
+        "title": "Simple English Wikipedia: Technological singularity (easy English)",
         "url": "https://simple.wikipedia.org/wiki/Technological_singularity"
       }
     ]
@@ -668,13 +668,13 @@
   {
     "id": "deepfake",
     "category": "ai_future",
-    "category_title": "🤖 ИИ и будущее",
-    "title": "Дипфейки (Deepfake)",
-    "brief": "Объясни, как создаются дипфейки, и убеди бизнесменов защищать от них свою компанию.",
+    "category_title": "🤖 AI and the Future",
+    "title": "Deepfakes",
+    "brief": "Explain how deepfakes are made and convince business people to protect their company from them.",
     "audience": "бизнесмены",
     "audience_id": "business",
-    "quirk": "Разве нельзя просто запретить дипфейки законом?",
-    "trick": "Разве нельзя просто запретить дипфейки законом?",
+    "quirk": "Can't we just ban deepfakes by law?",
+    "trick": "Can't we just ban deepfakes by law?",
     "summary": "Deepfakes are images, videos, or audio that have been edited or generated using artificial intelligence, AI-based tools or audio-video editing software.",
     "sources": [
       {
@@ -686,7 +686,7 @@
         "url": "https://www.britannica.com/technology/deepfake"
       },
       {
-        "title": "Simple English Wikipedia: Deepfake (простой английский)",
+        "title": "Simple English Wikipedia: Deepfake (easy English)",
         "url": "https://simple.wikipedia.org/wiki/Deepfake"
       }
     ]
@@ -694,13 +694,13 @@
   {
     "id": "growth_mindset",
     "category": "psychology",
-    "category_title": "🌱 Психология и привычки",
-    "title": "Мышление роста (Growth mindset)",
-    "brief": "Объясни разницу между фиксированным мышлением и мышлением роста и убеди преподавателей хвалить за усилия, а не за талант.",
+    "category_title": "🌱 Psychology and Habits",
+    "title": "Growth Mindset",
+    "brief": "Explain the difference between a fixed and a growth mindset and convince teachers to praise effort, not talent.",
     "audience": "преподаватели",
     "audience_id": "teachers",
-    "quirk": "Новые исследования показывают слабый эффект — может, это просто мотивационный лозунг?",
-    "trick": "Новые исследования показывают слабый эффект — может, это просто мотивационный лозунг?",
+    "quirk": "Recent studies show a small effect — isn't it just a motivational slogan?",
+    "trick": "Recent studies show a small effect — isn't it just a motivational slogan?",
     "summary": "A mindset refers to an established set of attitudes of a person or group concerning culture, values, philosophy, frame of reference, outlook, or disposition. Person A is said to have a theory of mind (ToM) about person B, relating mindset research to ToM.",
     "sources": [
       {
@@ -712,7 +712,7 @@
         "url": "https://www.verywellmind.com/what-is-a-mindset-2795025"
       },
       {
-        "title": "Simple English Wikipedia: Mindset (простой английский)",
+        "title": "Simple English Wikipedia: Mindset (easy English)",
         "url": "https://simple.wikipedia.org/wiki/Mindset"
       }
     ]
@@ -720,13 +720,13 @@
   {
     "id": "flow",
     "category": "psychology",
-    "category_title": "🌱 Психология и привычки",
-    "title": "Состояние потока (Flow)",
-    "brief": "Объясни, что такое состояние потока, и убеди бизнесменов строить работу так, чтобы сотрудники в него попадали.",
+    "category_title": "🌱 Psychology and Habits",
+    "title": "Flow State",
+    "brief": "Explain what a flow state is and convince business people to organize work so employees can reach it.",
     "audience": "бизнесмены",
     "audience_id": "business",
-    "quirk": "Поток бывает у художников, но как попасть в него в бухгалтерии?",
-    "trick": "Поток бывает у художников, но как попасть в него в бухгалтерии?",
+    "quirk": "Artists get into flow, but how do you get there in accounting?",
+    "trick": "Artists get into flow, but how do you get there in accounting?",
     "summary": "Flow in positive psychology, also known colloquially as being in the zone or focused, is the mental state in which a person performing some activity is fully immersed in a feeling of energized focus, full involvement, and enjoyment in the process of the activity.",
     "sources": [
       {
@@ -738,7 +738,7 @@
         "url": "https://www.verywellmind.com/what-is-flow-2794768"
       },
       {
-        "title": "Simple English Wikipedia: Flow (psychology) (простой английский)",
+        "title": "Simple English Wikipedia: Flow (psychology) (easy English)",
         "url": "https://simple.wikipedia.org/wiki/Flow_(psychology)"
       }
     ]
@@ -746,13 +746,13 @@
   {
     "id": "placebo",
     "category": "psychology",
-    "category_title": "🌱 Психология и привычки",
-    "title": "Эффект плацебо (Placebo)",
-    "brief": "Объясни, почему «пустышка» может лечить, и убеди людей, что это говорит о силе мозга, а не об обмане.",
+    "category_title": "🌱 Psychology and Habits",
+    "title": "The Placebo Effect",
+    "brief": "Explain why a \"sugar pill\" can heal and convince people it shows the power of the brain, not a trick.",
     "audience": "широкая публика",
     "audience_id": "public",
-    "quirk": "Тогда зачем вообще нужны настоящие лекарства?",
-    "trick": "Тогда зачем вообще нужны настоящие лекарства?",
+    "quirk": "Then why do we need real medicine at all?",
+    "trick": "Then why do we need real medicine at all?",
     "summary": "A placebo is a medicine or treatment intended to appear genuine to its recipient, but which has no pharmaceutical effect. Common placebos include inert tablets, inert injections, sham surgery, and other procedures.",
     "sources": [
       {
@@ -764,7 +764,7 @@
         "url": "https://www.britannica.com/science/placebo"
       },
       {
-        "title": "Simple English Wikipedia: Placebo (простой английский)",
+        "title": "Simple English Wikipedia: Placebo (easy English)",
         "url": "https://simple.wikipedia.org/wiki/Placebo"
       }
     ]
@@ -772,13 +772,13 @@
   {
     "id": "procrastination",
     "category": "psychology",
-    "category_title": "🌱 Психология и привычки",
-    "title": "Прокрастинация (Procrastination)",
-    "brief": "Объясни, почему мы прокрастинируем, и убеди жюри, что это проблема эмоций, а не лени.",
+    "category_title": "🌱 Psychology and Habits",
+    "title": "Procrastination",
+    "brief": "Explain why we procrastinate and convince the jury it's an emotional problem, not laziness.",
     "audience": "жюри конкурса",
     "audience_id": "contest_jury",
-    "quirk": "Может, это всё-таки просто лень и нужно взять себя в руки?",
-    "trick": "Может, это всё-таки просто лень и нужно взять себя в руки?",
+    "quirk": "Maybe it really is just laziness and you need to pull yourself together?",
+    "trick": "Maybe it really is just laziness and you need to pull yourself together?",
     "summary": "Procrastination is an avoidance coping behavior that involves unnecessarily delaying or postponing something despite knowing that there could be negative consequences for doing so.",
     "sources": [
       {
@@ -790,7 +790,7 @@
         "url": "https://www.verywellmind.com/the-psychology-of-procrastination-2795944"
       },
       {
-        "title": "Simple English Wikipedia: Procrastination (простой английский)",
+        "title": "Simple English Wikipedia: Procrastination (easy English)",
         "url": "https://simple.wikipedia.org/wiki/Procrastination"
       }
     ]
@@ -798,13 +798,13 @@
   {
     "id": "four_day_week",
     "category": "society",
-    "category_title": "🗳 Общество и споры",
-    "title": "Четырёхдневная рабочая неделя (Four-day week)",
-    "brief": "Убеди бизнесменов перейти на четырёхдневную рабочую неделю — или докажи, что это ошибка.",
+    "category_title": "🗳 Society and Debates",
+    "title": "The Four-Day Work Week",
+    "brief": "Convince business people to switch to a four-day work week — or prove that it's a mistake.",
     "audience": "бизнесмены",
     "audience_id": "business",
-    "quirk": "Кто будет отвечать клиентам в пятницу?",
-    "trick": "Кто будет отвечать клиентам в пятницу?",
+    "quirk": "Who will answer customers on Fridays?",
+    "trick": "Who will answer customers on Fridays?",
     "summary": "A four-day workweek is an arrangement where a workplace or place of education has its employees or students work or attend school, college or university over the course of four days per week rather than the more customary five-day workweek.",
     "sources": [
       {
@@ -812,7 +812,7 @@
         "url": "https://en.wikipedia.org/wiki/Four-day_workweek"
       },
       {
-        "title": "4 Day Week Global — сторонники четырёхдневки",
+        "title": "4 Day Week Global — advocates of the 4-day week",
         "url": "https://www.4dayweek.com/"
       }
     ]
@@ -820,13 +820,13 @@
   {
     "id": "filter_bubble",
     "category": "society",
-    "category_title": "🗳 Общество и споры",
-    "title": "Пузырь фильтров (Filter bubble)",
-    "brief": "Объясни, как алгоритмы запирают нас в пузыре мнений, и убеди людей из него выбираться.",
+    "category_title": "🗳 Society and Debates",
+    "title": "Filter Bubbles",
+    "brief": "Explain how algorithms lock us into a bubble of opinions and convince people to break out of it.",
     "audience": "широкая публика",
     "audience_id": "public",
-    "quirk": "Разве плохо, что лента показывает то, что мне интересно?",
-    "trick": "Разве плохо, что лента показывает то, что мне интересно?",
+    "quirk": "What's wrong with my feed showing me what I'm interested in?",
+    "trick": "What's wrong with my feed showing me what I'm interested in?",
     "summary": "A filter bubble is a state of intellectual isolation that arises when personalized searches, recommendation systems, and algorithmic curation selectively presents information to each user; the search results are based on information about the user, such as their location, past click-behavior, and search history.",
     "sources": [
       {
@@ -834,7 +834,7 @@
         "url": "https://en.wikipedia.org/wiki/Filter_bubble"
       },
       {
-        "title": "TED: Eli Pariser — Beware online filter bubbles (9 мин)",
+        "title": "TED: Eli Pariser — Beware online filter bubbles (9 min)",
         "url": "https://www.ted.com/talks/eli_pariser_beware_online_filter_bubbles"
       },
       {
@@ -846,13 +846,13 @@
   {
     "id": "effective_altruism",
     "category": "society",
-    "category_title": "🗳 Общество и споры",
-    "title": "Эффективный альтруизм (Effective altruism)",
-    "brief": "Объясни, как помогать «с умом» по данным, и убеди жюри, что благотворительность должна быть эффективной.",
+    "category_title": "🗳 Society and Debates",
+    "title": "Effective Altruism",
+    "brief": "Explain how to help others \"smartly\" using data and convince the jury that charity should be effective.",
     "audience": "жюри конкурса",
     "audience_id": "contest_jury",
-    "quirk": "Можно ли измерить чужое горе в цифрах?",
-    "trick": "Можно ли измерить чужое горе в цифрах?",
+    "quirk": "Can you really measure other people's suffering in numbers?",
+    "trick": "Can you really measure other people's suffering in numbers?",
     "summary": "Effective altruism (EA) is a 21st-century philosophical and social movement that advocates impartially calculating benefits and prioritizing causes to provide the greatest good.",
     "sources": [
       {
@@ -868,13 +868,13 @@
   {
     "id": "minimalism",
     "category": "society",
-    "category_title": "🗳 Общество и споры",
-    "title": "Минимализм (Simple living)",
-    "brief": "Объясни идею «меньше вещей — больше жизни» и убеди преподавателей, что ей стоит учить молодёжь.",
+    "category_title": "🗳 Society and Debates",
+    "title": "Minimalism",
+    "brief": "Explain the idea of \"fewer things, more life\" and convince teachers it's worth teaching young people.",
     "audience": "преподаватели",
     "audience_id": "teachers",
-    "quirk": "Минимализм — не просто дорогой стиль для тех, у кого всё уже есть?",
-    "trick": "Минимализм — не просто дорогой стиль для тех, у кого всё уже есть?",
+    "quirk": "Isn't minimalism just an expensive style for people who already have everything?",
+    "trick": "Isn't minimalism just an expensive style for people who already have everything?",
     "summary": "Simple living refers to practices that promote simplicity in one's lifestyle. Common practices of simple living include reducing the number of possessions one owns, depending less on technology and services, ascetism, and spending less money.",
     "sources": [
       {
@@ -882,7 +882,7 @@
         "url": "https://en.wikipedia.org/wiki/Simple_living"
       },
       {
-        "title": "Simple English Wikipedia: Simple living (простой английский)",
+        "title": "Simple English Wikipedia: Simple living (easy English)",
         "url": "https://simple.wikipedia.org/wiki/Simple_living"
       }
     ]
@@ -890,13 +890,13 @@
   {
     "id": "wabi_sabi",
     "category": "culture",
-    "category_title": "🎨 Культура и творчество",
-    "title": "Ваби-саби (Wabi-sabi)",
-    "brief": "Объясни японскую красоту несовершенства и убеди людей перестать гнаться за идеальностью.",
+    "category_title": "🎨 Culture and Creativity",
+    "title": "Wabi-Sabi",
+    "brief": "Explain the Japanese beauty of imperfection and convince people to stop chasing perfection.",
     "audience": "широкая публика",
     "audience_id": "public",
-    "quirk": "Это не оправдание для небрежной работы?",
-    "trick": "Это не оправдание для небрежной работы?",
+    "quirk": "Isn't that just an excuse for sloppy work?",
+    "trick": "Isn't that just an excuse for sloppy work?",
     "summary": "In traditional Japanese aesthetics, wabi-sabi (侘び寂び) centers on the acceptance of transience and imperfection. It is often described as the appreciation of beauty that is \"imperfect, impermanent, and incomplete\". It is prevalent in many forms of Japanese art.",
     "sources": [
       {
@@ -904,7 +904,7 @@
         "url": "https://en.wikipedia.org/wiki/Wabi-sabi"
       },
       {
-        "title": "Simple English Wikipedia: Wabi-sabi (простой английский)",
+        "title": "Simple English Wikipedia: Wabi-sabi (easy English)",
         "url": "https://simple.wikipedia.org/wiki/Wabi-sabi"
       }
     ]
@@ -912,13 +912,13 @@
   {
     "id": "heros_journey",
     "category": "culture",
-    "category_title": "🎨 Культура и творчество",
-    "title": "Путь героя (Hero's journey)",
-    "brief": "Объясни схему «путь героя» и убеди бизнесменов строить по ней рекламу и питчи.",
+    "category_title": "🎨 Culture and Creativity",
+    "title": "The Hero's Journey",
+    "brief": "Explain the hero's journey structure and convince business people to build ads and pitches around it.",
     "audience": "бизнесмены",
     "audience_id": "business",
-    "quirk": "Если все истории по одной схеме, разве это не скучно?",
-    "trick": "Если все истории по одной схеме, разве это не скучно?",
+    "quirk": "If every story follows the same template, isn't that boring?",
+    "trick": "If every story follows the same template, isn't that boring?",
     "summary": "In narratology and comparative mythology, the hero's quest or hero's journey, also known as the monomyth, is the common template of stories that involve a hero who goes on an adventure, is victorious in a decisive crisis, and comes home changed or transformed.",
     "sources": [
       {
@@ -934,13 +934,13 @@
   {
     "id": "golden_ratio",
     "category": "culture",
-    "category_title": "🎨 Культура и творчество",
-    "title": "Золотое сечение (Golden ratio)",
-    "brief": "Объясни, что такое золотое сечение, и убеди преподавателей, где оно правда встречается, а где это миф.",
+    "category_title": "🎨 Culture and Creativity",
+    "title": "The Golden Ratio",
+    "brief": "Explain what the golden ratio is and convince teachers where it really appears and where it's a myth.",
     "audience": "преподаватели",
     "audience_id": "teachers",
-    "quirk": "Разве «золотое сечение в Парфеноне» не подгонка под ответ?",
-    "trick": "Разве «золотое сечение в Парфеноне» не подгонка под ответ?",
+    "quirk": "Isn't \"the golden ratio in the Parthenon\" just fitting the data to the answer?",
+    "trick": "Isn't \"the golden ratio in the Parthenon\" just fitting the data to the answer?",
     "summary": "In mathematics, two quantities are in the golden ratio if their ratio is the same as the ratio of their sum to the larger of the two quantities. Expressed algebraically, for quantities ⁠⁠ and ⁠⁠ with ⁠⁠, ⁠⁠ is in a golden ratio to ⁠⁠ if\n\nwhere the Greek letter phi denotes the golden ratio.",
     "sources": [
       {
@@ -952,7 +952,7 @@
         "url": "https://www.britannica.com/science/golden-ratio"
       },
       {
-        "title": "Simple English Wikipedia: Golden ratio (простой английский)",
+        "title": "Simple English Wikipedia: Golden ratio (easy English)",
         "url": "https://simple.wikipedia.org/wiki/Golden_ratio"
       }
     ]
@@ -960,13 +960,13 @@
   {
     "id": "bauhaus",
     "category": "culture",
-    "category_title": "🎨 Культура и творчество",
-    "title": "Баухаус (Bauhaus)",
-    "brief": "Объясни принцип «форма следует функции» и убеди жюри, что Баухаус до сих пор влияет на дизайн вокруг нас.",
+    "category_title": "🎨 Culture and Creativity",
+    "title": "Bauhaus",
+    "brief": "Explain the principle \"form follows function\" and convince the jury that Bauhaus still shapes the design around us.",
     "audience": "жюри конкурса",
     "audience_id": "contest_jury",
-    "quirk": "Не сделал ли этот стиль города серыми и одинаковыми?",
-    "trick": "Не сделал ли этот стиль города серыми и одинаковыми?",
+    "quirk": "Didn't this style make cities gray and all the same?",
+    "trick": "Didn't this style make cities gray and all the same?",
     "summary": "The Staatliches Bauhaus, commonly known as the Bauhaus, was a German art school operational from 1919 to 1933 that combined crafts and the fine arts. The school became famous for its approach to design, which attempted to unify individual artistic vision with the principles of mass production and emphasis on function.",
     "sources": [
       {
@@ -978,7 +978,7 @@
         "url": "https://www.britannica.com/topic/Bauhaus"
       },
       {
-        "title": "Simple English Wikipedia: Bauhaus (простой английский)",
+        "title": "Simple English Wikipedia: Bauhaus (easy English)",
         "url": "https://simple.wikipedia.org/wiki/Bauhaus"
       }
     ]
@@ -986,13 +986,13 @@
   {
     "id": "printing_press",
     "category": "history_ideas",
-    "category_title": "📜 Идеи, изменившие историю",
-    "title": "Печатный станок (Printing press)",
-    "brief": "Объясни, как печатный станок изменил мир, и убеди людей, что интернет — его продолжение.",
+    "category_title": "📜 Ideas That Changed History",
+    "title": "The Printing Press",
+    "brief": "Explain how the printing press changed the world and convince people the internet is its continuation.",
     "audience": "широкая публика",
     "audience_id": "public",
-    "quirk": "Печатный станок разносил и ложь — не то же ли с интернетом?",
-    "trick": "Печатный станок разносил и ложь — не то же ли с интернетом?",
+    "quirk": "The printing press spread lies too — isn't it the same with the internet?",
+    "trick": "The printing press spread lies too — isn't it the same with the internet?",
     "summary": "A printing press is a machine that applies pressure to transfer ink onto a surface made of paper, cloth, or a similar material. Its workers are known as printing press operators. It marked a significant improvement on earlier methods, in which the paper was rubbed by hand to transfer applied ink to the printing surface.",
     "sources": [
       {
@@ -1004,7 +1004,7 @@
         "url": "https://www.britannica.com/technology/printing-press"
       },
       {
-        "title": "Simple English Wikipedia: Printing press (простой английский)",
+        "title": "Simple English Wikipedia: Printing press (easy English)",
         "url": "https://simple.wikipedia.org/wiki/Printing_press"
       }
     ]
@@ -1012,13 +1012,13 @@
   {
     "id": "enlightenment",
     "category": "history_ideas",
-    "category_title": "📜 Идеи, изменившие историю",
-    "title": "Эпоха Просвещения (Age of Enlightenment)",
-    "brief": "Объясни главные идеи Просвещения и убеди преподавателей, что они нужны сегодня.",
+    "category_title": "📜 Ideas That Changed History",
+    "title": "The Age of Enlightenment",
+    "brief": "Explain the main ideas of the Enlightenment and convince teachers we still need them today.",
     "audience": "преподаватели",
     "audience_id": "teachers",
-    "quirk": "Не устарели ли идеи XVIII века для мира соцсетей?",
-    "trick": "Не устарели ли идеи XVIII века для мира соцсетей?",
+    "quirk": "Aren't 18th-century ideas outdated in the age of social media?",
+    "trick": "Aren't 18th-century ideas outdated in the age of social media?",
     "summary": "The Age of Enlightenment, also known as the Age of Reason or simply the Enlightenment, was a period of intellectual and cultural flourishing in Europe and Western civilization, emerging in the late 17th century in Western Europe.",
     "sources": [
       {
@@ -1030,7 +1030,7 @@
         "url": "https://www.britannica.com/event/Enlightenment-European-history"
       },
       {
-        "title": "Simple English Wikipedia: Age of Enlightenment (простой английский)",
+        "title": "Simple English Wikipedia: Age of Enlightenment (easy English)",
         "url": "https://simple.wikipedia.org/wiki/Age_of_Enlightenment"
       }
     ]
@@ -1038,13 +1038,13 @@
   {
     "id": "silk_road",
     "category": "history_ideas",
-    "category_title": "📜 Идеи, изменившие историю",
-    "title": "Шёлковый путь (Silk Road)",
-    "brief": "Объясни, чем был Шёлковый путь, и убеди бизнесменов, чему он учит о торговле сегодня.",
+    "category_title": "📜 Ideas That Changed History",
+    "title": "The Silk Road",
+    "brief": "Explain what the Silk Road was and convince business people what it teaches us about trade today.",
     "audience": "бизнесмены",
     "audience_id": "business",
-    "quirk": "Чему нас может научить торговля на верблюдах?",
-    "trick": "Чему нас может научить торговля на верблюдах?",
+    "quirk": "What can camel caravans teach us about modern trade?",
+    "trick": "What can camel caravans teach us about modern trade?",
     "summary": "The Silk Road was a network of Asian trade routes active from the second century BCE until the mid-15th century. Spanning over 6,400 km (4,000 mi) on land, it played a central role in facilitating economic, cultural, political, and religious interactions between the Eastern and Western worlds.",
     "sources": [
       {
@@ -1056,7 +1056,7 @@
         "url": "https://www.britannica.com/topic/Silk-Road-trade-route"
       },
       {
-        "title": "Simple English Wikipedia: Silk Road (простой английский)",
+        "title": "Simple English Wikipedia: Silk Road (easy English)",
         "url": "https://simple.wikipedia.org/wiki/Silk_Road"
       }
     ]
@@ -1064,13 +1064,13 @@
   {
     "id": "scientific_method",
     "category": "history_ideas",
-    "category_title": "📜 Идеи, изменившие историю",
-    "title": "Научный метод (Scientific method)",
-    "brief": "Объясни, как работает научный метод, и убеди жюри применять его к обычным решениям.",
+    "category_title": "📜 Ideas That Changed History",
+    "title": "The Scientific Method",
+    "brief": "Explain how the scientific method works and convince the jury to apply it to everyday decisions.",
     "audience": "жюри конкурса",
     "audience_id": "contest_jury",
-    "quirk": "Наука тоже ошибается — почему ей верить?",
-    "trick": "Наука тоже ошибается — почему ей верить?",
+    "quirk": "Science makes mistakes too — why should we trust it?",
+    "trick": "Science makes mistakes too — why should we trust it?",
     "summary": "The scientific method is an empirical method for acquiring knowledge through careful observation, rigorous skepticism, hypothesis testing, and experimental validation. Developed from ancient and medieval practices, it acknowledges that cognitive assumptions can distort the interpretation of the observation.",
     "sources": [
       {
@@ -1082,7 +1082,7 @@
         "url": "https://www.britannica.com/science/scientific-method"
       },
       {
-        "title": "Simple English Wikipedia: Scientific method (простой английский)",
+        "title": "Simple English Wikipedia: Scientific method (easy English)",
         "url": "https://simple.wikipedia.org/wiki/Scientific_method"
       }
     ]
@@ -1090,13 +1090,13 @@
   {
     "id": "prisoners_dilemma",
     "category": "game_theory",
-    "category_title": "🎲 Теория игр и решения",
-    "title": "Дилемма заключённого (Prisoner's dilemma)",
-    "brief": "Объясни дилемму заключённого и убеди бизнесменов, когда выгоднее сотрудничать, чем конкурировать.",
+    "category_title": "🎲 Game Theory and Decisions",
+    "title": "The Prisoner's Dilemma",
+    "brief": "Explain the prisoner's dilemma and convince business people when cooperating pays off more than competing.",
     "audience": "бизнесмены",
     "audience_id": "business",
-    "quirk": "В реальном бизнесе побеждают жёсткие — зачем доверять конкурентам?",
-    "trick": "В реальном бизнесе побеждают жёсткие — зачем доверять конкурентам?",
+    "quirk": "In real business the tough ones win — why trust competitors?",
+    "trick": "In real business the tough ones win — why trust competitors?",
     "summary": "In game theory, the prisoner's dilemma is a thought experiment involving two rational agents, each of whom can either cooperate for mutual benefit or betray their partner (\"defect\") for individual gain. The dilemma arises from the fact that while defecting is rational for each agent, cooperation yields a higher payoff for each.",
     "sources": [
       {
@@ -1108,7 +1108,7 @@
         "url": "https://www.britannica.com/topic/prisoners-dilemma"
       },
       {
-        "title": "Simple English Wikipedia: Prisoner's dilemma (простой английский)",
+        "title": "Simple English Wikipedia: Prisoner's dilemma (easy English)",
         "url": "https://simple.wikipedia.org/wiki/Prisoner's_dilemma"
       }
     ]
@@ -1116,13 +1116,13 @@
   {
     "id": "nash_equilibrium",
     "category": "game_theory",
-    "category_title": "🎲 Теория игр и решения",
-    "title": "Равновесие Нэша (Nash equilibrium)",
-    "brief": "Объясни равновесие Нэша на примере из жизни и убеди преподавателей, что теория игр полезна не только математикам.",
+    "category_title": "🎲 Game Theory and Decisions",
+    "title": "Nash Equilibrium",
+    "brief": "Explain Nash equilibrium with a real-life example and convince teachers that game theory isn't just for mathematicians.",
     "audience": "преподаватели",
     "audience_id": "teachers",
-    "quirk": "Люди же не рациональны — работает ли это вне учебника?",
-    "trick": "Люди же не рациональны — работает ли это вне учебника?",
+    "quirk": "People aren't rational — does this work outside the textbook?",
+    "trick": "People aren't rational — does this work outside the textbook?",
     "summary": "In game theory, a Nash equilibrium is a situation where no player could gain more by changing their own strategy in a game. A Nash equilibrium is the most commonly used solution concept for non-cooperative games.",
     "sources": [
       {
@@ -1134,7 +1134,7 @@
         "url": "https://www.investopedia.com/terms/n/nash-equilibrium.asp"
       },
       {
-        "title": "Simple English Wikipedia: Nash equilibrium (простой английский)",
+        "title": "Simple English Wikipedia: Nash equilibrium (easy English)",
         "url": "https://simple.wikipedia.org/wiki/Nash_equilibrium"
       }
     ]
@@ -1142,13 +1142,13 @@
   {
     "id": "gamification",
     "category": "game_theory",
-    "category_title": "🎲 Теория игр и решения",
-    "title": "Геймификация (Gamification)",
-    "brief": "Объясни, как игровые механики меняют поведение, и убеди жюри применять их в учёбе или работе.",
+    "category_title": "🎲 Game Theory and Decisions",
+    "title": "Gamification",
+    "brief": "Explain how game mechanics change behavior and convince the jury to use them in learning or work.",
     "audience": "жюри конкурса",
     "audience_id": "contest_jury",
-    "quirk": "Не превращает ли это всё в погоню за баллами вместо смысла?",
-    "trick": "Не превращает ли это всё в погоню за баллами вместо смысла?",
+    "quirk": "Doesn't it turn everything into chasing points instead of meaning?",
+    "trick": "Doesn't it turn everything into chasing points instead of meaning?",
     "summary": "Gamification is the process of integrating game design elements and principles into non-game contexts in order to increase user engagement and motivation. It is a component of system design.",
     "sources": [
       {
@@ -1156,7 +1156,7 @@
         "url": "https://en.wikipedia.org/wiki/Gamification"
       },
       {
-        "title": "Simple English Wikipedia: Gamification (простой английский)",
+        "title": "Simple English Wikipedia: Gamification (easy English)",
         "url": "https://simple.wikipedia.org/wiki/Gamification"
       }
     ]
@@ -1164,13 +1164,13 @@
   {
     "id": "butterfly_effect",
     "category": "game_theory",
-    "category_title": "🎲 Теория игр и решения",
-    "title": "Эффект бабочки (Butterfly effect)",
-    "brief": "Объясни, как мелочи приводят к большим последствиям, и убеди людей ценить маленькие решения.",
+    "category_title": "🎲 Game Theory and Decisions",
+    "title": "The Butterfly Effect",
+    "brief": "Explain how small things lead to big consequences and convince people to value small decisions.",
     "audience": "широкая публика",
     "audience_id": "public",
-    "quirk": "Если всё непредсказуемо, зачем вообще что-то планировать?",
-    "trick": "Если всё непредсказуемо, зачем вообще что-то планировать?",
+    "quirk": "If everything is unpredictable, why plan anything at all?",
+    "trick": "If everything is unpredictable, why plan anything at all?",
     "summary": "In chaos theory, the butterfly effect is the sensitive dependence on initial conditions in which a small change in one state of a deterministic nonlinear system can result in large differences in a later state.",
     "sources": [
       {
@@ -1182,7 +1182,7 @@
         "url": "https://www.britannica.com/science/butterfly-effect"
       },
       {
-        "title": "Simple English Wikipedia: Butterfly effect (простой английский)",
+        "title": "Simple English Wikipedia: Butterfly effect (easy English)",
         "url": "https://simple.wikipedia.org/wiki/Butterfly_effect"
       }
     ]

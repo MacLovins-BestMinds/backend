@@ -39,7 +39,7 @@ JURORS: dict[JurorId, Juror] = {
         name="Марина Викторовна",
         persona="Строгая, бывший директор акселератора. Говорит сухо и по делу, требует цифр и сроков.",
         openai_voice="coral",
-        voice_style="Говори по-русски строго и сухо, чётко, в среднем темпе, без улыбки в голосе.",
+        voice_style="Speak English in a strict, dry, precise tone, medium pace, no smile in the voice.",
         stability=0.75,
         style=0.1,
     ),
@@ -47,7 +47,7 @@ JURORS: dict[JurorId, Juror] = {
         name="Борис",
         persona="Добряк, предприниматель. Поддерживает, но спрашивает о людях, которым продукт поможет.",
         openai_voice="ash",
-        voice_style="Говори по-русски тепло и дружелюбно, с лёгкой улыбкой, неторопливо.",
+        voice_style="Speak English warmly and kindly, with a light smile, unhurried.",
         stability=0.45,
         style=0.4,
     ),
@@ -55,7 +55,7 @@ JURORS: dict[JurorId, Juror] = {
         name="Глеб",
         persona="Скептик, инвестор. Сомневается во всём и ищет слабое место идеи.",
         openai_voice="onyx",
-        voice_style="Говори по-русски с недоверием и лёгкой иронией, делай паузу перед главным словом.",
+        voice_style="Speak English with doubt and light irony, pause before the key word.",
         stability=0.35,
         style=0.6,
     ),
@@ -112,50 +112,48 @@ AUDIENCE_FALLBACK_QUESTIONS: dict[Audience, list[DraftQuestion]] = {
     Audience.CONTEST_JURY: [
         DraftQuestion(
             juror="strict",
-            text="Назовите конкретные сроки запуска и бюджет, за который вы планируете это реализовать?",
+            text="What is your launch timeline, and what budget do you need to build this?",
         ),
         DraftQuestion(
             juror="kind",
-            text="Расскажите подробнее: какую главную боль реальных людей решает ваш проект?",
+            text="Tell us more: what real pain does your project solve for people?",
         ),
         DraftQuestion(
             juror="skeptic",
-            text="В чём ваше ключевое инновационное отличие от существующих решений и почему вас нельзя повторить за пару месяцев?",
+            text="What makes you different from existing solutions, and why can't someone copy you in a couple of months?",
         ),
     ],
     Audience.BUSINESS: [
         DraftQuestion(
             juror="strict",
-            text="Какова плановая экономика единицы и когда вы выйдете на операционную окупаемость?",
+            text="What are your unit economics, and when do you break even?",
         ),
-        DraftQuestion(juror="kind", text="Кто ваш первый платящий клиент и почему он выберет именно вас?"),
+        DraftQuestion(juror="kind", text="Who is your first paying customer, and why would they choose you?"),
         DraftQuestion(
             juror="skeptic",
-            text="Рынок переполнен предложениями. За счёт каких каналов вы рассчитываете привлекать клиентов дешевле конкурентов?",
+            text="The market is crowded. How will you acquire customers cheaper than your competitors?",
         ),
     ],
     Audience.TEACHERS: [
         DraftQuestion(
             juror="strict",
-            text="На каких проверенных исследованиях или данных строится ваша методология?",
+            text="What research or data is your approach based on?",
         ),
-        DraftQuestion(juror="kind", text="Как ваш проект поможет повысить вовлечённость и интерес учащихся?"),
-        DraftQuestion(
-            juror="skeptic", text="Каковы долгосрочные риски применения вашего подхода в образовательном процессе?"
-        ),
+        DraftQuestion(juror="kind", text="How will your project make students more engaged?"),
+        DraftQuestion(juror="skeptic", text="What are the long-term risks of using your approach in education?"),
     ],
     Audience.PUBLIC: [
         DraftQuestion(
             juror="strict",
-            text="Объясните простыми словами: сколько это будет стоить для конечного пользователя?",
+            text="In simple words: how much will this cost an ordinary user?",
         ),
         DraftQuestion(
             juror="kind",
-            text="Почему обычному человеку захочется пользоваться вашим продуктом каждый день?",
+            text="Why would an ordinary person want to use your product every day?",
         ),
         DraftQuestion(
             juror="skeptic",
-            text="Не кажется ли вам, что эта проблема надумана и люди отлично справляются без этого решения?",
+            text="Isn't this problem made up? People seem to manage fine without it.",
         ),
     ],
 }
@@ -181,11 +179,11 @@ async def _draft(pitch: Pitch, transcript: str) -> DraftQuestions:
 
 
 def fallback_questions(pitch: Pitch) -> DraftQuestions:
-    """Заготовленные вопросы по аудитории; прикол кейса, если есть, задаёт скептик — как и в LLM-версии."""
-    questions = list(AUDIENCE_FALLBACK_QUESTIONS[pitch.audience])
-    if pitch.quirk:
-        questions = [DraftQuestion(juror="skeptic", text=pitch.quirk), *(q for q in questions if q.juror != "skeptic")]
-    return DraftQuestions(questions=questions)
+    """Заготовленные английские вопросы по аудитории.
+
+    Прикол кейса записан по-русски, а без LLM его не перевести, поэтому скептик задаёт заготовленный вопрос.
+    """
+    return DraftQuestions(questions=list(AUDIENCE_FALLBACK_QUESTIONS[pitch.audience]))
 
 
 async def _voice(round_id: str, question_id: str, juror: JurorId, text: str) -> None:

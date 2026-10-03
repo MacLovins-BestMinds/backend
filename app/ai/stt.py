@@ -9,7 +9,7 @@ from app.ai.config import get_settings
 
 # Whisper по умолчанию «вычищает» речь; подсказка с паразитами заставляет их сохранять.
 # Scribe распознаёт дословно (no_verbatim=false), подсказка ему не нужна.
-FILLER_PROMPT = "Ну, эм... ээ, как бы, вот, короче, типа, это самое. Ммм, значит, в общем."
+FILLER_PROMPT = "Um, uh... so, you know, I mean, basically. Hmm, er, like, well."
 WAV_HEADER_BYTES = 44
 WAV_BYTES_PER_SEC = 16_000 * 2  # audio.to_wav16k: 16 кГц, моно, 16 бит
 

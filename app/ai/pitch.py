@@ -48,7 +48,7 @@ class RoundNotFoundError(LookupError):
 # Разминка «Представься залу»: без кейса и без жюри. Лимиты — как в create_round игрового движка.
 WARMUP = Pitch(
     title="Представься залу",
-    brief="За 30 секунд расскажи, кто ты, чем занимаешься и чем тебя запомнить.",
+    brief="За 30 секунд по-английски расскажи, кто ты, чем занимаешься и чем тебя запомнить.",
     audience=Audience.PUBLIC,
     is_warmup=True,
     min_sec=20,

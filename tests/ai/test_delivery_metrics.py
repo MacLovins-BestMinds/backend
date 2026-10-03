@@ -13,6 +13,11 @@ def test_scores_follow_spec_points() -> None:
     assert timing_score(120, 60, 180) == 100 and timing_score(30, 60, 180) == 50
 
 
+def test_english_fillers() -> None:
+    found = find_fillers(_words("So,", "um,", "you", "know,", "it", "uhh", "works.", "Basically"))
+    assert [w for _, w in found] == ["um", "you know", "uhh", "basically"]
+
+
 def test_fillers_include_bigrams_and_hesitations() -> None:
     found = find_fillers(_words("Ну,", "это", "как", "бы", "ээээ", "продукт", "Вот."))
     assert [w for _, w in found] == ["ну", "как бы", "ээээ", "вот"]

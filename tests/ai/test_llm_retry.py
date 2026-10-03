@@ -25,9 +25,7 @@ def test_overloaded_model_retries_then_falls_back(monkeypatch) -> None:
 
     monkeypatch.setattr(llm, "_call", fake_call)
     monkeypatch.setattr(llm.asyncio, "sleep", no_sleep)
-    monkeypatch.setattr(
-        llm, "get_settings", lambda: SimpleNamespace(gemini_model="primary", gemini_fallback_model="backup")
-    )
+    monkeypatch.setattr(llm, "get_settings", lambda: SimpleNamespace(gemini_models=["primary", "backup"]))
 
     response = asyncio.run(llm._generate_with_fallback("p", Answer))
     assert response.text == '{"score": 5}'

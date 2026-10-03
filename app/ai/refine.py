@@ -96,5 +96,5 @@ async def run_refine(req: RefineRequest) -> RefineResponse:
     except (OpenAIError, genai_errors.APIError) as e:
         logger.warning("run_refine: сбой LLM (%s), используем резервную разметку блоков", e)
         blocks = _fallback_blocks(req.text)
-        notes = ["Текст распределен по базовой структуре питча (хук, проблема, решение, почему мы, призыв)."]
+        notes = ["ИИ сейчас недоступен: текст разложен по абзацам без правок — проверь блоки сам или попробуй позже."]
         return RefineResponse(text=render(blocks), notes=notes, blocks=blocks)

@@ -30,7 +30,14 @@ class AiSettings(BaseSettings):
 
     # LLM
     gemini_model: str = "gemini-3.5-flash-lite"
-    gemini_fallback_model: str = "gemini-3.1-flash-lite"  # при перегрузке основной; пусто — без запасной
+    # при перегрузке или исчерпанной квоте основной — по очереди, через запятую; пусто — без запасных
+    gemini_fallback_models: str = "gemini-3.1-flash-lite,gemini-flash-lite-latest,gemini-3.5-flash,gemini-3.8-flash"
+
+    @property
+    def gemini_models(self) -> list[str]:
+        """Основная модель и запасные без повторов."""
+        names = [self.gemini_model, *self.gemini_fallback_models.split(",")]
+        return [m for m in dict.fromkeys(n.strip() for n in names) if m]
 
     # распознавание записей
     stt_provider: Literal["elevenlabs", "openai"] = "elevenlabs"

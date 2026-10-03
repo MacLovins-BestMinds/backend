@@ -1,0 +1,4 @@
+{
+  "permissions": { "deny": ["Bash(git push)", "Bash(git push *)", "Bash(git commit *)"] },
+  "attribution": { "commit": "", "pr": "", "sessionUrl": false }
+}

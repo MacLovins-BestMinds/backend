@@ -156,9 +156,10 @@ def _gaze_spans(gaze: Sequence[GazePoint], duration: float) -> list[tuple[float,
     return spans
 
 
-def gaze_on_ratio(gaze: Sequence[GazePoint], duration: float) -> float:
+def gaze_on_ratio(gaze: Sequence[GazePoint], duration: float) -> float | None:
+    """Доля времени со взглядом в зал; None — взгляд не измерялся (нет камеры, например в вебе)."""
     if not gaze or duration <= 0:
-        return 1.0  # приложение не прислало взгляд — не штрафуем
+        return None
     on = sum(end - start for start, end, is_on in _gaze_spans(gaze, duration) if is_on)
     return round(on / duration, 3)
 
@@ -234,11 +235,13 @@ def analyze(transcript: Transcript, gaze: Sequence[GazePoint], min_sec: float, m
     parts = {
         "fillers": fillers_score(fillers_per_min),
         "pace": pace_score(wpm),
-        "gaze": gaze_score(ratio),
+        "gaze": gaze_score(ratio) if ratio is not None else None,
         "pauses": pauses_score(len(long_pauses)),
         "timing": timing_score(duration, min_sec, max_sec),
     }
-    total = round(sum(parts[k] * w for k, w in WEIGHTS.items()))
+    # без камеры взгляд не измерен: его вес делится между остальными частями, а не даётся даром
+    measured = {k: w for k, w in WEIGHTS.items() if parts[k] is not None}
+    total = round(sum(parts[k] * w for k, w in measured.items()) / sum(measured.values()))
 
     events = [TimelineEvent(type="filler", t=t, text=f"«{w}»") for t, w in fillers]
     events += [TimelineEvent(type="long_pause", t=t, text=f"Пауза {d:.1f} с посреди фразы") for t, d in long_pauses]

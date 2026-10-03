@@ -37,7 +37,7 @@ def _metrics_summary(m: Metrics) -> str:
         f"- длительность: {m.duration_sec:.0f} с, темп: {m.wpm} слов/мин\n"
         f"- слова-паразиты: {m.fillers} ({m.fillers_per_min} в минуту)\n"
         f"- паузы дольше 3 с: {m.long_pauses}\n"
-        f"- взгляд в зал: {m.gaze_on_ratio:.0%} времени"
+        + (f"- взгляд в зал: {m.gaze_on_ratio:.0%} времени" if m.gaze_on_ratio is not None else "- взгляд не измерялся")
     )
 
 

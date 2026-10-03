@@ -14,6 +14,8 @@ class AiSettings(BaseSettings):
     gemini_model: str = "gemini-2.5-flash"
     stt_model: str = "whisper-1"
     stt_language: str = "ru"
+    tts_model: str = "gpt-4o-mini-tts"
+    static_dir: str = "static"
     max_audio_mb: int = 25
 
 

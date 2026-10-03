@@ -1,10 +1,8 @@
 """Распознавание записи с таймкодами слов (OpenAI Whisper)."""
 
 from dataclasses import dataclass
-from functools import lru_cache
 
-from openai import AsyncOpenAI
-
+from app.ai.clients import openai_client
 from app.ai.config import get_settings
 
 # Whisper по умолчанию «вычищает» речь; подсказка с паразитами заставляет их сохранять
@@ -25,14 +23,9 @@ class Transcript:
     duration: float
 
 
-@lru_cache
-def _client() -> AsyncOpenAI:
-    return AsyncOpenAI(api_key=get_settings().openai_api_key)
-
-
 async def transcribe(wav: bytes) -> Transcript:
     settings = get_settings()
-    result = await _client().audio.transcriptions.create(
+    result = await openai_client().audio.transcriptions.create(
         file=("speech.wav", wav, "audio/wav"),
         model=settings.stt_model,
         language=settings.stt_language,

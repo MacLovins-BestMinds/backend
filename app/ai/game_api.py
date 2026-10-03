@@ -1,7 +1,8 @@
 """Точка стыка с игровым бэкендом Егора.
 
-Пока `app.game` не готов, используются заглушки с тем же интерфейсом:
-`get_case(case_id)` (с приколом), `get_round(round_id)` и `save_ai_result(round_id, kind, payload)`.
+Нужные функции: `get_case(case_id)` (с приколом), `get_round(round_id)`,
+`save_ai_result(round_id, kind, payload)` и `get_ai_result(round_id, kind)` (последний результат такого вида).
+Пока `app.game` не готов, работают заглушки, которые хранят результаты в памяти процесса.
 """
 
 import logging
@@ -10,9 +11,11 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 try:
-    from app.game import get_case, get_round, save_ai_result  # type: ignore[attr-defined]
+    from app.game import get_ai_result, get_case, get_round, save_ai_result  # type: ignore[attr-defined]
 except ImportError:
-    logger.warning("app.game недоступен — используются заглушки get_case/get_round/save_ai_result")
+    logger.warning("app.game недоступен — используются заглушки game_api")
+
+    _results: dict[tuple[str, str], dict[str, Any]] = {}
 
     def get_case(case_id: str) -> dict[str, Any]:
         return {
@@ -28,7 +31,10 @@ except ImportError:
         return {"id": round_id, "mode": "training", "case_id": "health-01", "own": None}
 
     def save_ai_result(round_id: str, kind: str, payload: dict[str, Any]) -> None:
-        logger.info("save_ai_result(stub) round=%s kind=%s", round_id, kind)
+        _results[round_id, kind] = payload
+
+    def get_ai_result(round_id: str, kind: str) -> dict[str, Any] | None:
+        return _results.get((round_id, kind))
 
 
-__all__ = ["get_case", "get_round", "save_ai_result"]
+__all__ = ["get_ai_result", "get_case", "get_round", "save_ai_result"]

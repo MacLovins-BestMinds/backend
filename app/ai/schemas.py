@@ -13,6 +13,9 @@ class Audience(StrEnum):
     PUBLIC = "public"
 
 
+type JurorId = Literal["strict", "kind", "skeptic"]
+
+
 class RefineMode(StrEnum):
     STRUCTURE = "structure"
     IMPROVE = "improve"
@@ -121,7 +124,7 @@ class DeliveryResponse(BaseModel):
 
 class JuryQuestion(BaseModel):
     id: str
-    juror: str
+    juror: JurorId
     text: str
     audio_url: str
 

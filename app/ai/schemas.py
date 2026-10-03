@@ -118,7 +118,7 @@ class Metrics(BaseModel):
 class TimelineEvent(BaseModel):
     """Маркер на таймлайне разбора."""
 
-    type: Literal["filler", "long_pause", "pace", "gaze_off", "good_pause"]
+    type: Literal["filler", "long_pause", "hesitation", "pace", "gaze_off", "good_pause"]
     t: float
     text: str
 

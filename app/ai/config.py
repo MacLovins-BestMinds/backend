@@ -30,6 +30,7 @@ class AiSettings(BaseSettings):
 
     # LLM
     gemini_model: str = "gemini-3.8-flash"
+    gemini_fallback_model: str = "gemini-3.5-flash"  # при перегрузке основной; пусто — без запасной
 
     # распознавание записей
     stt_provider: Literal["elevenlabs", "openai"] = "elevenlabs"

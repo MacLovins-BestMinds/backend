@@ -1,14 +1,17 @@
-"""Распознавание записи с таймкодами слов (OpenAI Whisper)."""
+"""Распознавание записей с таймкодами слов: ElevenLabs Scribe (по умолчанию) или OpenAI Whisper (STT_PROVIDER)."""
 
 import json
 from dataclasses import asdict, dataclass
 
 from app.ai import cache
-from app.ai.clients import openai_client
+from app.ai.clients import elevenlabs_client, openai_client
 from app.ai.config import get_settings
 
-# Whisper по умолчанию «вычищает» речь; подсказка с паразитами заставляет их сохранять
+# Whisper по умолчанию «вычищает» речь; подсказка с паразитами заставляет их сохранять.
+# Scribe распознаёт дословно (no_verbatim=false), подсказка ему не нужна.
 FILLER_PROMPT = "Ну, эм... ээ, как бы, вот, короче, типа, это самое. Ммм, значит, в общем."
+WAV_HEADER_BYTES = 44
+WAV_BYTES_PER_SEC = 16_000 * 2  # audio.to_wav16k: 16 кГц, моно, 16 бит
 
 
 @dataclass(frozen=True, slots=True)
@@ -33,22 +36,45 @@ class Transcript:
         return cls(text=raw["text"], words=[Word(**w) for w in raw["words"]], duration=raw["duration"])
 
 
-async def transcribe(wav: bytes) -> Transcript:
-    settings = get_settings()
-    key = cache.make_key(settings.stt_model, settings.stt_language, FILLER_PROMPT, wav)
-    if cached := await cache.get("stt", key, "json"):
-        return Transcript.from_json(cached)
+async def _elevenlabs(wav: bytes) -> Transcript:
+    s = get_settings()
+    result = await elevenlabs_client().speech_to_text.convert(
+        model_id=s.stt_model,
+        file=("speech.wav", wav, "audio/wav"),
+        language_code=s.stt_language,
+        timestamps_granularity="word",
+        tag_audio_events=False,
+        no_verbatim=False,  # оставить «ну», «эм» и оговорки — по ним считается подача
+        temperature=0,
+        seed=0,
+    )
+    words = [Word(w.text, w.start or 0.0, w.end or 0.0) for w in result.words or [] if w.type == "word"]
+    duration = result.audio_duration_secs or max(0.0, (len(wav) - WAV_HEADER_BYTES) / WAV_BYTES_PER_SEC)
+    return Transcript(text=result.text.strip(), words=words, duration=duration)
 
+
+async def _openai(wav: bytes) -> Transcript:
+    s = get_settings()
     result = await openai_client().audio.transcriptions.create(
         file=("speech.wav", wav, "audio/wav"),
-        model=settings.stt_model,
-        language=settings.stt_language,
+        model=s.stt_model,
+        language=s.stt_language,
         prompt=FILLER_PROMPT,
         response_format="verbose_json",
         timestamp_granularities=["word"],
         temperature=0,
     )
     words = [Word(w.word, w.start, w.end) for w in result.words or []]
-    transcript = Transcript(text=result.text.strip(), words=words, duration=result.duration)
+    return Transcript(text=result.text.strip(), words=words, duration=result.duration)
+
+
+async def transcribe(wav: bytes) -> Transcript:
+    """wav — 16 кГц моно 16 бит (audio.to_wav16k). Оба провайдера отдают таймкоды слов."""
+    s = get_settings()
+    key = cache.make_key(s.stt_provider, s.stt_model, s.stt_language, FILLER_PROMPT, wav)
+    if cached := await cache.get("stt", key, "json"):
+        return Transcript.from_json(cached)
+
+    transcript = await (_elevenlabs(wav) if s.stt_provider == "elevenlabs" else _openai(wav))
     await cache.put("stt", key, "json", transcript.to_json())
     return transcript

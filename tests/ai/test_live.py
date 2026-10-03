@@ -19,3 +19,12 @@ def test_no_pause_after_sentence_end_and_offset_on_reconnect() -> None:
     assert a.on_audio(5 * PCM_BYTES_PER_SEC) == []
     a.begin_stream()
     assert a.offset == 5.0
+
+
+def test_partial_fillers_are_instant_and_not_duplicated_on_commit() -> None:
+    a = LiveAnalyzer()
+    a.on_audio(PCM_BYTES_PER_SEC)
+    assert [e.word for e in a.on_partial_text("ну вот")] == ["ну", "вот"]
+    assert a.on_partial_text("ну вот") == []  # тот же текст — без повторов
+    committed = [Word("Ну", 0.1, 0.2), Word("вот", 0.3, 0.4), Word("типа", 0.5, 0.6), Word("идея.", 0.7, 1.0)]
+    assert [e.word for e in a.on_words(committed, is_final=True)] == ["типа"]

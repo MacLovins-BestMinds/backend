@@ -68,7 +68,12 @@ def resolve_pitch(round_id: str) -> Pitch:
         return WARMUP
     if own := rnd.get("own"):
         return Pitch(
-            title=own["title"], brief="Свой питч игрока", audience=_normalize_audience(own["audience"]), own_text=own["text"]
+            title=own["title"],
+            brief="Свой питч игрока",
+            audience=_normalize_audience(own["audience"]),
+            own_text=own["text"],
         )
     case = game_api.get_case(rnd["case_id"])
-    return Pitch(title=case["title"], brief=case["brief"], audience=_normalize_audience(case["audience"]), quirk=case["quirk"])
+    return Pitch(
+        title=case["title"], brief=case["brief"], audience=_normalize_audience(case["audience"]), quirk=case["quirk"]
+    )

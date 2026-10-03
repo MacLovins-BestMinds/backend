@@ -5,6 +5,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from typing import Annotated
 
+from elevenlabs.core.api_error import ApiError as ElevenLabsApiError
 from fastapi import (
     APIRouter,
     Depends,
@@ -88,7 +89,7 @@ def ai_errors(op: str, round_id: str) -> Iterator[None]:
     except MissingKeyError as e:
         logger.error("%s: %s", op, e)
         raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, str(e)) from e
-    except (OpenAIError, genai_errors.APIError) as e:
+    except (OpenAIError, genai_errors.APIError, ElevenLabsApiError) as e:
         logger.exception("%s: ошибка внешнего AI-сервиса, round=%s", op, round_id)
         raise HTTPException(status.HTTP_502_BAD_GATEWAY, "AI-сервис недоступен, попробуйте ещё раз") from e
 

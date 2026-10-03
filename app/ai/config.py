@@ -55,6 +55,13 @@ class AiSettings(BaseSettings):
     tts_provider: Literal["elevenlabs", "openai"] = "elevenlabs"
     tts_model: str = "eleven_flash_v2_5"  # openai: gpt-4o-mini-tts
 
+    # Azure Pronunciation Assessment — оценка английского произношения; без ключа просто выключена
+    azure_speech_key: str = ""
+    azure_speech_region: str = "eastus"
+    azure_speech_locale: str = "en-US"  # интонацию (prosody) Azure оценивает только для en-US
+    azure_max_parallel: int = 8  # запись режется по паузам на куски, они оцениваются параллельно
+    azure_timeout_sec: float = 20.0
+
     static_dir: str = "static"
     ai_cache: bool = True
     ai_cache_dir: str = ".ai_cache"

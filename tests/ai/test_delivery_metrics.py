@@ -1,4 +1,4 @@
-from app.ai.delivery_metrics import analyze, fillers_score, find_fillers, gaze_on_ratio, pace_score, timing_score
+from app.ai.delivery_metrics import analyze, find_profanity, fillers_score, find_fillers, gaze_on_ratio, pace_score, timing_score
 from app.ai.schemas import GazePoint
 from app.ai.stt import Transcript, Word, to_latin
 
@@ -33,6 +33,14 @@ def test_fillers_include_bigrams_and_hesitations() -> None:
 def test_gaze_ratio_uses_change_points() -> None:
     gaze = [GazePoint(t=0, on=True), GazePoint(t=6, on=False), GazePoint(t=8, on=True)]
     assert gaze_on_ratio(gaze, 10) == 0.8
+
+
+def test_ambiguous_words_are_fillers_only_when_the_meaning_says_so() -> None:
+    words = _spoken("I like pizza and it was like really good um yes").words
+    # «like» №1 — глагол, «like» №6 — паразит: так решил LLM
+    assert [w for _, w in find_fillers(words, {1: False, 6: True})] == ["like", "um"]
+    # в живом потоке двусмысленные слова сразу не отмечаются
+    assert [w for _, w in find_fillers(words, {})] == ["um"]
 
 
 def test_looking_away_is_marked_at_the_word_spoken_then() -> None:
@@ -89,3 +97,19 @@ def test_english_mode_spells_russian_words_in_latin() -> None:
     assert [e.text for e in result.events if e.type == "filler"] == ["«e-e-e»"]
     russian = analyze(_spoken("Nu, koroche, eto tipa vazhno"), gaze=[], min_sec=60, max_sec=180)
     assert [e.text for e in russian.events if e.type == "filler"] == ["«nu»", "«koroche»", "«tipa»"]
+
+
+def test_swearing_is_marked_and_costs_delivery_points() -> None:
+    text = "This fucking pizza is suka good, blyat, and the Shiitake are fine"
+    polite = "This tasty pizza is very good, indeed, and the Shiitake are fine"  # те же слова по счёту и темпу
+    rude = analyze(_spoken(text), gaze=[], min_sec=60, max_sec=180)
+    clean = analyze(_spoken(polite), gaze=[], min_sec=60, max_sec=180)
+    marked = [text[e.start : e.end].strip(",") for e in rude.events if e.type == "profanity"]
+    assert marked == ["fucking", "suka", "blyat"]  # «Shiitake» и прочие обычные слова не задеты
+    assert rude.metrics.profanity == 3 and clean.metrics.profanity == 0
+    assert rude.score.total == clean.score.total - 24  # по 8 баллов за слово
+
+
+def test_innocent_words_are_not_swearing() -> None:
+    words = _spoken("The government made a sukiyaki assessment in Scunthorpe, f*** that").words
+    assert [w for _, w in find_profanity(words)] == ["f***"]

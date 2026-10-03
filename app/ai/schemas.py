@@ -68,7 +68,24 @@ class PaceEvent(BaseModel):
     verdict: Literal["fast", "slow"]
 
 
-LiveEvent = FillerEvent | LongPauseEvent | PaceEvent
+class ProfanityEvent(BaseModel):
+    """Игрок выругался — зал и жюри реагируют сразу."""
+
+    type: Literal["profanity"] = "profanity"
+    t: float
+    word: str
+
+
+class ContentEvent(BaseModel):
+    """Раз в несколько секунд: насколько последние слова по теме и содержательны, плюс подсказка на экран."""
+
+    type: Literal["content"] = "content"
+    t: float
+    score: int = Field(ge=0, le=100, description="0 — не по теме или вода, 100 — по теме и по делу")
+    comment: str = Field("", description="короткая подсказка игроку, может быть пустой")
+
+
+LiveEvent = FillerEvent | LongPauseEvent | PaceEvent | ContentEvent | ProfanityEvent
 
 
 # --- POST /api/ai/rounds/{id}/delivery ---
@@ -112,6 +129,7 @@ class Metrics(BaseModel):
     fillers: int
     fillers_per_min: float
     long_pauses: int
+    profanity: int = Field(0, description="сколько раз прозвучала ругань")
     gaze_on_ratio: float | None = Field(None, ge=0, le=1, description="null — взгляд не измерялся")
 
 
@@ -119,7 +137,7 @@ class TimelineEvent(BaseModel):
     """Маркер на таймлайне разбора."""
 
     # good_pause больше не выдаётся (паузу «после фразы» нельзя отличить от смеха или заминки), тип оставлен для старых записей
-    type: Literal["filler", "repeat", "long_pause", "hesitation", "pace", "gaze_off", "good_pause"]
+    type: Literal["filler", "repeat", "profanity", "long_pause", "hesitation", "pace", "gaze_off", "good_pause"]
     t: float
     text: str
     start: int | None = Field(None, description="позиция в transcript (символы): начало отмеченного места")

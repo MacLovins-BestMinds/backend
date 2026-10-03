@@ -4,13 +4,14 @@
 """
 
 import asyncio
+import logging
 from collections.abc import Sequence
 
 from pydantic import BaseModel, Field
 
 from app.ai import game_api, llm, pronunciation
 from app.ai.audio import to_wav16k
-from app.ai.delivery_metrics import analyze
+from app.ai.delivery_metrics import analyze, filler_candidates
 from app.ai.pitch import Pitch, resolve_pitch
 from app.ai.schemas import (
     ContentScore,
@@ -22,9 +23,43 @@ from app.ai.schemas import (
     PronunciationAssessment,
     Scores,
 )
-from app.ai.stt import transcribe
+from app.ai.stt import Transcript, transcribe
+
+logger = logging.getLogger(__name__)
 
 NO_SPEECH_TIP = "We didn't hear any speech — check the microphone and speak louder."
+
+
+class FillerVerdicts(BaseModel):
+    fillers: list[int] = Field(description="номера кандидатов, которые в своём контексте — слова-паразиты")
+
+
+CONTEXT_WORDS = 6
+
+
+async def judge_fillers(transcript: Transcript) -> dict[int, bool] | None:
+    """Паразит ли «like», «so», «you know» в этом месте — решает LLM по смыслу фразы.
+
+    Возвращает {номер слова: паразит?} для всех двусмысленных слов; None — LLM не ответил,
+    тогда разбор оценивает такие слова по положению во фразе.
+    """
+    words = transcript.words
+    candidates = filler_candidates(words)
+    if not candidates:
+        return {}
+    lines = []
+    for n, (i, span, _) in enumerate(candidates, 1):
+        before = " ".join(w.text for w in words[max(0, i - CONTEXT_WORDS) : i])
+        marked = " ".join(w.text for w in words[i : i + span])
+        after = " ".join(w.text for w in words[i + span : i + span + CONTEXT_WORDS])
+        lines.append(f"{n}. …{before} [{marked}] {after}…")
+    try:
+        verdict = await llm.generate("filler_judge", FillerVerdicts, transcript=transcript.text, candidates="\n".join(lines))
+    except Exception:
+        logger.exception("delivery: не удалось оценить паразиты по смыслу — считаю по положению во фразе")
+        return None
+    chosen = set(verdict.fillers)
+    return {i: n in chosen for n, (i, _, _) in enumerate(candidates, 1)}
 
 
 class ContentAssessment(BaseModel):
@@ -37,6 +72,7 @@ def _metrics_summary(m: Metrics) -> str:
         f"- duration: {m.duration_sec:.0f} s, pace: {m.wpm} words/min\n"
         f"- filler words: {m.fillers} ({m.fillers_per_min} per minute)\n"
         f"- pauses longer than 3 s: {m.long_pauses}\n"
+        f"- swear words: {m.profanity}\n"
         + (
             f"- eye contact with the audience: {m.gaze_on_ratio:.0%} of the time"
             if m.gaze_on_ratio is not None
@@ -99,7 +135,7 @@ async def run_delivery(round_id: str, audio: bytes, gaze: Sequence[GazePoint], n
     # произношение (Azure) оценивается параллельно с распознаванием и оценкой содержания; сбой → None
     pronunciation_task = asyncio.create_task(pronunciation.assess(wav))
     transcript = await transcribe(wav)
-    analysis = analyze(transcript, gaze, pitch.min_sec, pitch.max_sec)
+    analysis = analyze(transcript, gaze, pitch.min_sec, pitch.max_sec, await judge_fillers(transcript))
     # без LLM честной оценки содержания нет: ошибка уходит клиенту (502), повтор берёт распознавание из кэша
     try:
         content = await assess_content(pitch, transcript.text, analysis.metrics, notes)

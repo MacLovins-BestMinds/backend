@@ -82,6 +82,73 @@ class ProfileResponse(BaseModel):
     last_rounds: List[RoundSummary]
 
 
+class HistoryRound(BaseModel):
+    """Один сыгранный раунд в истории: баллы и привычки речи из разбора."""
+
+    id: str
+    mode: str
+    title: str
+    created_at: datetime
+    total: float
+    content: float
+    delivery: float
+    jury: float
+    duration_sec: Optional[float] = None
+    wpm: Optional[int] = None
+    fillers_per_min: Optional[float] = None
+    long_pauses: Optional[int] = None
+    repeats: Optional[int] = None
+    gaze_on_ratio: Optional[float] = None
+
+
+class SkillTrend(BaseModel):
+    """Среднее за последние 5 раундов и изменение к 5 предыдущим (None — сравнивать пока не с чем)."""
+
+    key: str
+    title: str
+    value: Optional[float] = None
+    delta: Optional[float] = None
+    better: Literal["higher", "lower", "range"] = "higher"
+    unit: str = ""
+
+
+class Insight(BaseModel):
+    kind: Literal["good", "focus"]
+    title: str
+    text: str
+
+
+class NextRank(BaseModel):
+    title: str
+    points_needed: float
+
+
+class ProgressResponse(BaseModel):
+    nick: str
+    rank: RankInfo
+    rank_score: float
+    next_rank: Optional[NextRank] = None
+    rounds_total: int
+    minutes_total: float
+    average: float
+    best: float
+    streak_days: int
+    skills: List[SkillTrend]
+    habits: List[SkillTrend]
+    insights: List[Insight]
+    history: List[HistoryRound]
+
+
+class RoundReview(BaseModel):
+    """Разбор сыгранного раунда из истории (без записи: звук и видео на сервере не хранятся)."""
+
+    round: HistoryRound
+    result: RoundFinishResponse
+    delivery: Optional[dict] = None
+    jury_questions: List[dict] = []
+    jury_answers: List[dict] = []
+
+
 class LeaderboardEntry(BaseModel):
     nick: str
     score: float

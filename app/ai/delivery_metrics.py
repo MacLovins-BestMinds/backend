@@ -1,7 +1,7 @@
 """Метрики и оценка подачи кодом — правила из docs/tz («Оценка и звание»)."""
 
 import re
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from itertools import pairwise
 
@@ -31,6 +31,17 @@ _STOPWORDS = frozenset(
     "a an the and or but of to in on at for from with by as is are was were be it its this that these those "
     "i you he she we they my your our their me him her us them do does did not no so if then there here".split()
 )
+# Ругань: слово считается бранным, если начинается с одного из корней. Русские корни — и кириллицей,
+# и в том виде, в каком они выходят после перевода расшифровки в латиницу («blyat», «khuy», «pizdets»).
+_SWEAR_EN = ("fuck", "motherfuck", "shit", "bullshit", "bitch", "asshole", "bastard", "cunt", "dickhead", "piss", "wtf")
+_SWEAR_RU = (
+    "бля", "сука", "сучк", "хуй", "хуя", "хуе", "хуё", "хую", "хуи", "нахуй", "нахуя", "похуй", "нихуя",
+    "пизд", "ебат", "ебал", "ебан", "ебуч", "ёб", "заеб", "заёб", "уеб", "уёб", "наеб", "мудак", "мудил", "говн",
+    "пидор", "пидар",
+)  # fmt: skip
+SWEAR_STEMS = _SWEAR_EN + _SWEAR_RU + tuple(to_latin(s) for s in _SWEAR_RU)
+_CENSORED = re.compile(r"[a-zа-яё]\*{2,}\w*")  # распознавание иногда само ставит звёздочки: «f***»
+PROFANITY_COST, PROFANITY_MAX = 8, 32  # столько баллов подачи снимает каждое бранное слово и не больше скольких всего
 REPEAT_WINDOW_WORDS = 15  # повтор фразы считается ошибкой, только если он рядом; дальше — нормальный возврат к мысли
 REPEAT_MAX_LEN = 8
 _STRIP = " .,!?;:…—–-«»\"'()"
@@ -85,13 +96,35 @@ def _filler_position(raw: Sequence[str], i: int, j: int, prev_is_filler: bool) -
     return (starts_clause and _ends(raw[j], _CLAUSE_END)) or prev_is_filler
 
 
-def find_fillers(words: Sequence[Word]) -> list[tuple[float, str]]:
+def find_fillers(words: Sequence[Word], verdicts: Mapping[int, bool] | None = None) -> list[tuple[float, str]]:
     """Слова-паразиты по контексту: «so, the idea…», «about, like, stoicism», но не «Do you know why…»."""
-    return [(words[i].start, hit) for i, _, hit in filler_hits(words)]
+    return [(words[i].start, hit) for i, _, hit in filler_hits(words, verdicts)]
 
 
-def filler_hits(words: Sequence[Word]) -> list[tuple[int, int, str]]:
-    """То же, что find_fillers, но с местом в тексте: (номер первого слова, сколько слов, паразит)."""
+def filler_candidates(words: Sequence[Word]) -> list[tuple[int, int, str]]:
+    """Слова, которые бывают и паразитами, и обычными словами («like», «so», «you know», «kind of»):
+    (номер первого слова, сколько слов, фраза). Паразит ли это здесь — решается по смыслу, см. verdicts."""
+    norm = [_norm(w.text) for w in words]
+    found: list[tuple[int, int, str]] = []
+    i = 0
+    while i < len(norm):
+        pair = (norm[i], norm[i + 1]) if i + 1 < len(norm) else None
+        if pair in DISCOURSE_BIGRAMS or pair in HEDGE_BIGRAMS:
+            found.append((i, 2, f"{pair[0]} {pair[1]}"))
+            i += 2
+            continue
+        if norm[i] in DISCOURSE_WORDS:
+            found.append((i, 1, norm[i]))
+        i += 1
+    return found
+
+
+def filler_hits(words: Sequence[Word], verdicts: Mapping[int, bool] | None = None) -> list[tuple[int, int, str]]:
+    """То же, что find_fillers, но с местом в тексте: (номер первого слова, сколько слов, паразит).
+
+    verdicts — решение по смыслу для двусмысленных слов (номер первого слова → паразит или нет), его даёт LLM.
+    Без него (None) такие слова оцениваются по положению во фразе; пустой словарь — двусмысленные не считаются.
+    """
     raw = [w.text for w in words]
     norm = [_norm(r) for r in raw]
     found: list[tuple[int, int, str]] = []
@@ -102,7 +135,15 @@ def filler_hits(words: Sequence[Word]) -> list[tuple[int, int, str]]:
         word = norm[i]
         hit: str | None = None
         span = 1
-        if (
+        if verdicts is not None:
+            # двусмысленные слова — по смыслу; однозначные («um», «э-э», «типа») — всегда паразиты
+            if pair in FILLER_BIGRAMS or (pair in DISCOURSE_BIGRAMS or pair in HEDGE_BIGRAMS) and verdicts.get(i, False):
+                hit, span = f"{pair[0]} {pair[1]}", 2
+            elif pair in DISCOURSE_BIGRAMS or pair in HEDGE_BIGRAMS:
+                span = 2  # обычная фраза («you know the answer») — второе слово отдельно не проверяем
+            elif word in FILLER_WORDS or _is_hesitation(word) or word in DISCOURSE_WORDS and verdicts.get(i, False):
+                hit = word
+        elif (
             pair in FILLER_BIGRAMS
             or pair in DISCOURSE_BIGRAMS
             and _filler_position(raw, i, i + 1, prev_is_filler)
@@ -121,6 +162,17 @@ def filler_hits(words: Sequence[Word]) -> list[tuple[int, int, str]]:
             found.append((i, span, hit))
         prev_is_filler = hit is not None and (word in FILLER_WORDS or _is_hesitation(word))
         i += span
+    return found
+
+
+def find_profanity(words: Sequence[Word]) -> list[tuple[int, str]]:
+    """Ругань: (номер слова, слово). На сцене её быть не должно — ни в питче, ни в ответах жюри."""
+    found = []
+    for i, w in enumerate(words):
+        raw = w.text.lower().strip(_STRIP.replace("*", ""))
+        word = _norm(w.text)
+        if word.startswith(SWEAR_STEMS) or _CENSORED.fullmatch(raw):
+            found.append((i, word or raw))
     return found
 
 
@@ -275,12 +327,18 @@ def timing_score(duration: float, min_sec: float, max_sec: float) -> int:
     return round(_interp(duration, [(0, 0), (min_sec, 100), (max_sec, 100), (max_sec + 60, 0)]))
 
 
-def analyze(transcript: Transcript, gaze: Sequence[GazePoint], min_sec: float, max_sec: float) -> DeliveryAnalysis:
+def analyze(
+    transcript: Transcript,
+    gaze: Sequence[GazePoint],
+    min_sec: float,
+    max_sec: float,
+    filler_verdicts: Mapping[int, bool] | None = None,
+) -> DeliveryAnalysis:
     words = transcript.words
     duration = transcript.duration
     speech_min = speech_minutes(words)
 
-    hits = filler_hits(words)
+    hits = filler_hits(words, filler_verdicts)
     fillers = [(words[i].start, hit) for i, _, hit in hits]
     filler_starts = {t for t, _ in fillers}
     spans_in_text = word_spans(transcript)
@@ -329,6 +387,11 @@ def analyze(transcript: Transcript, gaze: Sequence[GazePoint], min_sec: float, m
         if filler_words.isdisjoint(range(i, i + n)):  # «um, um» уже отмечено как паразит
             phrase = " ".join(_norm(w.text) for w in words[i : i + n])
             events.append(TimelineEvent(type="repeat", t=words[i].start, text=f"Repeated: «{phrase}»", **over_words(i, n)))
+    swears = find_profanity(words)
+    total = max(0, total - min(PROFANITY_MAX, PROFANITY_COST * len(swears)))  # ругань бьёт по подаче напрямую
+    events += [
+        TimelineEvent(type="profanity", t=words[i].start, text=f"Swearing: «{word}»", **over_words(i, 1)) for i, word in swears
+    ]
     events += [
         TimelineEvent(type="long_pause", t=t, text=f"Pause of {d:.1f} s mid-phrase", **after_word(t))
         for t, d in long_pauses
@@ -355,6 +418,7 @@ def analyze(transcript: Transcript, gaze: Sequence[GazePoint], min_sec: float, m
             fillers=len(fillers),
             fillers_per_min=fillers_per_min,
             long_pauses=len(long_pauses),
+            profanity=len(swears),
             gaze_on_ratio=ratio,
         ),
         score=DeliveryScore(total=total, **parts),

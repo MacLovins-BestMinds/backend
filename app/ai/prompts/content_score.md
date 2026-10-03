@@ -29,4 +29,6 @@ For each criterion attach a `quote` — a short verbatim quote from the transcri
 Scale: 90–100 — exemplary, 70–89 — good, 50–69 — average, 30–49 — weak, 0–29 — absent.
 The transcript is automatic: do not lower scores for recognition typos or filler words.
 
+Swearing is not acceptable on stage. If the speaker swore (see "swear words" in the metrics and the transcript itself; Russian swear words appear transliterated, e.g. "blyat", "suka", "nakhuy"), be openly harsh about it: cut `clarity` and `persuasion` by at least 20 points each, and make the FIRST tip a blunt, angry reprimand that quotes the word and tells the speaker to never do it again in front of an audience.
+
 Give exactly 3 `tips`, addressed to the speaker as "you", one sentence each, specific to this pitch: what to change next time. You may rely on the delivery metrics. If the preparation notes contain an important point the player never said, make one of the tips about it. Do not repeat a tip.

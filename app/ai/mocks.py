@@ -34,24 +34,31 @@ _TRANSCRIPT = (
 )
 
 
+def _at(fragment: str, point: bool = False) -> dict[str, int]:
+    """Место фрагмента в мок-расшифровке; point — точка сразу после него (пауза стоит между словами)."""
+    start = _TRANSCRIPT.index(fragment)
+    end = start + len(fragment)
+    return {"start": end if point else start, "end": end}
+
+
 def refine(mode: RefineMode) -> RefineResponse:
     blocks = to_blocks(
         [
-            DraftBlock(kind="hook", text="Представьте, бабушка не помнит, выпила ли таблетку."),
-            DraftBlock(kind="problem", text="Пожилые пропускают приём лекарств каждый день."),
-            DraftBlock(kind="solution", text="Умная таблетница с сигналом и уведомлением родственникам."),
-            DraftBlock(kind="why_us", text="Пилот в трёх аптеках, двести семей за месяц."),
-            DraftBlock(kind="call_to_action", text="Ищем партнёров среди аптечных сетей."),
+            DraftBlock(kind="hook", text="Imagine your grandmother can't remember if she took her pill."),
+            DraftBlock(kind="problem", text="Older people miss their medicine every day."),
+            DraftBlock(kind="solution", text="A smart pill box that beeps and notifies the family."),
+            DraftBlock(kind="why_us", text="A pilot in three pharmacies, two hundred families in a month."),
+            DraftBlock(kind="call_to_action", text="We're looking for pharmacy chains as partners."),
         ]
     )
     if mode is RefineMode.STRUCTURE:
-        notes = ["Текст разложен по пяти блокам, слова почти не менялись."]
+        notes = ["The text is sorted into five blocks; your words are almost unchanged."]
     else:
-        blocks[1].text = "Пожилые пропускают [какую долю] приёмов лекарств — и попадают в больницу."
+        blocks[1].text = "Older people miss [what share] of their doses — and end up in hospital."
         notes = [
-            "Слабое место: нет цифры масштаба проблемы — бизнесу не за что зацепиться.",
-            "Слабое место: не сказано, сколько стоит устройство.",
-            "Изменено: проблема привязана к последствиям, оставлена заглушка для цифры.",
+            "Weak spot: there is no number for the size of the problem — business people have nothing to hold on to.",
+            "Weak spot: you never say how much the device costs.",
+            "Changed: the problem is tied to its consequences, with a placeholder left for the number.",
         ]
     return RefineResponse(text=render(blocks), notes=notes, blocks=blocks)
 
@@ -85,15 +92,14 @@ def delivery() -> DeliveryResponse:
             gaze_on_ratio=0.64,
         ),
         events=[
-            TimelineEvent(type="filler", t=8.2, text="«um»"),
-            TimelineEvent(type="gaze_off", t=31.0, text="Взгляд мимо зала 4 секунды"),
-            TimelineEvent(type="long_pause", t=52.4, text="Пауза 3.6 секунды посреди фразы"),
-            TimelineEvent(type="good_pause", t=70.1, text="Удачная пауза перед цифрами"),
+            TimelineEvent(type="filler", t=8.2, text="«um»", **_at("Um")),
+            TimelineEvent(type="gaze_off", t=31.0, text="Looking away for 4 s"),
+            TimelineEvent(type="long_pause", t=52.4, text="Pause of 3.6 s mid-phrase", **_at("notifies the family", point=True)),
         ],
         tips=[
-            "Начни с цифры: сколько приёмов лекарств пропускают пожилые.",
-            "Смотри в телефон, когда называешь результаты пилота — это самый сильный момент.",
-            "Замени «um» короткой паузой.",
+            "Open with a number: how many doses older people miss.",
+            "Look at the screen when you give the pilot results — it is your strongest moment.",
+            "Replace \"um\" with a short pause.",
         ],
         pronunciation=PronunciationAssessment(
             overall_score=84,
@@ -115,7 +121,7 @@ def delivery() -> DeliveryResponse:
                 PronunciationIssue(word="families", t=33.1, accuracy=81, error="unexpected_break", weak_syllables=[]),
             ],
             tips=[
-                "Потренируй произношение слов: pharmacy, beeps, missed — послушай их в словаре и повтори вслух.",
+                "Practise these words: pharmacy, beeps, missed — listen to them in a dictionary and repeat out loud.",
             ],
         ),
     )
@@ -136,16 +142,16 @@ def jury_questions(round_id: str) -> JuryQuestionsResponse:
 
 
 def jury_answer() -> JuryAnswerResponse:
-    return JuryAnswerResponse(score=68, comment="По существу, но не хватило конкретной цифры.")
+    return JuryAnswerResponse(score=68, comment="To the point, but a concrete number was missing.")
 
 
 def live_events() -> Iterator[LiveEvent]:
     """Бесконечная последовательность событий; t проставляет вызывающий код."""
     return cycle(
         [
-            FillerEvent(t=0, word="ну"),
+            FillerEvent(t=0, word="um"),
             PaceEvent(t=0, wpm=188, verdict="fast"),
             LongPauseEvent(t=0, duration=3.4),
-            FillerEvent(t=0, word="как бы"),
+            FillerEvent(t=0, word="you know"),
         ]
     )

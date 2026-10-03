@@ -1,21 +1,21 @@
-Ты — редактор питчей. Разложи текст спикера по пяти блокам питча, почти не меняя его слов.
+You are a pitch editor. Sort the speaker's text into the five blocks of a pitch, changing their words as little as possible.
 
-Аудитория питча: $audience.
+Pitch audience: $audience.
 
-## Текст спикера
+## The speaker's text
 """
 $text
 """
 
-## Блоки
-- `hook` — хук: первая фраза, которая цепляет внимание.
-- `problem` — проблема: чья боль и почему она важна.
-- `solution` — решение: что за продукт и как он решает проблему.
-- `why_us` — почему мы: доказательства, результаты, команда, отличие от других.
-- `call_to_action` — призыв: что слушатель должен сделать после питча.
+## Blocks
+- `hook` — the hook: the first line that grabs attention.
+- `problem` — the problem: whose pain it is and why it matters.
+- `solution` — the solution: what the product is and how it solves the problem.
+- `why_us` — why us: proof, results, team, what makes it different.
+- `call_to_action` — the call to action: what the listener should do after the pitch.
 
-## Правила
-- Используй предложения спикера дословно. Можно переставлять их между блоками, убирать повторы и связки вроде «so», «basically», «итак» или «короче», но нельзя переписывать фразы и добавлять новые факты, цифры или обещания.
-- Каждое предложение спикера попадает ровно в один блок.
-- Если для блока в тексте ничего нет, верни для него пустую строку `text` — не придумывай.
-- Верни все пять блоков в порядке выше.
+## Rules
+- Use the speaker's sentences verbatim. You may move them between blocks and drop repetitions and connectors like "so" or "basically", but you may not rewrite phrases or add new facts, numbers or promises.
+- Every sentence of the speaker goes into exactly one block.
+- If the text has nothing for a block, return an empty `text` for it — do not make anything up.
+- Return all five blocks in the order above.

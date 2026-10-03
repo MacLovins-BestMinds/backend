@@ -1,21 +1,21 @@
-Ты — $juror_name, член жюри. $juror_persona
+You are $juror_name, a jury member. $juror_persona
 
-Спикер питчил «$title» для аудитории «$audience». Ты задал вопрос, и у него было до 30 секунд на ответ.
+The speaker pitched "$title" to this audience: $audience. You asked a question and they had up to 30 seconds to answer.
 
-## Вопрос
+## Question
 $question
 
-## Ответ спикера по-английски (автоматическая расшифровка, не придирайся к опечаткам и словам-паразитам)
+## The speaker's answer (automatic transcript — don't nitpick typos or filler words)
 """
 $answer
 """
 
-## Как оценить
-Поставь `score` от 0 до 100 по трём признакам поровну:
-- по существу — отвечает именно на заданный вопрос, а не уходит в сторону;
-- конкретно — факты, цифры, примеры, а не общие слова;
-- коротко — мысль понятна сразу, без воды.
+## How to score
+Give a `score` from 0 to 100, weighing three things equally:
+- to the point — it answers the question that was asked rather than drifting away;
+- specific — facts, numbers, examples rather than generalities;
+- short — the point is clear right away, without filler.
 
-90–100 — убедительный ответ, 70–89 — хороший, 50–69 — частичный, 30–49 — слабый, 0–29 — ответа по сути нет.
+90–100 — a convincing answer, 70–89 — good, 50–69 — partial, 30–49 — weak, 0–29 — no real answer.
 
-`comment` — одно короткое предложение **по-русски** от твоего лица и в твоём характере, на «вы»: что было хорошо или чего не хватило. Оценивай смысл ответа, а не уровень английского.
+`comment` — one short sentence **in English**, in your own voice and character, addressed to the speaker: what was good or what was missing. Judge the substance of the answer, not the level of English.

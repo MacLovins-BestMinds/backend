@@ -5,7 +5,7 @@ from app.main import app
 
 
 def _round(client: TestClient, user_id: str, mode: str) -> str:
-    body = {"user_id": user_id, "mode": mode} | ({"case_id": "stoicism"} if mode == "training" else {})
+    body = {"user_id": user_id, "mode": mode} | ({"case_id": "favourite_food"} if mode == "training" else {})
     resp = client.post("/api/game/rounds", json=body)
     assert resp.status_code == 200
     return resp.json()["round_id"]
@@ -54,5 +54,6 @@ def test_google_mock_tokens_need_explicit_flag(monkeypatch) -> None:
 def test_spin_returns_updated_topic_content() -> None:
     with TestClient(app) as client:
         case = client.get("/api/game/spin").json()["case"]
-        assert case["summary"] and case["sources"][0]["url"].startswith("https://en.wikipedia.org/wiki/")
+        # простые темы: вместо статьи — короткий план выступления, читать по ним нечего
+        assert case["summary"] and case["sources"] == []
         assert "quirk" not in case and "trick" not in case

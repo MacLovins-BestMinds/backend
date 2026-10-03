@@ -28,7 +28,7 @@ def test_demo_pitcher_seeded(client):
     assert response.status_code == 200
     data = response.json()
     assert data["nick"] == "demo_pitcher"
-    assert data["rank"]["title"] == "Питчер"
+    assert data["rank"]["title"] == "Pitcher"
     assert data["rank"]["trend"] == "up"
     assert len(data["last_rounds"]) >= 5
 
@@ -80,7 +80,7 @@ def test_round_flow(client):
     round_resp = client.post("/api/game/rounds", json={
         "user_id": user_id,
         "mode": "training",
-        "case_id": "stoicism"
+        "case_id": "favourite_food"
     })
     assert round_resp.status_code == 200
     round_data = round_resp.json()
@@ -123,7 +123,7 @@ def test_round_flow(client):
     assert "delivery" in finish_data
     assert "jury" in finish_data
     assert "rank" in finish_data
-    assert finish_data["rank"]["title"] in ["Новичок", "Спикер", "Питчер", "Оратор", "Легенда"]
+    assert finish_data["rank"]["title"] in ["Novice", "Speaker", "Pitcher", "Orator", "Legend"]
 
 
 def test_static_audio(client):

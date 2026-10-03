@@ -36,24 +36,24 @@ class Juror:
 # Черновые характеры; финальные даёт универсал (docs/tz/universal.md)
 JURORS: dict[JurorId, Juror] = {
     "strict": Juror(
-        name="Марина Викторовна",
-        persona="Строгая, бывший директор акселератора. Говорит сухо и по делу, требует цифр и сроков.",
+        name="Marina",
+        persona="Strict, a former accelerator director. Speaks dryly and to the point, demands numbers and deadlines.",
         openai_voice="coral",
         voice_style="Speak English in a strict, dry, precise tone, medium pace, no smile in the voice.",
         stability=0.75,
         style=0.1,
     ),
     "kind": Juror(
-        name="Борис",
-        persona="Добряк, предприниматель. Поддерживает, но спрашивает о людях, которым продукт поможет.",
+        name="Boris",
+        persona="Kind-hearted, an entrepreneur. Supportive, but asks about the people the product will help.",
         openai_voice="ash",
         voice_style="Speak English warmly and kindly, with a light smile, unhurried.",
         stability=0.45,
         style=0.4,
     ),
     "skeptic": Juror(
-        name="Глеб",
-        persona="Скептик, инвестор. Сомневается во всём и ищет слабое место идеи.",
+        name="Gleb",
+        persona="A sceptic, an investor. Doubts everything and looks for the weak spot of the idea.",
         openai_voice="onyx",
         voice_style="Speak English with doubt and light irony, pause before the key word.",
         stability=0.35,
@@ -72,7 +72,7 @@ class DraftQuestion(BaseModel):
 
 
 class DraftQuestions(BaseModel):
-    questions: list[DraftQuestion] = Field(min_length=2, max_length=3)
+    questions: list[DraftQuestion] = Field(min_length=1, max_length=6)
 
 
 class AnswerAssessment(BaseModel):
@@ -104,8 +104,8 @@ def _audio_url(round_id: str, question_id: str) -> str:
 
 def _quirk_rule(pitch: Pitch) -> str:
     if pitch.quirk:
-        return f"- Первый вопрос задаёт скептик, и он строится на этом каверзном углу (перефразируй под сказанное): «{pitch.quirk}»"
-    return "- Первый вопрос — о самом слабом месте питча с точки зрения этой аудитории."
+        return f"- The sceptic's question is built on this tricky angle (rephrase it to fit what was said): {pitch.quirk}"
+    return "- The sceptic's question is about the weakest spot of the pitch from this audience's point of view."
 
 
 AUDIENCE_FALLBACK_QUESTIONS: dict[Audience, list[DraftQuestion]] = {
@@ -168,8 +168,8 @@ async def _draft(pitch: Pitch, transcript: str) -> DraftQuestions:
             brief=pitch.brief,
             audience=pitch.audience_ru,
             audience_focus=AUDIENCE_FOCUS[pitch.audience],
-            own_text=f'- Подготовленный текст спикера:\n"""\n{pitch.own_text}\n"""' if pitch.is_own else "",
-            transcript=transcript or "(спикер ничего не сказал)",
+            own_text=f'- Prepared text of the speaker:\n"""\n{pitch.own_text}\n"""' if pitch.is_own else "",
+            transcript=transcript or "(the speaker said nothing)",
             jurors="\n".join(f"- `{jid}` — {j.name}. {j.persona}" for jid, j in JURORS.items()),
             quirk_rule=_quirk_rule(pitch),
         )
@@ -186,6 +186,18 @@ def fallback_questions(pitch: Pitch) -> DraftQuestions:
     return DraftQuestions(questions=list(AUDIENCE_FALLBACK_QUESTIONS[pitch.audience]))
 
 
+def one_per_juror(draft: DraftQuestions, pitch: Pitch) -> DraftQuestions:
+    """Ровно три вопроса — по одному от каждого члена жюри, в порядке стола: строгий, добрый, скептик.
+
+    Лишние вопросы одного члена жюри отбрасываются; если кто-то промолчал, берётся его заготовленный вопрос.
+    """
+    spare = {q.juror: q for q in AUDIENCE_FALLBACK_QUESTIONS[pitch.audience]}
+    asked: dict[JurorId, DraftQuestion] = {}
+    for q in draft.questions:
+        asked.setdefault(q.juror, q)
+    return DraftQuestions(questions=[asked.get(juror_id, spare[juror_id]) for juror_id in JURORS])
+
+
 async def _voice(round_id: str, question_id: str, juror: JurorId, text: str) -> None:
     mp3 = await synthesize(text, voice_for(juror))
     path = _audio_dir(round_id) / f"{question_id}.mp3"
@@ -199,11 +211,11 @@ async def run_jury_questions(round_id: str) -> JuryQuestionsResponse:
 
     pitch = await asyncio.to_thread(resolve_pitch, round_id)
     if pitch.is_warmup:
-        raise RoundStateError("В разминке нет вопросов жюри")
+        raise RoundStateError("The warm-up has no jury questions")
     delivery = await asyncio.to_thread(game_api.get_ai_result, round_id, "delivery")
     if delivery is None:
-        raise RoundStateError("Сначала отправьте выступление в delivery")
-    draft = await _draft(pitch, delivery["transcript"])
+        raise RoundStateError("Send the pitch for review (delivery) first")
+    draft = one_per_juror(await _draft(pitch, delivery["transcript"]), pitch)
 
     questions = [
         JuryQuestion(id=f"q{i}", juror=q.juror, text=q.text, audio_url=_audio_url(round_id, f"q{i}"))
@@ -220,14 +232,14 @@ async def run_jury_questions(round_id: str) -> JuryQuestionsResponse:
 async def run_jury_answer(round_id: str, question_id: str, audio: bytes) -> JuryAnswerResponse:
     saved = await asyncio.to_thread(game_api.get_ai_result, round_id, "jury_questions")
     if saved is None:
-        raise RoundStateError("Сначала запросите вопросы жюри")
+        raise RoundStateError("Request the jury questions first")
     question = next((q for q in JuryQuestionsResponse.model_validate(saved).questions if q.id == question_id), None)
     if question is None:
         raise KeyError(question_id)
 
     answer = (await transcribe(await to_wav16k(audio))).text
     if not answer:
-        result = JuryAnswerResponse(score=0, comment="Ответа не прозвучало.")
+        result = JuryAnswerResponse(score=0, comment="We didn't hear an answer.")
     else:
         pitch = await asyncio.to_thread(resolve_pitch, round_id)
         juror = JURORS[question.juror]

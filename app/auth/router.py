@@ -45,7 +45,7 @@ def register(req: UserRegisterRequest, session: Session = Depends(get_session)):
     if len(clean_nick) < 2:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Никнейм должен содержать не менее 2 символов"
+            detail="The nickname must be at least 2 characters long"
         )
 
     # Проверка уникальности ника
@@ -53,7 +53,7 @@ def register(req: UserRegisterRequest, session: Session = Depends(get_session)):
     if existing_nick:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Пользователь с никнеймом «{clean_nick}» уже существует"
+            detail=f"A user with the nickname \"{clean_nick}\" already exists"
         )
 
     # Проверка уникальности email, если указан
@@ -63,7 +63,7 @@ def register(req: UserRegisterRequest, session: Session = Depends(get_session)):
         if existing_email:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Пользователь с email «{clean_email}» уже существует"
+                detail=f"A user with the email \"{clean_email}\" already exists"
             )
     else:
         clean_email = None
@@ -102,7 +102,7 @@ def login(req: UserLoginRequest, session: Session = Depends(get_session)):
     if not user or not user.password_hash or not verify_password(req.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Неверный логин или пароль",
+            detail="Wrong login or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
 

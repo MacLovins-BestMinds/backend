@@ -39,7 +39,7 @@ def auth(
         return AuthResponse(
             user_id="u_mock",
             nick=req.nick,
-            rank=RankInfo(title="Новичок", trend="flat")
+            rank=RankInfo(title="Novice", trend="flat")
         )
 
     user = service.get_or_create_user(session, req.nick)
@@ -48,13 +48,13 @@ def auth(
 
 
 _MOCK_CASE = CasePublic(
-    id="stoicism",
-    title="Stoicism",
-    brief="Explain in simple words what Stoicism is and convince teachers it's worth discussing with students.",
-    audience="преподаватели",
-    summary="Stoicism is a philosophical movement and practical guide to living, emphasizing daily self-discipline "
-    "and moral improvement.",
-    sources=[{"title": "Wikipedia: Stoicism", "url": "https://en.wikipedia.org/wiki/Stoicism"}],
+    id="favourite_food",
+    title="My Favourite Food",
+    brief="Tell the room about the food you love most and make them hungry.",
+    audience="general public",
+    summary="Say what the food is, describe how it tastes, tell when you last had it, "
+    "and finish with why everybody should try it.",
+    sources=[],
 )
 
 
@@ -125,7 +125,7 @@ def finish_round(
             content=70.0,
             delivery=80.0,
             jury=80.0,
-            rank=RankInfo(title="Оратор", trend="up")
+            rank=RankInfo(title="Orator", trend="up")
         )
     return service.finish_round(session, round_id)
 
@@ -143,7 +143,7 @@ def get_profile(
     if mock == 1:
         return ProfileResponse(
             nick="demo_pitcher",
-            rank=RankInfo(title="Питчер", trend="up"),
+            rank=RankInfo(title="Pitcher", trend="up"),
             last_rounds=[
                 RoundSummary(
                     id="rnd_mock_1",
@@ -159,7 +159,7 @@ def get_profile(
 
     target_id = user_id or (current_user.id if current_user else None)
     if not target_id:
-        raise HTTPException(status_code=400, detail="Укажите user_id или войдите в аккаунт")
+        raise HTTPException(status_code=400, detail="Provide user_id or sign in")
     return service.get_user_profile(session, target_id)
 
 

@@ -15,7 +15,7 @@ class MissingKeyError(RuntimeError):
 
 def require(key: str, env_name: str) -> str:
     if not key:
-        raise MissingKeyError(f"AI не настроен: задайте {env_name} в .env или используйте ?mock=1")
+        raise MissingKeyError(f"AI is not configured: set {env_name} in .env or use ?mock=1")
     return key
 
 

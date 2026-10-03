@@ -53,7 +53,7 @@ def verify_google_token(id_token_str: str) -> Dict[str, Any]:
         }
 
     if not settings.GOOGLE_CLIENT_ID:
-        raise ValueError("Вход через Google не настроен: задайте GOOGLE_CLIENT_ID")
+        raise ValueError("Google sign-in is not configured: set GOOGLE_CLIENT_ID")
 
     try:
         from google.oauth2 import id_token
@@ -65,4 +65,4 @@ def verify_google_token(id_token_str: str) -> Dict[str, Any]:
         )
         return id_info
     except Exception as e:
-        raise ValueError(f"Недействительный Google токен: {str(e)}")
+        raise ValueError(f"Invalid Google token: {str(e)}")

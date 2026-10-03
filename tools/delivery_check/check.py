@@ -17,7 +17,7 @@ from app.ai.audio import to_wav16k
 from app.ai.delivery_metrics import analyze
 from app.ai.stt import transcribe
 
-KINDS = ("filler", "long_pause", "hesitation", "good_pause", "pace")
+KINDS = ("filler", "repeat", "long_pause", "hesitation", "pace")
 
 
 async def main() -> None:

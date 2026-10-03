@@ -1,19 +1,19 @@
 """Метрики и оценка подачи кодом — правила из docs/tz («Оценка и звание»)."""
 
 import re
-from bisect import bisect_right
 from collections.abc import Sequence
 from dataclasses import dataclass
 from itertools import pairwise
 
 from app.ai.schemas import DeliveryScore, GazePoint, Metrics, TimelineEvent
-from app.ai.stt import Transcript, Word
+from app.ai.stt import Transcript, Word, to_latin
 
 # Паразиты, которые паразиты всегда (звуки-заминки и русские слова на случай STT_LANGUAGE=ru)
-FILLER_WORDS = frozenset(
-    {"um", "uh", "er", "erm", "ah", "hmm"} | {"ну", "вот", "короче", "типа", "значит", "блин", "собственно", "кстати"}
-)
-FILLER_BIGRAMS = frozenset({("как", "бы"), ("это", "самое"), ("в", "общем"), ("так", "сказать"), ("в", "принципе")})
+_RU_FILLERS = {"ну", "вот", "короче", "типа", "значит", "блин", "собственно", "кстати"}
+_RU_BIGRAMS = {("как", "бы"), ("это", "самое"), ("в", "общем"), ("так", "сказать"), ("в", "принципе")}
+# русские паразиты ищем и латиницей: в английском режиме расшифровка переведена в латиницу («nu», «koroche»)
+FILLER_WORDS = frozenset({"um", "uh", "er", "erm", "ah", "hmm"} | _RU_FILLERS | {to_latin(w) for w in _RU_FILLERS})
+FILLER_BIGRAMS = frozenset(_RU_BIGRAMS | {(to_latin(a), to_latin(b)) for a, b in _RU_BIGRAMS})
 # Английские слова, которые бывают и паразитами, и нормальными словами («I like it», «Do you know why…»):
 # считаем их паразитами только в «паразитной» позиции — см. _filler_position
 DISCOURSE_WORDS = frozenset({"like", "so", "well", "actually", "basically", "literally", "right", "okay"})
@@ -23,12 +23,20 @@ HEDGE_BIGRAMS = frozenset({("kind", "of"), ("sort", "of")})
 _HEDGE_LEGIT_BEFORE = frozenset(
     {"a", "an", "the", "this", "that", "what", "which", "any", "some", "every", "one", "same"}
 )
-_HESITATION = re.compile(r"(u+[hm]+|e+r+m*|a+h+|h+m+|m+|э+м*|м+|а+м+|ы+)")
+# «e-e-e», «aaa» — так выглядит русское «э-э-э» после перевода расшифровки в латиницу
+_HESITATION = re.compile(r"(u+[hm]+|e+r+m*|a+h+|h+m+|m+|e{2,}|a{2,}|y{2,}|э+м*|м+|а+м+|ы+)")
+# слова, которые повторяют нарочно («very, very good») или по грамматике («that that», «had had»)
+_REPEAT_OK = frozenset({"very", "really", "so", "much", "many", "long", "no", "yes", "bye", "ha", "that", "had", "is"})
+_STOPWORDS = frozenset(
+    "a an the and or but of to in on at for from with by as is are was were be it its this that these those "
+    "i you he she we they my your our their me him her us them do does did not no so if then there here".split()
+)
+REPEAT_WINDOW_WORDS = 15  # повтор фразы считается ошибкой, только если он рядом; дальше — нормальный возврат к мысли
+REPEAT_MAX_LEN = 8
 _STRIP = " .,!?;:…—–-«»\"'()"
 _SENTENCE_END = (".", "!", "?", "…")
 _CLAUSE_END = (*_SENTENCE_END, ",", ";", ":", "—", "–")
 
-GOOD_PAUSE_SEC = (1.0, 2.5)  # после фразы: удачная пауза; длиннее — без штрафа
 HESITATION_SEC = 1.0  # посреди фразы от 1 до 3 с — запинка, от 3 с — длинная пауза (штраф)
 LONG_PAUSE_SEC = 3.0
 GAZE_OFF_SEC = 3.0
@@ -48,6 +56,10 @@ class DeliveryAnalysis:
 
 def _norm(word: str) -> str:
     return word.lower().strip(_STRIP).replace("ё", "е")
+
+
+def _is_hesitation(word: str) -> bool:
+    return bool(_HESITATION.fullmatch(word.replace("-", "")))
 
 
 def _interp(x: float, points: Sequence[tuple[float, float]]) -> float:
@@ -75,9 +87,14 @@ def _filler_position(raw: Sequence[str], i: int, j: int, prev_is_filler: bool) -
 
 def find_fillers(words: Sequence[Word]) -> list[tuple[float, str]]:
     """Слова-паразиты по контексту: «so, the idea…», «about, like, stoicism», но не «Do you know why…»."""
+    return [(words[i].start, hit) for i, _, hit in filler_hits(words)]
+
+
+def filler_hits(words: Sequence[Word]) -> list[tuple[int, int, str]]:
+    """То же, что find_fillers, но с местом в тексте: (номер первого слова, сколько слов, паразит)."""
     raw = [w.text for w in words]
     norm = [_norm(r) for r in raw]
-    found: list[tuple[float, str]] = []
+    found: list[tuple[int, int, str]] = []
     prev_is_filler = False
     i = 0
     while i < len(words):
@@ -95,16 +112,65 @@ def find_fillers(words: Sequence[Word]) -> list[tuple[float, str]]:
             hit, span = f"{pair[0]} {pair[1]}", 2
         elif (
             word in FILLER_WORDS
-            or _HESITATION.fullmatch(word)
+            or _is_hesitation(word)
             or word in DISCOURSE_WORDS
             and _filler_position(raw, i, i, prev_is_filler)
         ):
             hit = word
         if hit:
-            found.append((words[i].start, hit))
-        prev_is_filler = hit is not None and (word in FILLER_WORDS or bool(_HESITATION.fullmatch(word)))
+            found.append((i, span, hit))
+        prev_is_filler = hit is not None and (word in FILLER_WORDS or _is_hesitation(word))
         i += span
     return found
+
+
+def find_repeats(words: Sequence[Word]) -> list[tuple[int, int]]:
+    """Повторы слов и выражений: (номер первого слова повтора, сколько слов).
+
+    Ошибкой считается: слово, сказанное два раза подряд («Telegram. Telegram»), фраза из трёх и более слов,
+    повторённая рядом («they will leave… they will leave»), и пара слов, прозвучавшая рядом в третий раз.
+    """
+    norm = [_norm(w.text).replace("-", "") for w in words]
+    found: list[tuple[int, int]] = []
+    i = 0
+    while i < len(norm):
+        length = 0
+        lo = max(0, i - REPEAT_WINDOW_WORDS)
+        # самая длинная фраза, начинающаяся здесь и уже звучавшая рядом; последним словом предложения фраза
+        # не начинается — иначе в «…is money. They need money. They need money» отметится «money. They need»
+        longest = 1 if _ends(words[i].text, _SENTENCE_END) else min(REPEAT_MAX_LEN, len(norm) - i)
+        for n in range(longest, 1, -1):
+            gram = norm[i : i + n]
+            if not all(gram) or all(w in _STOPWORDS for w in gram):
+                continue
+            earlier = sum(norm[j : j + n] == gram for j in range(lo, i - n + 1))
+            adjacent = i >= n and norm[i - n : i] == gram
+            if earlier >= (1 if n >= 3 or adjacent else 2):
+                length = n
+                break
+        if not length and i > 0 and norm[i] and norm[i] == norm[i - 1] and norm[i] not in _REPEAT_OK:
+            length = 1
+        if length:
+            found.append((i, length))
+            i += length
+        else:
+            i += 1
+    return found
+
+
+def word_spans(transcript: Transcript) -> list[tuple[int, int]]:
+    """Где каждое слово стоит в transcript.text (символы) — чтобы приложение отметило ошибку прямо в тексте."""
+    spans: list[tuple[int, int]] = []
+    cursor = 0
+    for w in transcript.words:
+        token = w.text.strip()
+        at = transcript.text.find(token, cursor) if token else -1
+        if at < 0:  # текст и слова разошлись — ставим точку на текущем месте
+            spans.append((cursor, cursor))
+            continue
+        spans.append((at, at + len(token)))
+        cursor = at + len(token)
+    return spans
 
 
 def find_gaps(words: Sequence[Word], min_sec: float, max_sec: float = float("inf")) -> list[tuple[float, float]]:
@@ -118,16 +184,15 @@ def find_gaps(words: Sequence[Word], min_sec: float, max_sec: float = float("inf
 
 
 def classify_pauses(words: Sequence[Word]) -> dict[str, list[tuple[float, float]]]:
-    """Паузы по положению: после конца фразы — нормально, посреди фразы — запинка или длинная пауза."""
-    result: dict[str, list[tuple[float, float]]] = {"good": [], "hesitation": [], "long": []}
+    """Только плохие паузы — посреди фразы: запинка или длинная пауза. Пауза после конца фразы не отмечается."""
+    result: dict[str, list[tuple[float, float]]] = {"hesitation": [], "long": []}
     for prev, cur in pairwise(words):
         gap = round(cur.start - prev.end, 2)
         if gap < HESITATION_SEC:
             continue
         if _ends(prev.text, _SENTENCE_END):
-            if gap <= GOOD_PAUSE_SEC[1]:
-                result["good"].append((prev.end, gap))
-        elif gap >= LONG_PAUSE_SEC:
+            continue
+        if gap >= LONG_PAUSE_SEC:
             result["long"].append((prev.end, gap))
         elif not _ends(prev.text, _CLAUSE_END):  # пауза после запятой — естественная, не запинка
             result["hesitation"].append((prev.end, gap))
@@ -162,13 +227,6 @@ def gaze_on_ratio(gaze: Sequence[GazePoint], duration: float) -> float | None:
         return None
     on = sum(end - start for start, end, is_on in _gaze_spans(gaze, duration) if is_on)
     return round(on / duration, 3)
-
-
-def _gaze_on_at(spans: list[tuple[float, float, bool]], t: float) -> bool:
-    if not spans:
-        return True
-    idx = max(0, bisect_right([s[0] for s in spans], t) - 1)
-    return spans[idx][2]
 
 
 def pace_alerts(words: Sequence[Word], filler_starts: set[float]) -> list[tuple[float, int]]:
@@ -222,8 +280,30 @@ def analyze(transcript: Transcript, gaze: Sequence[GazePoint], min_sec: float, m
     duration = transcript.duration
     speech_min = speech_minutes(words)
 
-    fillers = find_fillers(words)
+    hits = filler_hits(words)
+    fillers = [(words[i].start, hit) for i, _, hit in hits]
     filler_starts = {t for t, _ in fillers}
+    spans_in_text = word_spans(transcript)
+    by_end = {w.end: i for i, w in enumerate(words)}
+    by_start = {w.start: i for i, w in enumerate(words)}
+
+    def after_word(t: float) -> dict[str, int | None]:
+        """Точка в тексте сразу после слова, которое закончилось в момент t (пауза стоит между словами)."""
+        i = by_end.get(t)
+        return {"start": spans_in_text[i][1], "end": spans_in_text[i][1]} if i is not None else {}
+
+    def before_word(t: float) -> dict[str, int | None]:
+        i = by_start.get(t)
+        return {"start": spans_in_text[i][0], "end": spans_in_text[i][0]} if i is not None else {}
+
+    def at_time(t: float) -> dict[str, int | None]:
+        """Точка в тексте перед первым словом, прозвучавшим не раньше момента t (взгляд к словам не привязан)."""
+        i = next((k for k, w in enumerate(words) if w.end >= t), None)
+        return {"start": spans_in_text[i][0], "end": spans_in_text[i][0]} if i is not None else {}
+
+    def over_words(i: int, n: int) -> dict[str, int | None]:
+        return {"start": spans_in_text[i][0], "end": spans_in_text[i + n - 1][1]}
+
     pauses = classify_pauses(words)
     long_pauses = pauses["long"]
     spans = _gaze_spans(gaze, duration)
@@ -243,24 +323,28 @@ def analyze(transcript: Transcript, gaze: Sequence[GazePoint], min_sec: float, m
     measured = {k: w for k, w in WEIGHTS.items() if parts[k] is not None}
     total = round(sum(parts[k] * w for k, w in measured.items()) / sum(measured.values()))
 
-    events = [TimelineEvent(type="filler", t=t, text=f"«{w}»") for t, w in fillers]
-    events += [TimelineEvent(type="long_pause", t=t, text=f"Пауза {d:.1f} с посреди фразы") for t, d in long_pauses]
+    events = [TimelineEvent(type="filler", t=words[i].start, text=f"«{hit}»", **over_words(i, n)) for i, n, hit in hits]
+    filler_words = {i + k for i, n, _ in hits for k in range(n)}
+    for i, n in find_repeats(words):
+        if filler_words.isdisjoint(range(i, i + n)):  # «um, um» уже отмечено как паразит
+            phrase = " ".join(_norm(w.text) for w in words[i : i + n])
+            events.append(TimelineEvent(type="repeat", t=words[i].start, text=f"Repeated: «{phrase}»", **over_words(i, n)))
     events += [
-        TimelineEvent(type="hesitation", t=t, text=f"Запинка {d:.1f} с посреди фразы") for t, d in pauses["hesitation"]
+        TimelineEvent(type="long_pause", t=t, text=f"Pause of {d:.1f} s mid-phrase", **after_word(t))
+        for t, d in long_pauses
     ]
-    # без камеры взгляд не измерен — не утверждаем, что он был в зале
-    good_pause_text = "Пауза с взглядом в зал" if gaze else "Удачная пауза перед следующей мыслью"
     events += [
-        TimelineEvent(type="good_pause", t=t, text=good_pause_text) for t, _ in pauses["good"] if _gaze_on_at(spans, t)
+        TimelineEvent(type="hesitation", t=t, text=f"Hesitation of {d:.1f} s mid-phrase", **after_word(t))
+        for t, d in pauses["hesitation"]
     ]
     events += [
-        TimelineEvent(type="gaze_off", t=round(start, 2), text=f"Взгляд мимо зала {end - start:.0f} с")
+        TimelineEvent(type="gaze_off", t=round(start, 2), text=f"Looking away for {end - start:.0f} s", **at_time(start))
         for start, end, on in spans
         if not on and end - start > GAZE_OFF_SEC
     ]
     for t, window_wpm in pace_alerts(words, filler_starts):
-        verdict = "слишком быстро" if window_wpm > PACE_RANGE_WPM[1] else "слишком медленно"
-        events.append(TimelineEvent(type="pace", t=t, text=f"Темп {window_wpm} слов/мин — {verdict}"))
+        verdict = "too fast" if window_wpm > PACE_RANGE_WPM[1] else "too slow"
+        events.append(TimelineEvent(type="pace", t=t, text=f"Pace {window_wpm} words/min — {verdict}", **before_word(t)))
     events.sort(key=lambda e: e.t)
 
     return DeliveryAnalysis(

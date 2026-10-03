@@ -17,7 +17,7 @@ def get_current_user(
     if not credentials or not credentials.credentials:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Требуется заголовок Authorization: Bearer <token>",
+            detail="The Authorization: Bearer <token> header is required",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
@@ -25,7 +25,7 @@ def get_current_user(
     if not payload or "sub" not in payload:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Недействительный или истекший токен авторизации",
+            detail="Invalid or expired authorization token",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
@@ -34,7 +34,7 @@ def get_current_user(
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Пользователь не найден",
+            detail="User not found",
             headers={"WWW-Authenticate": "Bearer"},
         )
 

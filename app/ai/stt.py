@@ -14,6 +14,19 @@ WAV_HEADER_BYTES = 44
 WAV_BYTES_PER_SEC = 16_000 * 2  # audio.to_wav16k: 16 кГц, моно, 16 бит
 
 
+_CYR = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя"
+_LAT = ("a", "b", "v", "g", "d", "e", "yo", "zh", "z", "i", "y", "k", "l", "m", "n", "o", "p", "r", "s", "t", "u",
+        "f", "kh", "ts", "ch", "sh", "shch", "", "y", "", "e", "yu", "ya")  # fmt: skip
+_TRANSLIT = {ord(c): lat for c, lat in zip(_CYR, _LAT, strict=True)}
+_TRANSLIT |= {ord(c.upper()): lat.capitalize() for c, lat in zip(_CYR, _LAT, strict=True)}
+
+
+def to_latin(text: str) -> str:
+    """Кириллица → латиница. Scribe пишет русские слова по-русски даже с language_code=en,
+    а в английском режиме вся расшифровка должна быть английскими буквами."""
+    return text.translate(_TRANSLIT)
+
+
 @dataclass(frozen=True, slots=True)
 class Word:
     text: str
@@ -73,8 +86,18 @@ async def transcribe(wav: bytes) -> Transcript:
     s = get_settings()
     key = cache.make_key(s.stt_provider, s.stt_model, s.stt_language, FILLER_PROMPT, wav)
     if cached := await cache.get("stt", key, "json"):
-        return Transcript.from_json(cached)
+        return _in_language(Transcript.from_json(cached), s.stt_language)
 
     transcript = await (_elevenlabs(wav) if s.stt_provider == "elevenlabs" else _openai(wav))
     await cache.put("stt", key, "json", transcript.to_json())
-    return transcript
+    return _in_language(transcript, s.stt_language)
+
+
+def _in_language(transcript: Transcript, language: str) -> Transcript:
+    if language != "en":
+        return transcript
+    return Transcript(
+        text=to_latin(transcript.text),
+        words=[Word(to_latin(w.text), w.start, w.end) for w in transcript.words],
+        duration=transcript.duration,
+    )

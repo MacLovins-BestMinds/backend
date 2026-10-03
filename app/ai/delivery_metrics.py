@@ -9,9 +9,16 @@ from itertools import pairwise
 from app.ai.schemas import DeliveryScore, GazePoint, Metrics, TimelineEvent
 from app.ai.stt import Transcript, Word
 
-FILLER_WORDS = frozenset({"ну", "вот", "короче", "типа", "значит", "блин", "собственно", "кстати"})
-FILLER_BIGRAMS = frozenset({("как", "бы"), ("это", "самое"), ("в", "общем"), ("так", "сказать"), ("в", "принципе")})
-_HESITATION = re.compile(r"(э+м*|м+|а+м+|ы+)")
+# английские (язык игры) и русские — на случай STT_LANGUAGE=ru
+FILLER_WORDS = frozenset(
+    {"um", "uh", "er", "erm", "ah", "hmm", "basically", "literally"}
+    | {"ну", "вот", "короче", "типа", "значит", "блин", "собственно", "кстати"}
+)
+FILLER_BIGRAMS = frozenset(
+    {("you", "know"), ("i", "mean")}
+    | {("как", "бы"), ("это", "самое"), ("в", "общем"), ("так", "сказать"), ("в", "принципе")}
+)
+_HESITATION = re.compile(r"(u+[hm]+|e+r+m*|a+h+|h+m+|m+|э+м*|м+|а+м+|ы+)")
 _STRIP = " .,!?;:…—–-«»\"'()"
 
 LONG_PAUSE_SEC = 3.0

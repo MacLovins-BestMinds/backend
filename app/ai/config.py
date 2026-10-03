@@ -42,7 +42,7 @@ class AiSettings(BaseSettings):
     # распознавание записей
     stt_provider: Literal["elevenlabs", "openai"] = "elevenlabs"
     stt_model: str = "scribe_v2"  # openai: whisper-1
-    stt_language: str = "ru"
+    stt_language: str = "en"  # язык выступлений: распознавание, живой зал, голоса жюри
 
     # живой поток
     live_stt_provider: Literal["elevenlabs", "deepgram"] = "elevenlabs"

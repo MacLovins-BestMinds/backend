@@ -34,10 +34,20 @@ async def _call(model: str, prompt: str, schema: type[BaseModel]) -> types.Gener
     )
 
 
+BACKUP_MODELS = (
+    "gemini-3.5-flash-lite",
+    "gemini-3.1-flash-lite",
+    "gemini-flash-lite-latest",
+    "gemini-3.6-flash",
+    "gemini-3.5-flash",
+    "gemini-3.8-flash",
+)
+
+
 async def _generate_with_fallback(prompt: str, schema: type[BaseModel]) -> types.GenerateContentResponse:
-    """Повторы при перегрузке, затем запасная модель (GEMINI_FALLBACK_MODEL)."""
+    """Повторы при перегрузке, затем каскадный переход по резервным моделям Gemini."""
     s = get_settings()
-    models = [m for m in dict.fromkeys([s.gemini_model, s.gemini_fallback_model]) if m]
+    models = [m for m in dict.fromkeys([s.gemini_model, s.gemini_fallback_model, *BACKUP_MODELS]) if m]
     last_error: errors.APIError | None = None
     for model in models:
         for delay in (*RETRY_DELAYS_SEC, None):
@@ -47,7 +57,11 @@ async def _generate_with_fallback(prompt: str, schema: type[BaseModel]) -> types
                 if e.code not in RETRYABLE_CODES:
                     raise
                 last_error = e
-                logger.warning("gemini %s: %s %s", model, e.code, "повтор" if delay else "переход на запасную модель")
+                logger.warning("gemini %s: %s (детали: %s)", model, e.code, str(e)[:120])
+                err_str = str(e).lower()
+                # При исчерпании суточной квоты модели сразу переходим к следующей без задержки
+                if e.code == 429 and ("per day" in err_str or "free_tier" in err_str or "quota" in err_str):
+                    break
                 if delay:
                     await asyncio.sleep(delay)
     assert last_error is not None

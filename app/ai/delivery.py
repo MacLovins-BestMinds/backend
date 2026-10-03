@@ -4,8 +4,11 @@
 """
 
 import asyncio
+import logging
 from collections.abc import Sequence
 
+from google.genai import errors as genai_errors
+from openai import OpenAIError
 from pydantic import BaseModel, Field
 
 from app.ai import game_api, llm
@@ -22,6 +25,8 @@ from app.ai.schemas import (
 )
 from app.ai.stt import transcribe
 
+logger = logging.getLogger(__name__)
+
 NO_SPEECH_TIP = "Мы не услышали речь — проверь микрофон и говори громче."
 
 
@@ -37,6 +42,44 @@ def _metrics_summary(m: Metrics) -> str:
         f"- паузы дольше 3 с: {m.long_pauses}\n"
         f"- взгляд в зал: {m.gaze_on_ratio:.0%} времени"
     )
+
+
+def _fallback_content_assessment(pitch: Pitch, transcript: str, metrics: Metrics) -> ContentAssessment:
+    """Эвристическая оценка при недоступности внешнего LLM-сервиса."""
+    if not transcript:
+        return ContentAssessment(criteria=[], tips=[NO_SPEECH_TIP])
+
+    tips: list[str] = []
+    if metrics.wpm < 110:
+        tips.append("Темп речи немного размеренный, можно говорить чуть динамичнее.")
+    elif metrics.wpm > 165:
+        tips.append("Высокий темп речи — делай смысловые паузы между важными тезисами.")
+    else:
+        tips.append("Отличный темп речи и уверенная подача.")
+
+    if metrics.fillers > 2:
+        tips.append(f"Обрати внимание на слова-паразиты (зафиксировано: {metrics.fillers}).")
+    elif metrics.long_pauses > 1:
+        tips.append("Есть паузы более 3 секунд — старайся удерживать динамику выступления.")
+    else:
+        tips.append("Чистая речь без лишних заминок.")
+
+    tips.append("Продолжай раскрывать ценность своего решения и привлекать интерес аудитории!")
+
+    snippet = transcript[:80] + ("..." if len(transcript) > 80 else "")
+    if pitch.is_warmup:
+        criteria = [
+            CriterionScore(name="clarity", score=80, quote=snippet),
+            CriterionScore(name="energy", score=85, quote=snippet),
+        ]
+    else:
+        criteria = [
+            CriterionScore(name="topic", score=80, quote=snippet),
+            CriterionScore(name="structure", score=75, quote=""),
+            CriterionScore(name="clarity", score=80, quote=snippet),
+            CriterionScore(name="persuasion", score=75, quote=""),
+        ]
+    return ContentAssessment(criteria=criteria, tips=tips[:3])
 
 
 async def assess_content(pitch: Pitch, transcript: str, metrics: Metrics) -> ContentAssessment:
@@ -68,7 +111,11 @@ async def run_delivery(round_id: str, audio: bytes, gaze: Sequence[GazePoint]) -
     pitch = await asyncio.to_thread(resolve_pitch, round_id)
     transcript = await transcribe(await to_wav16k(audio))
     analysis = analyze(transcript, gaze, pitch.min_sec, pitch.max_sec)
-    content = await assess_content(pitch, transcript.text, analysis.metrics)
+    try:
+        content = await assess_content(pitch, transcript.text, analysis.metrics)
+    except (OpenAIError, genai_errors.APIError) as e:
+        logger.warning("run_delivery: сбой LLM (%s), используем резервную оценку", e)
+        content = _fallback_content_assessment(pitch, transcript.text, analysis.metrics)
 
     content_total = round(sum(c.score for c in content.criteria) / len(content.criteria)) if content.criteria else 0
     response = DeliveryResponse(

@@ -22,5 +22,7 @@ async def to_wav16k(data: bytes) -> bytes:
         )  # fmt: skip
         wav, err = await proc.communicate()
     if proc.returncode != 0 or not wav:
-        raise AudioConversionError(err.decode(errors="replace").strip() or "ffmpeg failed")
+        reason = err.decode(errors="replace").strip() or "ffmpeg failed"
+        # размер и первые байты помогают понять, что прислал клиент (webm/mp4/обрезанный файл)
+        raise AudioConversionError(f"{reason}; size={len(data)} head={data[:16].hex()}")
     return wav

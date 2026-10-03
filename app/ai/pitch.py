@@ -41,14 +41,18 @@ class Pitch:
         return self.own_text is not None
 
 
-# Разминка «Представься залу»: 30 секунд, без кейса и без жюри
+class RoundNotFoundError(LookupError):
+    """Раунда (или его кейса) нет в игровой базе."""
+
+
+# Разминка «Представься залу»: без кейса и без жюри. Лимиты — как в create_round игрового движка.
 WARMUP = Pitch(
     title="Представься залу",
     brief="За 30 секунд расскажи, кто ты, чем занимаешься и чем тебя запомнить.",
     audience=Audience.PUBLIC,
     is_warmup=True,
     min_sec=20,
-    max_sec=40,
+    max_sec=45,
 )
 
 
@@ -64,6 +68,8 @@ def _normalize_audience(raw: str | Audience) -> Audience:
 def resolve_pitch(round_id: str) -> Pitch:
     """Разминка — фиксированное задание; свой питч — данные из раунда; иначе — кейс через get_case."""
     rnd = game_api.get_round(round_id)
+    if rnd is None:
+        raise RoundNotFoundError(f"Раунд {round_id} не найден")
     if rnd.get("mode") == "warmup":
         return WARMUP
     if own := rnd.get("own"):
@@ -73,7 +79,9 @@ def resolve_pitch(round_id: str) -> Pitch:
             audience=_normalize_audience(own["audience"]),
             own_text=own["text"],
         )
-    case = game_api.get_case(rnd["case_id"])
+    case = game_api.get_case(rnd["case_id"]) if rnd.get("case_id") else None
+    if case is None:
+        raise RoundNotFoundError(f"У раунда {round_id} нет темы")
     return Pitch(
         title=case["title"], brief=case["brief"], audience=_normalize_audience(case["audience"]), quirk=case["quirk"]
     )

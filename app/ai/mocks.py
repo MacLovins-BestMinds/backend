@@ -3,6 +3,7 @@
 from collections.abc import Iterator
 from itertools import cycle
 
+from app.ai.refine import DraftBlock, render, to_blocks
 from app.ai.schemas import (
     ContentScore,
     CriterionScore,
@@ -31,24 +32,26 @@ _TRANSCRIPT = (
 )
 
 
-def refine(text: str, mode: RefineMode) -> RefineResponse:
-    structured = (
-        "Хук: Представьте, бабушка не помнит, выпила ли таблетку.\n"
-        "Проблема: пожилые пропускают приём лекарств каждый день.\n"
-        "Решение: умная таблетница с сигналом и уведомлением родственникам.\n"
-        "Почему мы: пилот в трёх аптеках, двести семей за месяц.\n"
-        "Призыв: ищем партнёров среди аптечных сетей."
+def refine(mode: RefineMode) -> RefineResponse:
+    blocks = to_blocks(
+        [
+            DraftBlock(kind="hook", text="Представьте, бабушка не помнит, выпила ли таблетку."),
+            DraftBlock(kind="problem", text="Пожилые пропускают приём лекарств каждый день."),
+            DraftBlock(kind="solution", text="Умная таблетница с сигналом и уведомлением родственникам."),
+            DraftBlock(kind="why_us", text="Пилот в трёх аптеках, двести семей за месяц."),
+            DraftBlock(kind="call_to_action", text="Ищем партнёров среди аптечных сетей."),
+        ]
     )
     if mode is RefineMode.STRUCTURE:
-        return RefineResponse(text=structured, notes=["Текст разложен по пяти блокам, слова почти не менялись."])
-    return RefineResponse(
-        text=structured.replace("пропускают приём лекарств", "пропускают каждый третий приём лекарств"),
-        notes=[
-            "Слабое место: нет цифры масштаба проблемы — добавили долю пропущенных приёмов.",
+        notes = ["Текст разложен по пяти блокам, слова почти не менялись."]
+    else:
+        blocks[1].text = "Пожилые пропускают [какую долю] приёмов лекарств — и попадают в больницу."
+        notes = [
+            "Слабое место: нет цифры масштаба проблемы — бизнесу не за что зацепиться.",
             "Слабое место: не сказано, сколько стоит устройство.",
-            "Изменено: призыв стал конкретным — к кому и зачем обращаемся.",
-        ],
-    )
+            "Изменено: проблема привязана к последствиям, оставлена заглушка для цифры.",
+        ]
+    return RefineResponse(text=render(blocks), notes=notes, blocks=blocks)
 
 
 def delivery() -> DeliveryResponse:

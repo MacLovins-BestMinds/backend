@@ -17,6 +17,8 @@ from app.ai.schemas import (
     LongPauseEvent,
     Metrics,
     PaceEvent,
+    PronunciationAssessment,
+    PronunciationIssue,
     RefineMode,
     RefineResponse,
     Scores,
@@ -24,11 +26,11 @@ from app.ai.schemas import (
 )
 
 _TRANSCRIPT = (
-    "Представьте: бабушка в восемь утра не помнит, выпила ли она таблетку от давления. "
-    "Ну, это происходит каждый день с миллионами пожилых людей. "
-    "Мы сделали умную таблетницу: она пищит, светится и присылает родственникам уведомление, "
-    "если ячейка не открылась вовремя. Пилот в трёх аптеках, двести семей за месяц. "
-    "Нам нужны партнёры среди аптечных сетей — давайте поговорим после выступления."
+    "Imagine it's eight in the morning and your grandmother can't remember if she took her blood pressure pill. "
+    "Um, this happens every day to millions of older people. "
+    "We built a smart pill box: it beeps, lights up and notifies the family "
+    "if the box isn't opened on time. A pilot in three pharmacies, two hundred families in a month. "
+    "We're looking for pharmacy chains as partners — let's talk after the pitch."
 )
 
 
@@ -61,12 +63,14 @@ def delivery() -> DeliveryResponse:
             content=ContentScore(
                 total=72,
                 criteria=[
-                    CriterionScore(name="topic", score=85, quote="Мы сделали умную таблетницу"),
-                    CriterionScore(name="structure", score=70, quote="Нам нужны партнёры среди аптечных сетей"),
+                    CriterionScore(name="topic", score=85, quote="We built a smart pill box"),
+                    CriterionScore(name="structure", score=70, quote="We're looking for pharmacy chains as partners"),
+                    CriterionScore(name="clarity", score=75, quote="it beeps, lights up and notifies the family"),
                     CriterionScore(
-                        name="clarity", score=75, quote="она пищит, светится и присылает родственникам уведомление"
+                        name="persuasion",
+                        score=60,
+                        quote="A pilot in three pharmacies, two hundred families in a month",
                     ),
-                    CriterionScore(name="persuasion", score=60, quote="Пилот в трёх аптеках, двести семей за месяц"),
                 ],
             ),
             delivery=DeliveryScore(total=78, fillers=85, pace=100, gaze=70, pauses=90, timing=100),
@@ -81,7 +85,7 @@ def delivery() -> DeliveryResponse:
             gaze_on_ratio=0.64,
         ),
         events=[
-            TimelineEvent(type="filler", t=8.2, text="«ну»"),
+            TimelineEvent(type="filler", t=8.2, text="«um»"),
             TimelineEvent(type="gaze_off", t=31.0, text="Взгляд мимо зала 4 секунды"),
             TimelineEvent(type="long_pause", t=52.4, text="Пауза 3.6 секунды посреди фразы"),
             TimelineEvent(type="good_pause", t=70.1, text="Удачная пауза перед цифрами"),
@@ -89,16 +93,39 @@ def delivery() -> DeliveryResponse:
         tips=[
             "Начни с цифры: сколько приёмов лекарств пропускают пожилые.",
             "Смотри в телефон, когда называешь результаты пилота — это самый сильный момент.",
-            "Замени «ну» короткой паузой.",
+            "Замени «um» короткой паузой.",
         ],
+        pronunciation=PronunciationAssessment(
+            overall_score=84,
+            accuracy_score=86,
+            fluency_score=88,
+            prosody_score=79,
+            words_total=212,
+            mispronounced_words_count=3,
+            unexpected_breaks_count=1,
+            monotone=False,
+            words=[
+                PronunciationIssue(
+                    word="pharmacy", t=41.2, accuracy=37, error="mispronunciation", weak_syllables=["pha"]
+                ),
+                PronunciationIssue(
+                    word="beeps", t=24.8, accuracy=42, error="mispronunciation", weak_syllables=["eeps"]
+                ),
+                PronunciationIssue(word="missed", t=36.0, accuracy=55, error="mispronunciation", weak_syllables=[]),
+                PronunciationIssue(word="families", t=33.1, accuracy=81, error="unexpected_break", weak_syllables=[]),
+            ],
+            tips=[
+                "Потренируй произношение слов: pharmacy, beeps, missed — послушай их в словаре и повтори вслух.",
+            ],
+        ),
     )
 
 
 def jury_questions(round_id: str) -> JuryQuestionsResponse:
     questions = [
-        ("strict", "А если бабушка не пользуется смартфоном, кто получит уведомление?"),
-        ("kind", "Двести семей за месяц — сколько из них остались с вами?"),
-        ("skeptic", "Сколько стоит таблетница и кто за неё платит?"),
+        ("strict", "What if grandma doesn't use a smartphone — who gets the notification?"),
+        ("kind", "Two hundred families in a month — how many of them stayed with you?"),
+        ("skeptic", "How much does the pill box cost, and who pays for it?"),
     ]
     return JuryQuestionsResponse(
         questions=[

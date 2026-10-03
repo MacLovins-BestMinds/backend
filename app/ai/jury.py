@@ -15,15 +15,17 @@ from app.ai.config import get_settings
 from app.ai.pitch import AUDIENCE_FOCUS, Pitch, resolve_pitch
 from app.ai.schemas import JurorId, JuryAnswerResponse, JuryQuestion, JuryQuestionsResponse
 from app.ai.stt import transcribe
-from app.ai.tts import synthesize
+from app.ai.tts import Voice, synthesize
 
 
 @dataclass(frozen=True, slots=True)
 class Juror:
     name: str
     persona: str
-    voice: str
-    voice_style: str
+    openai_voice: str
+    voice_style: str  # инструкция тона для OpenAI TTS
+    stability: float  # тон для ElevenLabs: ниже — живее, выше — ровнее
+    style: float
 
 
 # Черновые характеры; финальные даёт универсал (docs/tz/universal.md)
@@ -31,20 +33,26 @@ JURORS: dict[JurorId, Juror] = {
     "strict": Juror(
         name="Марина Викторовна",
         persona="Строгая, бывший директор акселератора. Говорит сухо и по делу, требует цифр и сроков.",
-        voice="coral",
+        openai_voice="coral",
         voice_style="Говори по-русски строго и сухо, чётко, в среднем темпе, без улыбки в голосе.",
+        stability=0.75,
+        style=0.1,
     ),
     "kind": Juror(
         name="Борис",
         persona="Добряк, предприниматель. Поддерживает, но спрашивает о людях, которым продукт поможет.",
-        voice="ash",
+        openai_voice="ash",
         voice_style="Говори по-русски тепло и дружелюбно, с лёгкой улыбкой, неторопливо.",
+        stability=0.45,
+        style=0.4,
     ),
     "skeptic": Juror(
         name="Глеб",
         persona="Скептик, инвестор. Сомневается во всём и ищет слабое место идеи.",
-        voice="onyx",
+        openai_voice="onyx",
         voice_style="Говори по-русски с недоверием и лёгкой иронией, делай паузу перед главным словом.",
+        stability=0.35,
+        style=0.6,
     ),
 }
 
@@ -65,6 +73,20 @@ class DraftQuestions(BaseModel):
 class AnswerAssessment(BaseModel):
     score: int = Field(ge=0, le=100)
     comment: str
+
+
+def voice_for(juror_id: JurorId) -> Voice:
+    """Голос ElevenLabs: свой у члена жюри (ELEVENLABS_VOICE_ID_<ID>) или общий ELEVENLABS_VOICE_ID."""
+    s = get_settings()
+    j = JURORS[juror_id]
+    own_voice_id = getattr(s, f"elevenlabs_voice_id_{juror_id}")
+    return Voice(
+        openai_voice=j.openai_voice,
+        openai_instructions=j.voice_style,
+        elevenlabs_voice_id=own_voice_id or s.elevenlabs_voice_id,
+        stability=j.stability,
+        style=j.style,
+    )
 
 
 def _audio_dir(round_id: str) -> Path:
@@ -97,8 +119,7 @@ async def _draft(pitch: Pitch, transcript: str) -> DraftQuestions:
 
 
 async def _voice(round_id: str, question_id: str, juror: JurorId, text: str) -> None:
-    j = JURORS[juror]
-    mp3 = await synthesize(text, j.voice, j.voice_style)
+    mp3 = await synthesize(text, voice_for(juror))
     path = _audio_dir(round_id) / f"{question_id}.mp3"
     await asyncio.to_thread(path.write_bytes, mp3)
 

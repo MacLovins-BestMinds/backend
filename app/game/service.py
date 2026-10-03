@@ -1,4 +1,5 @@
 import json
+import logging
 import random
 import hashlib
 from datetime import datetime, date, timedelta, timezone
@@ -23,6 +24,8 @@ from app.game.schemas import (
     LeaderboardEntry,
 )
 
+
+logger = logging.getLogger(__name__)
 
 def get_rank_title(avg_score: float) -> str:
     """
@@ -365,6 +368,50 @@ def create_round(session: Session, req: RoundCreateRequest) -> RoundCreateRespon
     )
 
 
+def _collect_ai_scores(ai_results) -> tuple[Optional[float], Optional[float], Optional[float]]:
+    """
+    Баллы содержания, подачи и жюри из AiResult (None — результата нет).
+
+    Форматы AI-движка (app/ai):
+    - kind="delivery": {"scores": {"content": {"total"}, "delivery": {"total"}}, ...}
+    - kind="jury_answer": {"question_id", "score", ...} — по записи на вопрос, балл жюри = среднее
+    Старые форматы (kind="content" / "jury", плоский "score") поддерживаются для совместимости.
+    """
+    content_score = None
+    delivery_score = None
+    jury_answers: List[float] = []
+    jury_score = None
+
+    for res in ai_results:
+        try:
+            data = json.loads(res.payload)
+            if res.kind == "delivery":
+                scores = data.get("scores")
+                if isinstance(scores, dict) and isinstance(scores.get("delivery"), dict):
+                    delivery_score = float(scores["delivery"]["total"])
+                    if isinstance(scores.get("content"), dict):
+                        content_score = float(scores["content"]["total"])
+                elif isinstance(scores, dict) and "total" in scores:
+                    delivery_score = float(scores["total"])
+                elif "score" in data:
+                    delivery_score = float(data["score"])
+            elif res.kind == "content":
+                content_score = float(data.get("score", data.get("content_score")))
+            elif res.kind == "jury_answer":
+                jury_answers.append(float(data["score"]))
+            elif res.kind == "jury":
+                if "score" in data:
+                    jury_score = float(data["score"])
+                elif isinstance(data.get("scores"), list) and data["scores"]:
+                    jury_score = float(sum(data["scores"]) / len(data["scores"]))
+        except (ValueError, TypeError, KeyError):
+            logger.warning("finish: не удалось разобрать AiResult kind=%s round=%s", res.kind, res.round_id)
+
+    if jury_answers:
+        jury_score = sum(jury_answers) / len(jury_answers)
+    return content_score, delivery_score, jury_score
+
+
 def finish_round(session: Session, round_id: str) -> RoundFinishResponse:
     """
     Завершение раунда:
@@ -384,38 +431,22 @@ def finish_round(session: Session, round_id: str) -> RoundFinishResponse:
         session.commit()
 
     ai_results = session.exec(select(AiResult).where(AiResult.round_id == round_id)).all()
+    content_score, delivery_score, jury_score = _collect_ai_scores(ai_results)
 
-    content_score = None
-    delivery_score = None
-    jury_score = None
-
-    for res in ai_results:
-        try:
-            data = json.loads(res.payload)
-            if res.kind == "content":
-                content_score = float(data.get("score", data.get("content_score", 75.0)))
-            elif res.kind == "delivery":
-                if "scores" in data and isinstance(data["scores"], dict):
-                    delivery_score = float(data["scores"].get("total", 75.0))
-                else:
-                    delivery_score = float(data.get("score", 75.0))
-            elif res.kind == "jury":
-                if "score" in data:
-                    jury_score = float(data["score"])
-                elif "scores" in data and isinstance(data["scores"], list):
-                    jury_score = float(sum(data["scores"]) / len(data["scores"]))
-        except Exception:
-            pass
-
-    # Фоллбеки для автономной работы до подключения реальных нейросетей
+    # Фоллбеки для автономной работы, пока раунд не прошёл через AI (моки, демо)
     if content_score is None:
         content_score = 74.0
     if delivery_score is None:
         delivery_score = 78.0
-    if jury_score is None:
-        jury_score = 72.0
 
-    total_score = round(0.4 * content_score + 0.4 * delivery_score + 0.2 * jury_score, 1)
+    if round_obj.mode == "warmup":
+        # в разминке нет жюри: 50% содержание + 50% подача
+        jury_score = 0.0
+        total_score = round(0.5 * content_score + 0.5 * delivery_score, 1)
+    else:
+        if jury_score is None:
+            jury_score = 72.0
+        total_score = round(0.4 * content_score + 0.4 * delivery_score + 0.2 * jury_score, 1)
 
     existing_score = session.exec(select(RoundScore).where(RoundScore.round_id == round_id)).first()
     if existing_score:

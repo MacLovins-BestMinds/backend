@@ -29,3 +29,11 @@ def test_analyze_detects_long_pause_and_total() -> None:
     assert result.metrics.long_pauses == 1
     assert [e.type for e in result.events] == ["long_pause"]
     assert 0 <= result.score.total <= 100
+
+
+def test_good_pause_mentions_gaze_only_when_gaze_was_measured() -> None:
+    words = [Word("Итак.", 0.0, 0.5), Word("Дальше", 2.0, 2.4)]
+    without = analyze(Transcript("…", words, duration=70), gaze=[], min_sec=60, max_sec=180)
+    with_gaze = analyze(Transcript("…", words, duration=70), gaze=[GazePoint(t=0, on=True)], min_sec=60, max_sec=180)
+    assert [e.text for e in without.events if e.type == "good_pause"] == ["Удачная пауза перед следующей мыслью"]
+    assert [e.text for e in with_gaze.events if e.type == "good_pause"] == ["Пауза с взглядом в зал"]

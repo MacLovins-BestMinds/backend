@@ -14,3 +14,5 @@ passlib>=1.7.4
 pyjwt>=2.8.0
 google-auth>=2.30.0
 psycopg2-binary>=2.9.9
+openai>=1.50.0
+google-genai>=1.0.0

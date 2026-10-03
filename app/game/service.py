@@ -80,19 +80,57 @@ def calculate_user_rank(session: Session, user_id: str) -> RankInfo:
     return RankInfo(title=title, trend=trend)
 
 
-# --------------------------------------------------------------------------
-# Функции для Толика (AI-модуль)
-# --------------------------------------------------------------------------
+class DictLikeObject(dict):
+    """Словарь с поддержкой доступа к полям через точку и через скобки."""
+    def __getattr__(self, name: str) -> Any:
+        try:
+            return self[name]
+        except KeyError:
+            raise AttributeError(name)
 
-def get_case(case_id: str, session: Optional[Session] = None) -> Optional[Case]:
+
+AUDIENCE_RU_TO_EN = {
+    "бизнесмены": "business",
+    "жюри конкурса": "contest_jury",
+    "преподаватели": "teachers",
+    "широкая публика": "public",
+    "business": "business",
+    "contest_jury": "contest_jury",
+    "teachers": "teachers",
+    "public": "public",
+}
+
+
+def get_case(case_id: str, session: Optional[Session] = None) -> Optional[DictLikeObject]:
     """
-    Возвращает кейс ИЗ БАЗЫ ВКЛЮЧАЯ ПРИКОЛ (trick).
-    Толик берёт его через get_case(case_id) для генерации вопросов жюри.
+    Возвращает кейс ИЗ БАЗЫ ВКЛЮЧАЯ ПРИКОЛ (trick / quirk).
+    Поддерживает как case.trick, так и case["quirk"] для AI Толика.
     """
+    c = None
     if session is not None:
-        return session.get(Case, case_id)
-    with Session(engine) as s:
-        return s.get(Case, case_id)
+        c = session.get(Case, case_id)
+    else:
+        with Session(engine) as s:
+            c = s.get(Case, case_id)
+
+    if not c:
+        return None
+
+    raw_aud = c.audience or "business"
+    norm_aud = AUDIENCE_RU_TO_EN.get(raw_aud.lower(), raw_aud)
+
+    return DictLikeObject({
+        "id": c.id,
+        "category": c.category_id,
+        "category_id": c.category_id,
+        "category_title": c.category_title,
+        "title": c.title,
+        "brief": c.brief,
+        "audience": norm_aud,
+        "audience_ru": raw_aud,
+        "quirk": c.trick,
+        "trick": c.trick,
+    })
 
 
 def save_ai_result(
@@ -120,14 +158,70 @@ def save_ai_result(
         return ai_res
 
 
-def get_round(round_id: str, session: Optional[Session] = None) -> Optional[Round]:
+def get_round(round_id: str, session: Optional[Session] = None) -> Optional[DictLikeObject]:
     """
-    Возвращает объект раунда.
+    Возвращает объект раунда с поддержкой round.mode и round["case_id"].
     """
+    r = None
     if session is not None:
-        return session.get(Round, round_id)
-    with Session(engine) as s:
-        return s.get(Round, round_id)
+        r = session.get(Round, round_id)
+    else:
+        with Session(engine) as s:
+            r = s.get(Round, round_id)
+
+    if not r:
+        return None
+
+    own = None
+    if r.own_title:
+        raw_own_aud = r.own_audience or "public"
+        own = {
+            "title": r.own_title,
+            "text": r.own_text or "",
+            "audience": AUDIENCE_RU_TO_EN.get(raw_own_aud.lower(), raw_own_aud),
+        }
+
+    return DictLikeObject({
+        "id": r.id,
+        "user_id": r.user_id,
+        "mode": r.mode,
+        "case_id": r.case_id,
+        "status": r.status,
+        "own": own,
+        "own_title": r.own_title,
+        "own_text": r.own_text,
+        "own_audience": r.own_audience,
+    })
+
+
+def get_ai_result(round_id: str, kind: str, session: Optional[Session] = None) -> Optional[dict]:
+    """
+    Возвращает последний сохраненный результат AI для раунда.
+    """
+    res = None
+    if session is not None:
+        stmt = (
+            select(AiResult)
+            .where(AiResult.round_id == round_id, AiResult.kind == kind)
+            .order_by(desc(AiResult.created_at))
+        )
+        res = session.exec(stmt).first()
+    else:
+        with Session(engine) as s:
+            stmt = (
+                select(AiResult)
+                .where(AiResult.round_id == round_id, AiResult.kind == kind)
+                .order_by(desc(AiResult.created_at))
+            )
+            res = s.exec(stmt).first()
+
+    if not res:
+        return None
+
+    try:
+        return json.loads(res.payload)
+    except Exception:
+        return {"raw": res.payload}
 
 
 # --------------------------------------------------------------------------

@@ -1,7 +1,21 @@
 import pytest
 from fastapi.testclient import TestClient
 
+from sqlmodel import Session, select
 from app.main import app
+from app.core.db import engine
+from app.game.models import User
+
+
+@pytest.fixture(scope="module", autouse=True)
+def cleanup_users():
+    with Session(engine) as session:
+        for nick in ["alex_speaker_auth", "guest_pitcher", "retro_guest"]:
+            u = session.exec(select(User).where(User.nick == nick)).first()
+            if u:
+                session.delete(u)
+        session.commit()
+    yield
 
 
 @pytest.fixture(scope="module")

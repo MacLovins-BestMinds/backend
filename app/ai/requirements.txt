@@ -1,0 +1,7 @@
+# Зависимости AI-движка (добавить в общие зависимости бэкенда). Нужен системный ffmpeg.
+fastapi
+uvicorn[standard]
+python-multipart
+pydantic-settings
+openai
+google-genai

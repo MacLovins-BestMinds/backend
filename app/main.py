@@ -49,7 +49,7 @@ app.mount("/static", StaticFiles(directory=str(settings.STATIC_DIR)), name="stat
 # Подключение игрового, AI и Auth роутеров
 app.include_router(auth_router, prefix="/api")
 app.include_router(game_router, prefix="/api")
-app.include_router(ai_router, prefix="/api")
+app.include_router(ai_router)
 
 
 @app.get("/")

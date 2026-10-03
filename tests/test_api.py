@@ -89,25 +89,27 @@ def test_round_flow(client):
     assert round_data["pitch_min_sec"] == 60
     assert round_data["pitch_max_sec"] == 180
 
-    # 3. Вопросы жюри для Толика (включают каверзный угол кейса)
-    q_resp = client.post(f"/api/ai/rounds/{round_id}/jury/questions")
-    assert q_resp.status_code == 200
-    questions = q_resp.json()["questions"]
-    assert len(questions) >= 2
-    assert questions[0]["audio_url"].startswith("/static/audio/")
-
-    # 4. Анализ подачи delivery
+    # 3. Анализ подачи delivery
     deliv_resp = client.post(
-        f"/api/ai/rounds/{round_id}/delivery",
-        data={"gaze": '[{"t": 0.5, "on": true}]'}
+        f"/api/ai/rounds/{round_id}/delivery?mock=1",
+        data={"gaze": '[{"t": 0.5, "on": true}]'},
+        files={"audio": ("pitch.m4a", b"dummy_pitch_audio", "audio/m4a")}
     )
     assert deliv_resp.status_code == 200
     assert "scores" in deliv_resp.json()
 
+    # 4. Вопросы жюри (включают каверзный угол кейса)
+    q_resp = client.post(f"/api/ai/rounds/{round_id}/jury/questions?mock=1")
+    assert q_resp.status_code == 200
+    questions = q_resp.json()["questions"]
+    assert len(questions) >= 2
+    assert questions[0]["audio_url"].startswith("/static/")
+
     # 5. Ответ на вопрос жюри
     ans_resp = client.post(
-        f"/api/ai/rounds/{round_id}/jury/answer",
-        data={"question_id": "q1"}
+        f"/api/ai/rounds/{round_id}/jury/answer?mock=1",
+        data={"question_id": "q1"},
+        files={"audio": ("answer.m4a", b"dummy_answer_audio", "audio/m4a")}
     )
     assert ans_resp.status_code == 200
     assert "score" in ans_resp.json()
@@ -146,8 +148,8 @@ def test_mock_parameter(client):
 
 def test_websocket_live(client):
     # WebSocket для передачи PCM аудио кусков и получения сигналов зала
-    with client.websocket_connect("/api/ai/live?round_id=test_rnd") as ws:
-        ws.send_bytes(b"\x00" * 4000)
+    with client.websocket_connect("/api/ai/live?round_id=test_rnd&mock=true") as ws:
+        ws.send_bytes(b"\x00" * 160000)
         event = ws.receive_json()
         assert "type" in event
         assert "t" in event

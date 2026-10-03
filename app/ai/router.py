@@ -1,196 +1,168 @@
-import json
-import asyncio
-from typing import Optional, List
-from fastapi import APIRouter, UploadFile, File, Form, Query, Path, WebSocket, WebSocketDisconnect
+"""Роутер /api/ai. При ?mock=1 или AI_MOCK=1 все эндпоинты отвечают примерами ответов (моками)."""
 
+import logging
+from collections.abc import Iterator
+from contextlib import contextmanager
+from typing import Annotated
+
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Path,
+    Query,
+    UploadFile,
+    WebSocket,
+    WebSocketDisconnect,
+    status,
+)
+from google.genai import errors as genai_errors
+from openai import OpenAIError
+from pydantic import TypeAdapter, ValidationError
+
+from app.ai import mocks
+from app.ai.audio import AudioConversionError
+from app.ai.clients import MissingKeyError
+from app.ai.config import get_settings
+from app.ai.delivery import run_delivery
+from app.ai.jury import RoundStateError, run_jury_answer, run_jury_questions
+from app.ai.live import PCM_BYTES_PER_SEC, run_live
+from app.ai.refine import run_refine
 from app.ai.schemas import (
+    DeliveryResponse,
+    GazePoint,
+    JuryAnswerResponse,
+    JuryQuestionsResponse,
     RefineRequest,
     RefineResponse,
-    DeliveryResponse,
-    DeliveryScoreDetails,
-    JuryQuestionsResponse,
-    JurorQuestion,
-    JuryAnswerResponse,
 )
-from app.game import service
 
-router = APIRouter(prefix="/ai", tags=["ai"])
+logger = logging.getLogger(__name__)
+router = APIRouter(prefix="/api/ai", tags=["ai"])
+
+MOCK_LIVE_EVENT_EVERY_SEC = 5.0
+
+# round_id попадает в путь к mp3 на диске — только безопасные символы
+RoundId = Annotated[str, Path(pattern=r"^[A-Za-z0-9_-]{1,64}$")]
+
+_gaze_adapter = TypeAdapter(list[GazePoint])
 
 
-@router.post("/refine", response_model=RefineResponse)
-def refine_pitch(
-    req: RefineRequest,
-    mock: int = Query(0, description="1 для мок-ответа")
-):
-    """
-    «Структурировать» раскладывает текст по блокам (хук, проблема, решение, почему мы, призыв).
-    «Структурировать и улучшить» добавляет разбор слабых мест и переписанную версию.
-    """
-    if req.mode == "improve":
-        refined_text = (
-            f"1. [ХУК]: Знаете ли вы, с чем ежедневно сталкивается аудитория: {req.audience}?\n"
-            f"2. [ПРОБЛЕМА]: Существующие методы отнимают слишком много времени и не дают нужного результата.\n"
-            f"3. [РЕШЕНИЕ]: {req.text.strip()}\n"
-            f"4. [ПОЧЕМУ МЫ]: Быстрый запуск, доказанная надёжность и прозрачная ценность.\n"
-            f"5. [ПРИЗЫВ]: Приглашаю вас протестировать наше решение уже сегодня!"
-        )
-        notes = [
-            "Усилен хук в начале для захвата внимания зала",
-            f"Акцент сфокусирован под специфику «{req.audience}»",
-            "Добавлен понятный и убедительный призыв к действию"
-        ]
-    else:
-        refined_text = (
-            f"[ХУК]: Внимание аудитории.\n"
-            f"[ПРОБЛЕМА]: Ключевое препятствие.\n"
-            f"[РЕШЕНИЕ]: {req.text.strip()}\n"
-            f"[ПОЧЕМУ МЫ]: Главное преимущество.\n"
-            f"[ПРИЗЫВ]: Конкретный следующий шаг."
-        )
-        notes = [
-            "Текст структурирован по классической формуле питча",
-            "Оригинальные мысли и формулировки сохранены"
-        ]
+def is_mock(mock: Annotated[bool, Query()] = False) -> bool:
+    return mock or get_settings().ai_mock
 
-    return RefineResponse(text=refined_text, notes=notes)
+
+UseMock = Annotated[bool, Depends(is_mock)]
+
+
+def parse_gaze(gaze: Annotated[str, Form()] = "[]") -> list[GazePoint]:
+    try:
+        return _gaze_adapter.validate_json(gaze)
+    except ValidationError as e:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, f"gaze: {e.errors(include_url=False)}") from e
+
+
+async def read_audio(upload: UploadFile) -> bytes:
+    data = await upload.read()
+    if not data:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "audio: пустой файл")
+    if len(data) > get_settings().max_audio_mb * 1024 * 1024:
+        raise HTTPException(status.HTTP_413_CONTENT_TOO_LARGE, "audio: файл слишком большой")
+    return data
+
+
+@contextmanager
+def ai_errors(op: str, round_id: str) -> Iterator[None]:
+    """Единое отображение ошибок пайплайна в HTTP-ответы."""
+    try:
+        yield
+    except AudioConversionError as e:
+        logger.warning("%s: ffmpeg не прочитал запись, round=%s: %s", op, round_id, e)
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_CONTENT, "audio: не удалось прочитать запись, нужен m4a/AAC"
+        ) from e
+    except RoundStateError as e:
+        raise HTTPException(status.HTTP_409_CONFLICT, str(e)) from e
+    except MissingKeyError as e:
+        logger.error("%s: %s", op, e)
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, str(e)) from e
+    except (OpenAIError, genai_errors.APIError) as e:
+        logger.exception("%s: ошибка внешнего AI-сервиса, round=%s", op, round_id)
+        raise HTTPException(status.HTTP_502_BAD_GATEWAY, "AI-сервис недоступен, попробуйте ещё раз") from e
+
+
+@router.post("/refine")
+async def refine(body: RefineRequest, use_mock: UseMock) -> RefineResponse:
+    """structure — разложить свой текст по блокам почти без правок; improve — слабые места и переписанная версия."""
+    if use_mock:
+        return mocks.refine(body.mode)
+    with ai_errors("refine", "-"):
+        return await run_refine(body)
+
+
+@router.post("/rounds/{round_id}/delivery")
+async def delivery(
+    round_id: RoundId,
+    audio: Annotated[UploadFile, File(description="запись выступления, m4a/AAC")],
+    gaze: Annotated[list[GazePoint], Depends(parse_gaze)],
+    use_mock: UseMock,
+) -> DeliveryResponse:
+    if use_mock:
+        return mocks.delivery()
+    data = await read_audio(audio)
+    with ai_errors("delivery", round_id):
+        return await run_delivery(round_id, data, gaze)
+
+
+@router.post("/rounds/{round_id}/jury/questions")
+async def jury_questions(round_id: RoundId, use_mock: UseMock) -> JuryQuestionsResponse:
+    """2–3 вопроса жюри с mp3-озвучкой. Требует выполненного delivery; повторный вызов отдаёт те же вопросы."""
+    if use_mock:
+        return mocks.jury_questions(round_id)
+    with ai_errors("jury_questions", round_id):
+        return await run_jury_questions(round_id)
+
+
+@router.post("/rounds/{round_id}/jury/answer")
+async def jury_answer(
+    round_id: RoundId,
+    question_id: Annotated[str, Form()],
+    audio: Annotated[UploadFile, File(description="ответ на вопрос, m4a")],
+    use_mock: UseMock,
+) -> JuryAnswerResponse:
+    if use_mock:
+        return mocks.jury_answer()
+    data = await read_audio(audio)
+    with ai_errors("jury_answer", round_id):
+        try:
+            return await run_jury_answer(round_id, question_id, data)
+        except KeyError as e:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, f"Вопрос {question_id} не найден") from e
 
 
 @router.websocket("/live")
-async def live_analysis(websocket: WebSocket, round_id: Optional[str] = Query(None)):
-    """
-    WebSocket для живых сигналов зала:
-    Приложение шлёт бинарные куски PCM 16 кГц, моно, 16 бит по 250 мс.
-    Обратно летят события filler, long_pause, pace.
-    """
+async def live(websocket: WebSocket, round_id: str, mock: bool = False) -> None:
+    """Приложение шлёт бинарные куски PCM 16 кГц по 250 мс, сервер отвечает событиями filler/long_pause/pace."""
+    if mock or get_settings().ai_mock:
+        await _live_mock(websocket)
+    else:
+        await run_live(websocket, round_id)
+
+
+async def _live_mock(websocket: WebSocket) -> None:
     await websocket.accept()
+    events = mocks.live_events()
+    received_bytes = 0
+    next_event_at = MOCK_LIVE_EVENT_EVERY_SEC
     try:
-        ticks = 0
         while True:
-            # Читаем приходящие аудио чанки или текстовые пинги
-            try:
-                data = await asyncio.wait_for(websocket.receive(), timeout=3.0)
-                if "bytes" in data:
-                    pcm_chunk = data["bytes"]
-                elif "text" in data:
-                    text_msg = data["text"]
-            except asyncio.TimeoutError:
-                pass
-
-            ticks += 1
-            # Эмулируем события зала для интерактивной реакции
-            if ticks % 4 == 1:
-                event = {"type": "filler", "word": "э-э-э", "t": ticks * 2}
-                await websocket.send_json(event)
-            elif ticks % 4 == 2:
-                event = {"type": "pace", "wpm": 140, "t": ticks * 2}
-                await websocket.send_json(event)
-            elif ticks % 4 == 3:
-                event = {"type": "attention", "delta": 4, "t": ticks * 2}
-                await websocket.send_json(event)
-
-            await asyncio.sleep(0.5)
+            received_bytes += len(await websocket.receive_bytes())
+            elapsed = received_bytes / PCM_BYTES_PER_SEC
+            if elapsed >= next_event_at:
+                event = next(events).model_copy(update={"t": round(elapsed, 2)})
+                await websocket.send_json(event.model_dump())
+                next_event_at += MOCK_LIVE_EVENT_EVERY_SEC
     except WebSocketDisconnect:
         pass
-
-
-@router.post("/rounds/{round_id}/delivery", response_model=DeliveryResponse)
-async def analyze_delivery(
-    round_id: str = Path(...),
-    audio: UploadFile = File(None),
-    gaze: Optional[str] = Form(None),
-    mock: int = Query(0, description="1 для мок-ответа")
-):
-    """
-    Анализ подачи (m4a/AAC + MediaPipe gaze):
-    - транскрипт
-    - оценки (паразиты 30%, темп 20%, взгляд 20%, паузы 15%, тайминг 15%)
-    - события зала и советы
-    """
-    res = DeliveryResponse(
-        transcript="Приветствую членов жюри и всех присутствующих! Сегодня мы представляем наш проект...",
-        scores=DeliveryScoreDetails(
-            total=78.5,
-            fillers=80.0,
-            pace=85.0,
-            gaze=75.0,
-            pauses=70.0,
-            timing=85.0
-        ),
-        metrics={
-            "words_per_minute": 138,
-            "fillers_count": 2,
-            "gaze_camera_percent": 76.0,
-            "long_pauses_count": 1,
-            "duration_sec": 75
-        },
-        events=[
-            {"t": 12, "type": "filler", "word": "ну"},
-            {"t": 34, "type": "pause", "duration": 3.2}
-        ],
-        tips=[
-            "Отличный средний темп (138 слов в минуту).",
-            "Старайтесь удерживать взгляд на камере телефона во время кульминации питча."
-        ]
-    )
-
-    service.save_ai_result(round_id, "delivery", res.model_dump())
-    service.save_ai_result(round_id, "content", {"score": 76.0, "comment": "Отличная структура и соответствие теме."})
-
-    return res
-
-
-@router.post("/rounds/{round_id}/jury/questions", response_model=JuryQuestionsResponse)
-def get_jury_questions(
-    round_id: str = Path(...),
-    mock: int = Query(0, description="1 для мок-ответа")
-):
-    """
-    2–3 вопроса жюри, строятся из прикола кейса и сказанного человеком.
-    В ответе возвращаются id, juror, text, audio_url (mp3 в /static/audio/).
-    """
-    trick_text = "А если бабушка принципиально не пользуется смартфоном?"
-    round_obj = service.get_round(round_id)
-    if round_obj and round_obj.case_id:
-        case = service.get_case(round_obj.case_id)
-        if case and case.trick:
-            trick_text = case.trick
-
-    questions = [
-        JurorQuestion(
-            id="q1",
-            juror="Анна (Строгая)",
-            text=f"Ответьте прямо: {trick_text}",
-            audio_url="/static/audio/q1.mp3"
-        ),
-        JurorQuestion(
-            id="q2",
-            juror="Игорь (Скептик)",
-            text="Какова себестоимость решения и кто за него готов платить?",
-            audio_url="/static/audio/q2.mp3"
-        ),
-        JurorQuestion(
-            id="q3",
-            juror="Михаил (Добряк)",
-            text="Что вдохновило вас на выбор именно этой аудитории?",
-            audio_url="/static/audio/q3.mp3"
-        )
-    ]
-    return JuryQuestionsResponse(questions=questions)
-
-
-@router.post("/rounds/{round_id}/jury/answer", response_model=JuryAnswerResponse)
-async def submit_jury_answer(
-    round_id: str = Path(...),
-    question_id: str = Form(...),
-    audio: UploadFile = File(None),
-    mock: int = Query(0, description="1 для мок-ответа")
-):
-    """
-    Оценка ответа на вопрос жюри: по существу, конкретно, коротко.
-    """
-    res = JuryAnswerResponse(
-        score=82.0,
-        comment="Отличный конкретный ответ, каверзный угол отработан аргументированно."
-    )
-    service.save_ai_result(round_id, "jury", {"question_id": question_id, "score": res.score, "comment": res.comment})
-    return res

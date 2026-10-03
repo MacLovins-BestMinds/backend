@@ -11,4 +11,7 @@ dist/
 build/
 *.egg-info/
 .pytest_cache/
+.ruff_cache/
 backups/
+static/jury/
+.ai_cache/

@@ -2,6 +2,7 @@
 
 from functools import lru_cache
 
+from elevenlabs.client import AsyncElevenLabs
 from google import genai
 from openai import AsyncOpenAI
 
@@ -12,7 +13,7 @@ class MissingKeyError(RuntimeError):
     """В окружении нет ключа к AI-сервису."""
 
 
-def _require(key: str, env_name: str) -> str:
+def require(key: str, env_name: str) -> str:
     if not key:
         raise MissingKeyError(f"AI не настроен: задайте {env_name} в .env или используйте ?mock=1")
     return key
@@ -20,9 +21,14 @@ def _require(key: str, env_name: str) -> str:
 
 @lru_cache
 def openai_client() -> AsyncOpenAI:
-    return AsyncOpenAI(api_key=_require(get_settings().openai_api_key, "OPENAI_API_KEY"))
+    return AsyncOpenAI(api_key=require(get_settings().openai_api_key, "OPENAI_API_KEY"))
 
 
 @lru_cache
 def gemini_client() -> genai.Client:
-    return genai.Client(api_key=_require(get_settings().gemini_api_key, "GEMINI_API_KEY"))
+    return genai.Client(api_key=require(get_settings().gemini_api_key, "GEMINI_API_KEY"))
+
+
+@lru_cache
+def elevenlabs_client() -> AsyncElevenLabs:
+    return AsyncElevenLabs(api_key=require(get_settings().elevenlabs_api_key, "ELEVENLABS_API_KEY"))

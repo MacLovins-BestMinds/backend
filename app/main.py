@@ -8,12 +8,15 @@ from app.core.config import settings
 from app.core.db import init_db, engine
 from app.game.service import seed_cases_from_json, seed_demo_pitcher
 from app.game.router import router as game_router
+from app.ai.config import validate_ai_settings
 from app.ai.router import router as ai_router
 from app.auth.router import router as auth_router
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # 0. Без ключей AI (ElevenLabs, Gemini) сервер не стартует; AI_MOCK=1 — запуск на моках
+    validate_ai_settings()
     # 1. Инициализация таблиц базы данных
     init_db()
     # 2. Загрузка тем из content/topics.json и создание демо-пользователя «Питчер»

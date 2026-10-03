@@ -34,22 +34,10 @@ async def _call(model: str, prompt: str, schema: type[BaseModel]) -> types.Gener
     )
 
 
-BACKUP_MODELS = (
-    "gemini-3.5-flash-lite",
-    "gemini-3.1-flash-lite",
-    "gemini-flash-lite-latest",
-    "gemini-3.6-flash",
-    "gemini-3.5-flash",
-    "gemini-3.8-flash",
-)
-
-
 async def _generate_with_fallback(prompt: str, schema: type[BaseModel]) -> types.GenerateContentResponse:
-    """Повторы при перегрузке, затем каскадный переход по резервным моделям Gemini."""
-    s = get_settings()
-    models = [m for m in dict.fromkeys([s.gemini_model, s.gemini_fallback_model, *BACKUP_MODELS]) if m]
+    """Повторы при перегрузке, затем по очереди запасные модели (GEMINI_FALLBACK_MODELS)."""
     last_error: errors.APIError | None = None
-    for model in models:
+    for model in get_settings().gemini_models:
         for delay in (*RETRY_DELAYS_SEC, None):
             try:
                 return await _call(model, prompt, schema)

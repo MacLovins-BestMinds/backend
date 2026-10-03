@@ -52,6 +52,15 @@ WARMUP = Pitch(
 )
 
 
+def _normalize_audience(raw: str | Audience) -> Audience:
+    if isinstance(raw, Audience):
+        return raw
+    ru_map = {v: k for k, v in AUDIENCE_RU.items()}
+    if raw in ru_map:
+        return ru_map[raw]
+    return Audience(raw)
+
+
 def resolve_pitch(round_id: str) -> Pitch:
     """Разминка — фиксированное задание; свой питч — данные из раунда; иначе — кейс через get_case."""
     rnd = game_api.get_round(round_id)
@@ -59,7 +68,7 @@ def resolve_pitch(round_id: str) -> Pitch:
         return WARMUP
     if own := rnd.get("own"):
         return Pitch(
-            title=own["title"], brief="Свой питч игрока", audience=Audience(own["audience"]), own_text=own["text"]
+            title=own["title"], brief="Свой питч игрока", audience=_normalize_audience(own["audience"]), own_text=own["text"]
         )
     case = game_api.get_case(rnd["case_id"])
-    return Pitch(title=case["title"], brief=case["brief"], audience=Audience(case["audience"]), quirk=case["quirk"])
+    return Pitch(title=case["title"], brief=case["brief"], audience=_normalize_audience(case["audience"]), quirk=case["quirk"])

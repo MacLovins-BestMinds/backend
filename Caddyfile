@@ -1,0 +1,8 @@
+# Замените your-domain.com на реальный домен сервера при деплое
+:80 {
+    reverse_proxy backend:8000
+}
+
+# your-domain.com {
+#     reverse_proxy backend:8000
+# }

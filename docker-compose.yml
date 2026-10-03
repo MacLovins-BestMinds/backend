@@ -1,0 +1,54 @@
+services:
+  # База данных PostgreSQL 16
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: stage_zero
+      POSTGRES_PASSWORD: stage_zero_password
+      POSTGRES_DB: stage_zero
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U stage_zero -d stage_zero"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./static:/app/static
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8000
+      - DATABASE_URL=postgresql://stage_zero:stage_zero_password@postgres:5432/stage_zero
+      - CORS_ORIGINS=*
+      - MOCK_FALLBACK=true
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Автоматический HTTPS через Caddy для серверов (P1 Деплой)
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:

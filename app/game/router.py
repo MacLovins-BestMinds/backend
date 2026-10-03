@@ -47,6 +47,17 @@ def auth(
     return AuthResponse(user_id=user.id, nick=user.nick, rank=rank)
 
 
+_MOCK_CASE = CasePublic(
+    id="stoicism",
+    title="Стоицизм (Stoicism)",
+    brief="Объясни простыми словами, что такое стоицизм, и убеди преподавателей, что его стоит разбирать со студентами.",
+    audience="преподаватели",
+    summary="Stoicism is a philosophical movement and practical guide to living, emphasizing daily self-discipline "
+    "and moral improvement.",
+    sources=[{"title": "Wikipedia: Stoicism", "url": "https://en.wikipedia.org/wiki/Stoicism"}],
+)
+
+
 @router.get("/spin", response_model=SpinResponse)
 def spin(
     mock: int = Query(0, description="1 для мок-ответа"),
@@ -57,13 +68,8 @@ def spin(
     """
     if mock == 1:
         return SpinResponse(
-            category=CategoryOut(id="health", title="Здоровье"),
-            case=CasePublic(
-                id="health-01",
-                title="Умная таблетница, которая напоминает пожилым о лекарствах",
-                brief="Умная таблетница, которая напоминает пожилым о лекарствах. Аудитория: бизнесмены. Убеди зал и жюри в ценности и жизнеспособности этой идеи.",
-                audience="бизнесмены"
-            )
+            category=CategoryOut(id="philosophy", title="🏛 Философия жизни"),
+            case=_MOCK_CASE
         )
     return service.spin_case(session)
 
@@ -80,12 +86,7 @@ def daily(
     if mock == 1:
         return DailyResponse(
             date=date or "2026-10-03",
-            case=CasePublic(
-                id="health-01",
-                title="Умная таблетница, которая напоминает пожилым о лекарствах",
-                brief="Умная таблетница, которая напоминает пожилым о лекарствах. Аудитория: бизнесмены. Убеди зал и жюри в ценности и жизнеспособности этой идеи.",
-                audience="бизнесмены"
-            )
+            case=_MOCK_CASE
         )
     return service.get_daily_case(session, date)
 

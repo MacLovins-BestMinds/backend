@@ -8,11 +8,18 @@ class CategoryOut(BaseModel):
     title: str
 
 
+class SourceLink(BaseModel):
+    title: str
+    url: str
+
+
 class CasePublic(BaseModel):
     id: str
     title: str
     brief: str
     audience: str
+    summary: Optional[str] = None  # 2–3 предложения из Википедии (англ.) — прочитать на подготовке
+    sources: List[SourceLink] = []  # Википедия + 1–2 проверенных сайта
     # ВНИМАНИЕ: trick (прикол кейса) исключен из публичной схемы!
 
 

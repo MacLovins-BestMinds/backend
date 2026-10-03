@@ -1,6 +1,6 @@
 from typing import List, Optional
 from datetime import datetime
-from fastapi import APIRouter, Depends, Query, Path
+from fastapi import HTTPException, APIRouter, Depends, Query, Path
 from sqlmodel import Session
 
 from app.core.db import get_session
@@ -156,7 +156,9 @@ def get_profile(
             ]
         )
 
-    target_id = user_id or (current_user.id if current_user else "demo_pitcher")
+    target_id = user_id or (current_user.id if current_user else None)
+    if not target_id:
+        raise HTTPException(status_code=400, detail="Укажите user_id или войдите в аккаунт")
     return service.get_user_profile(session, target_id)
 
 

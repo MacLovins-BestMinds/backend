@@ -28,3 +28,24 @@ def test_finish_uses_ai_engine_results() -> None:
         service.save_ai_result(warmup, "delivery", delivery)
         data = client.post(f"/api/game/rounds/{warmup}/finish").json()
         assert data["jury"] == 0 and data["total"] == 75  # без жюри: 50/50
+
+
+def test_finish_rejects_unknown_round_and_round_without_review(monkeypatch) -> None:
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "MOCK_FALLBACK", False)
+    with TestClient(app) as client:
+        assert client.post("/api/game/rounds/rnd_missing_404/finish").status_code == 404
+        user_id = client.post("/api/game/auth", json={"nick": "finish_409"}).json()["user_id"]
+        rid = _round(client, user_id, "training")
+        assert client.post(f"/api/game/rounds/{rid}/finish").status_code == 409
+
+
+def test_google_mock_tokens_need_explicit_flag(monkeypatch) -> None:
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "AUTH_MOCK_GOOGLE", False)
+    monkeypatch.setattr(settings, "GOOGLE_CLIENT_ID", None)
+    with TestClient(app) as client:
+        resp = client.post("/api/auth/google", json={"id_token": "any-string-is-not-a-token"})
+        assert resp.status_code == 400

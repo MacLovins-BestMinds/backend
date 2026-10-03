@@ -42,6 +42,7 @@ class FillerEvent(BaseModel):
     type: Literal["filler"] = "filler"
     t: float = Field(description="секунды от начала выступления")
     word: str
+    burst: bool = Field(False, description="третий паразит за 20 секунд — «кто-то достаёт телефон»")
 
 
 class LongPauseEvent(BaseModel):

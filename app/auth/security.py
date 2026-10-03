@@ -40,17 +40,20 @@ def decode_access_token(token: str) -> Optional[Dict[str, Any]]:
 def verify_google_token(id_token_str: str) -> Dict[str, Any]:
     """
     Верифицирует Google ID Token.
-    Если передан тестовый/мок токен (начинается с mock_ или mock mode) — возвращает валидные мок-данные.
+    Тестовые токены mock_<id> принимаются только при AUTH_MOCK_GOOGLE=true.
     В продакшене верифицирует через официальную библиотеку google-auth.
     """
-    if id_token_str.startswith("mock_") or (settings.MOCK_FALLBACK and not settings.GOOGLE_CLIENT_ID):
-        clean_id = id_token_str[5:] if id_token_str.startswith("mock_") else id_token_str[:12]
+    if settings.AUTH_MOCK_GOOGLE and id_token_str.startswith("mock_"):
+        clean_id = id_token_str[5:]
         return {
             "sub": f"google_sub_{clean_id}",
             "email": f"speaker_{clean_id}@gmail.com",
             "name": f"Google Speaker {clean_id}",
             "picture": "https://lh3.googleusercontent.com/a/default-user"
         }
+
+    if not settings.GOOGLE_CLIENT_ID:
+        raise ValueError("Вход через Google не настроен: задайте GOOGLE_CLIENT_ID")
 
     try:
         from google.oauth2 import id_token

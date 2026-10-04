@@ -1,3 +1,7 @@
+"""Роутер /api/game. Язык интерфейса — заголовок Accept-Language (en | ru | ro): на нём темы (статические переводы
+content/topics.<lang>.json), тексты ошибок, подписи и советы прогресса. На разбор выступлений он не влияет.
+"""
+
 from typing import List, Optional
 from datetime import datetime
 from fastapi import HTTPException, APIRouter, Depends, Query, Path
@@ -24,6 +28,7 @@ from app.game.schemas import (
 from app.game import service
 from app.auth.deps import get_current_user, get_current_user_optional
 from app.game.models import User
+from app.core.lang import UiLang, normalize_lang
 
 router = APIRouter(prefix="/game", tags=["game"])
 
@@ -62,41 +67,44 @@ _MOCK_CASE = CasePublic(
 
 @router.get("/spin", response_model=SpinResponse)
 def spin(
+    lang: UiLang,
     difficulty: str = Query("easy", description="уровень темы: easy | medium | hard"),
     mock: int = Query(0, description="1 для мок-ответа"),
     session: Session = Depends(get_session)
 ):
     """
-    Колесо: категория -> кейс -> готовая тема (без прикола).
+    Колесо: категория -> кейс -> готовая тема (без прикола) на языке интерфейса.
     """
     if mock == 1:
         return SpinResponse(
             category=CategoryOut(id="philosophy", title="🏛 Philosophy for Life"),
             case=_MOCK_CASE
         )
-    return service.spin_case(session, difficulty if difficulty in service.LEVEL_TIMING else "easy")
+    return service.spin_case(session, difficulty if difficulty in service.LEVEL_TIMING else "easy", lang)
 
 
 @router.get("/daily", response_model=DailyResponse)
 def daily(
+    lang: UiLang,
     date: Optional[str] = Query(None, description="Дата в формате YYYY-MM-DD"),
     mock: int = Query(0, description="1 для мок-ответа"),
     session: Session = Depends(get_session)
 ):
     """
-    Тема дня: одна тема на всех на сегодня (выбор по хэшу даты).
+    Тема дня: одна тема на всех на сегодня (выбор по хэшу даты), на языке интерфейса.
     """
     if mock == 1:
         return DailyResponse(
             date=date or "2026-10-03",
             case=_MOCK_CASE
         )
-    return service.get_daily_case(session, date)
+    return service.get_daily_case(session, date, lang)
 
 
 @router.post("/rounds", response_model=RoundCreateResponse)
 def create_round(
     req: RoundCreateRequest,
+    header_lang: UiLang,
     mock: int = Query(0, description="1 для мок-ответа"),
     current_user: Optional[User] = Depends(get_current_user_optional),
     session: Session = Depends(get_session)
@@ -104,21 +112,25 @@ def create_round(
     """
     Создание раунда: training | daily | own | warmup.
     С токеном раунд всегда создаётся от имени вошедшего пользователя, user_id из тела не используется.
+    Язык интерфейса раунда: поле lang, иначе заголовок Accept-Language, иначе en. Тема в ответе — на этом языке.
     """
+    lang = normalize_lang(req.lang) or header_lang
     if mock == 1:
         return RoundCreateResponse(
             round_id="rnd_mock_123",
             prep_sec=300,
             pitch_min_sec=60,
-            pitch_max_sec=180
+            pitch_max_sec=180,
+            lang=lang,
         )
     if current_user:
         req = req.model_copy(update={"user_id": current_user.id})
-    return service.create_round(session, req)
+    return service.create_round(session, req, lang)
 
 
 @router.post("/rounds/{round_id}/finish", response_model=RoundFinishResponse)
 def finish_round(
+    lang: UiLang,
     round_id: str = Path(..., description="ID раунда"),
     mock: int = Query(0, description="1 для мок-ответа"),
     session: Session = Depends(get_session)
@@ -134,7 +146,7 @@ def finish_round(
             jury=80.0,
             rank=RankInfo(title="Orator", trend="up")
         )
-    return service.finish_round(session, round_id)
+    return service.finish_round(session, round_id, lang)
 
 
 @router.get("/profile", response_model=ProfileResponse)
@@ -171,23 +183,27 @@ def get_profile(
 
 
 @router.get("/progress", response_model=ProgressResponse)
-def get_progress(current_user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+def get_progress(
+    lang: UiLang, current_user: User = Depends(get_current_user), session: Session = Depends(get_session)
+):
     """
     История всех раундов и трекер прогресса вошедшего пользователя: баллы, привычки речи, серия дней, советы.
+    Подписи, советы и названия тем — на языке интерфейса.
     """
-    return service.get_progress(session, current_user)
+    return service.get_progress(session, current_user, lang)
 
 
 @router.get("/rounds/{round_id}/review", response_model=RoundReview)
 def get_round_review(
+    lang: UiLang,
     round_id: str = Path(..., description="ID раунда"),
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session)
 ):
     """
-    Разбор сыгранного раунда из истории (только своего).
+    Разбор сыгранного раунда из истории (только своего). Название темы — на языке интерфейса.
     """
-    return service.get_round_review(session, current_user, round_id)
+    return service.get_round_review(session, current_user, round_id, lang)
 
 
 @router.get("/leaderboard/daily", response_model=List[LeaderboardEntry])

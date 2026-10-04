@@ -1,6 +1,6 @@
 from app.ai.delivery_metrics import analyze, find_profanity, fillers_score, find_fillers, gaze_on_ratio, pace_score, timing_score
 from app.ai.schemas import GazePoint
-from app.ai.stt import Transcript, Word, to_latin
+from app.ai.stt import Transcript, Word
 
 
 def _words(*texts: str, step: float = 0.4) -> list[Word]:
@@ -91,12 +91,11 @@ def test_deliberate_and_distant_repeats_are_not_marked() -> None:
     assert [e for e in result.events if e.type == "repeat"] == []
 
 
-def test_english_mode_spells_russian_words_in_latin() -> None:
-    assert to_latin("Ну, это Telegram, э-э-э, хорошо") == "Nu, eto Telegram, e-e-e, khorosho"
+def test_russian_speech_stays_in_cyrillic_and_its_fillers_are_found() -> None:
     result = analyze(_spoken("So this is, e-e-e, the idea"), gaze=[], min_sec=60, max_sec=180)
     assert [e.text for e in result.events if e.type == "filler"] == ["«e-e-e»"]
-    russian = analyze(_spoken("Nu, koroche, eto tipa vazhno"), gaze=[], min_sec=60, max_sec=180)
-    assert [e.text for e in russian.events if e.type == "filler"] == ["«nu»", "«koroche»", "«tipa»"]
+    russian = analyze(_spoken("Ну, короче, это типа важно, э-э"), gaze=[], min_sec=60, max_sec=180, lang="ru")
+    assert [e.text for e in russian.events if e.type == "filler"] == ["«ну»", "«короче»", "«типа»", "«э-э»"]
 
 
 def test_swearing_is_marked_and_costs_delivery_points() -> None:

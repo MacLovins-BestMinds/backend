@@ -53,7 +53,7 @@ engine = create_db_engine()
 # Колонки, добавленные после первого релиза: create_all их в существующую таблицу не дописывает.
 _ADDED_COLUMNS = {
     "cases": {"level": "VARCHAR NOT NULL DEFAULT 'easy'"},
-    "rounds": {"difficulty": "VARCHAR NOT NULL DEFAULT 'easy'"},
+    "rounds": {"difficulty": "VARCHAR NOT NULL DEFAULT 'easy'", "lang": "VARCHAR NOT NULL DEFAULT 'en'"},
     "users": {
         "email_verified": "BOOLEAN NOT NULL DEFAULT FALSE",
         "verify_code": "VARCHAR",

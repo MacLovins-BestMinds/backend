@@ -1,5 +1,7 @@
 """Оценка английского произношения: Azure Pronunciation Assessment без эталонного текста.
 
+Только для английской речи: язык определяет распознавание по записи раунда (delivery.run_delivery).
+
 Работает параллельно с распознаванием Scribe (паразиты, паузы, темп считаются по нему: Azure выкидывает «um»).
 Azure обрабатывает звук примерно вдвое быстрее реального времени, поэтому запись режется по паузам на куски,
 которые оцениваются параллельно. Любой сбой → None: разбор приходит без блока произношения.
@@ -148,6 +150,7 @@ def _issue(word: dict[str, Any], offset_sec: float) -> PronunciationIssue | None
 
 
 def _tips(issues: list[PronunciationIssue], prosody: int | None, monotone: bool, breaks: int) -> list[str]:
+    """Советы по-английски: Azure оценивает только английскую речь, а советы — на языке речи."""
     tips = []
     worst = list(dict.fromkeys(i.word for i in issues if i.error == "mispronunciation"))[:3]
     if worst:
@@ -210,8 +213,8 @@ def aggregate(chunks: list[tuple[float, list[dict[str, Any]]]]) -> Pronunciation
 
 
 def enabled() -> bool:
-    s = get_settings()
-    return bool(s.azure_speech_key) and s.stt_language == "en"
+    """Azure настроен. Оценивать ли запись, решает язык речи раунда: только английская."""
+    return bool(get_settings().azure_speech_key)
 
 
 async def assess(wav: bytes) -> PronunciationAssessment | None:

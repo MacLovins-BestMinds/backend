@@ -26,7 +26,7 @@ async def main() -> None:
         if not path.exists():
             sys.exit("Нет записей — сначала: python tools/delivery_check/make_recordings.py")
         transcript = await transcribe(await to_wav16k(path.read_bytes()))
-        result = analyze(transcript, [], 60, 180)
+        result = analyze(transcript, [], 60, 180, lang=transcript.language or "en")
         found: dict[str, list[str]] = {}
         for event in result.events:
             found.setdefault(event.type, []).append(event.text)

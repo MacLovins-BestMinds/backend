@@ -1,0 +1,962 @@
+{
+ "my_morning": {
+  "title": "Dimineața mea",
+  "brief": "Povestește-le celor prezenți cum decurge de obicei dimineața ta și ce o face să fie una reușită.",
+  "audience": "publicul larg",
+  "summary": "Spune la ce oră te trezești, menționează două sau trei lucruri pe care le faci mereu și încheie cu partea dimineții care îți place cel mai mult.",
+  "category": "🙋 Despre mine",
+  "source_hash": "1ead04133bff"
+ },
+ "my_best_friend": {
+  "title": "Cel mai bun prieten al meu",
+  "brief": "Povestește-le celor din sală despre cel mai bun prieten al tău și de ce este importantă această persoană pentru tine.",
+  "audience": "publicul larg",
+  "summary": "Spune cine este prietenul tău și cum v-ați cunoscut, relatează o scurtă poveste despre el și încheie cu motivul pentru care te bucuri că îl ai în viața ta.",
+  "category": "🙋 Despre mine",
+  "source_hash": "3bd57a8a9b07"
+ },
+ "my_hometown": {
+  "title": "Orașul meu natal",
+  "brief": "Povestește-le celor prezenți despre locul din care provii și ce îți place la el.",
+  "audience": "publicul larg",
+  "summary": "Spune unde se află, menționează două lucruri care îți plac acolo și încheie cu un loc pe care toată lumea ar trebui să-l vadă.",
+  "category": "🙋 Despre mine",
+  "source_hash": "b9df8ea54379"
+ },
+ "my_skill": {
+  "title": "Ceva la care mă pricep",
+  "brief": "Spune-le celor din sală despre un lucru la care te pricepi și cum l-ai învățat.",
+  "audience": "publicul larg",
+  "summary": "Numește abilitatea, spune cum ai început, povestește un moment în care te-a ajutat și încheie cu un sfat pentru un începător.",
+  "category": "🙋 Despre mine",
+  "source_hash": "98c1ebdbef1c"
+ },
+ "favourite_food": {
+  "title": "Mâncarea mea preferată",
+  "brief": "Povestește-le celor din sală despre mâncarea pe care o iubești cel mai mult și fă-le poftă.",
+  "audience": "publicul larg",
+  "summary": "Spune care este mâncarea, descrie ce gust are, povestește când ai mâncat-o ultima dată și încheie explicând de ce ar trebui să o încerce toată lumea.",
+  "category": "🍕 Mâncare",
+  "source_hash": "f456175c07ae"
+ },
+ "best_breakfast": {
+  "title": "Cel mai bun mic dejun",
+  "brief": "Descrie micul tău dejun perfect și explică de ce este cel mai bun început de zi.",
+  "audience": "publicul larg",
+  "summary": "Spune ce este în farfurie, oferă două motive pentru care îți place și încheie spunând cu cine l-ai împărți.",
+  "category": "🍕 Mâncare",
+  "source_hash": "7071cb691b62"
+ },
+ "pizza_or_burger": {
+  "title": "Pizza sau burgeri",
+  "brief": "Alege o tabără — pizza sau burgeri — și convinge sala că ai dreptate.",
+  "audience": "publicul larg",
+  "summary": "Spune-ți mai întâi alegerea, oferă trei motive simple și încheie invitând sala să fie de acord.",
+  "category": "🍕 Mâncare",
+  "source_hash": "fd426691fcb3"
+ },
+ "dish_i_cook": {
+  "title": "Un preparat pe care știu să-l gătesc",
+  "brief": "Povestește-le celor din sală despre un fel de mâncare pe care știi să-l gătești și explică în pași simpli cum se prepară.",
+  "audience": "publicul larg",
+  "summary": "Numește preparatul, enumeră ingredientele de care ai nevoie, explică trei pași și încheie spunând când îl gătești de obicei.",
+  "category": "🍕 Mâncare",
+  "source_hash": "642812fe88c1"
+ },
+ "cats_or_dogs": {
+  "title": "Pisici sau câini",
+  "brief": "Alege o tabără — pisici sau câini — și convinge sala că ai dreptate.",
+  "audience": "publicul larg",
+  "summary": "Spune mai întâi ce alegi, oferă trei motive simple, spune o poveste amuzantă și încheie cu o frază finală clară.",
+  "category": "🐶 Animale",
+  "source_hash": "f0d991b4c127"
+ },
+ "why_have_a_pet": {
+  "title": "De ce toată lumea are nevoie de un animal de companie",
+  "brief": "Convinge sala că un animal de companie îți face viața mai bună.",
+  "audience": "publicul larg",
+  "summary": "Spune-ți ideea principală, prezintă două lucruri bune pe care le aduce un animal de companie, dă un exemplu scurt și repetă-ți ideea la final.",
+  "category": "🐶 Animale",
+  "source_hash": "6bdccbeae2c8"
+ },
+ "favourite_animal": {
+  "title": "Animalul meu preferat",
+  "brief": "Povestește-le celor din sală despre animalul care îți place cel mai mult și ce îl face special.",
+  "audience": "publicul larg",
+  "summary": "Numește animalul, descrie cum arată și cum trăiește, împărtășește un fapt care îți place și încheie cu motivul pentru care l-ai ales.",
+  "category": "🐶 Animale",
+  "source_hash": "fa21200c9181"
+ },
+ "animal_i_would_be": {
+  "title": "Dacă aș fi un animal",
+  "brief": "Spune-le celor din sală ce animal ți-ai dori să fii pentru o zi și de ce.",
+  "audience": "publicul larg",
+  "summary": "Numește animalul, spune ce ai face dimineața și seara și încheie cu ce ai învăța.",
+  "category": "🐶 Animale",
+  "source_hash": "5916578e116d"
+ },
+ "my_hobby": {
+  "title": "Hobby-ul meu",
+  "brief": "Povestește-le celor din sală despre hobby-ul tău și de ce le-ar putea plăcea și lor.",
+  "audience": "publicul larg",
+  "summary": "Spune care este hobby-ul tău, cum ai început, ce îți place la el și încheie cu modul în care poate fi încercat săptămâna aceasta.",
+  "category": "🎮 Timp liber",
+  "source_hash": "0f1b5c55197a"
+ },
+ "perfect_weekend": {
+  "title": "Weekendul meu perfect",
+  "brief": "Descrie weekendul tău perfect, de sâmbătă dimineața până duminică seara.",
+  "audience": "publicul larg",
+  "summary": "Mergi în ordine: sâmbătă dimineața, sâmbătă seara, duminică. Încheie cu cel mai frumos moment din tot weekendul.",
+  "category": "🎮 Timp liber",
+  "source_hash": "14485651ab4f"
+ },
+ "film_to_watch": {
+  "title": "Un film pe care toată lumea ar trebui să-l vadă",
+  "brief": "Povestește-le celor din sală despre un film pe care îl iubești și convinge-i să-l vadă — fără spoilere.",
+  "audience": "publicul larg",
+  "summary": "Numește filmul, spune despre ce este vorba în două propoziții, oferă două motive pentru a-l viziona și încheie spunând când să fie văzut.",
+  "category": "🎮 Timp liber",
+  "source_hash": "e3e849999ab3"
+ },
+ "favourite_game": {
+  "title": "Jocul meu preferat",
+  "brief": "Povestește-le celor din sală despre un joc pe care îl iubești — un joc video, un joc de societate sau un sport — și explică cum se joacă.",
+  "audience": "publicul larg",
+  "summary": "Numește jocul, explică regulile în trei propoziții, spune de ce este distractiv și încheie spunând cu cine îl joci.",
+  "category": "🎮 Timp liber",
+  "source_hash": "837c2341dd34"
+ },
+ "best_place": {
+  "title": "Cel mai frumos loc în care am fost",
+  "brief": "Povestește-le celor din sală despre cel mai frumos loc pe care l-ai vizitat și ce ai făcut acolo.",
+  "audience": "publicul larg",
+  "summary": "Spune unde și când a fost, descrie ce ai văzut, povestește o scurtă întâmplare și încheie spunând dacă te-ai întoarce.",
+  "category": "✈️ Călătorii",
+  "source_hash": "408f919db95d"
+ },
+ "sea_or_mountains": {
+  "title": "Mare sau munte",
+  "brief": "Alege o tabără — o vacanță la mare sau la munte — și convinge sala.",
+  "audience": "publicul larg",
+  "summary": "Spune mai întâi ce ai ales, oferă trei motive simple și încheie cu imaginea zilei tale perfecte acolo.",
+  "category": "✈️ Călătorii",
+  "source_hash": "913f98c31437"
+ },
+ "dream_trip": {
+  "title": "Călătoria mea de vis",
+  "brief": "Spune-le celor din sală unde ai merge dacă ai putea călători oriunde și ce ai face.",
+  "audience": "publicul larg",
+  "summary": "Numește locul, spune de ce l-ai ales, enumeră trei lucruri pe care le-ai face și încheie spunând pe cine ai lua cu tine.",
+  "category": "✈️ Călătorii",
+  "source_hash": "8e53b99265a6"
+ },
+ "visit_my_city": {
+  "title": "De ce ar trebui să vizitezi orașul meu",
+  "brief": "Convinge-i pe cei din sală să petreacă un weekend în orașul tău.",
+  "audience": "publicul larg",
+  "summary": "Începe cu un lucru pentru care orașul tău este cunoscut, adaugă două locuri de văzut și ceva de mâncat, iar la sfârșit încheie cu o invitație.",
+  "category": "✈️ Călătorii",
+  "source_hash": "2ee96a69b0d6"
+ },
+ "favourite_subject": {
+  "title": "Materia mea preferată",
+  "brief": "Spune-le celor din sală ce materie școlară îți place cel mai mult și de ce.",
+  "audience": "profesori",
+  "summary": "Numește materia, oferă două motive pentru care îți place, povestește despre o lecție frumoasă și încheie spunând cum te ajută.",
+  "category": "🎒 Școală și muncă",
+  "source_hash": "1ddee4a6933f"
+ },
+ "dream_job": {
+  "title": "Jobul meu de vis",
+  "brief": "Spune-le celor din sală ce job ți-ar plăcea să ai și cum arată o zi la acest job.",
+  "audience": "profesori",
+  "summary": "Numește jobul, descrie o zi de muncă, spune de ce ți se potrivește și încheie cu primul tău pas către el.",
+  "category": "🎒 Școală și muncă",
+  "source_hash": "1a29ea416361"
+ },
+ "best_teacher": {
+  "title": "Cel mai bun profesor pe care l-am avut",
+  "brief": "Povestește-le celor din sală despre un profesor de care îți amintești și ce îl făcea bun.",
+  "audience": "profesori",
+  "summary": "Spune cine a fost profesorul, povestește o întâmplare dintr-o lecție, menționează ce ai învățat și încheie cu o mulțumire.",
+  "category": "🎒 Școală și muncă",
+  "source_hash": "93edf5b6760f"
+ },
+ "homework": {
+  "title": "Sunt utile temele pentru acasă?",
+  "brief": "Alege o tabără — temele sunt utile sau nu — și convinge sala.",
+  "audience": "profesori",
+  "summary": "Spune-ți mai întâi opinia, oferă două motive și un exemplu din propria viață, iar la final repetă-ți opinia.",
+  "category": "🎒 Școală și muncă",
+  "source_hash": "94ce4ef7e1b0"
+ },
+ "early_bird_or_owl": {
+  "title": "Matinal sau pasăre de noapte",
+  "brief": "Spune dacă ești o persoană matinală sau nocturnă și convinge sala că stilul tău este mai bun.",
+  "audience": "publicul larg",
+  "summary": "Spune care dintre ele ești, descrie cele mai bune ore ale tale, oferă două motive pentru care funcționează și încheie cu un sfat.",
+  "category": "☕ Viața de zi cu zi",
+  "source_hash": "0f6c075ec1c3"
+ },
+ "why_sleep": {
+  "title": "De ce contează somnul",
+  "brief": "Convinge sala să meargă la culcare mai devreme în seara asta.",
+  "audience": "publicul larg",
+  "summary": "Spune ideea ta principală, povestește cum te simți după o noapte proastă și după una bună și încheie cu o regulă simplă.",
+  "category": "☕ Viața de zi cu zi",
+  "source_hash": "d9469d7bc698"
+ },
+ "day_without_phone": {
+  "title": "O zi fără telefonul meu",
+  "brief": "Spune-le celor din sală cum ar arăta o zi fără telefonul tău — cu bune și rele.",
+  "audience": "publicul larg",
+  "summary": "Parcurge ziua: dimineața, după-amiaza, seara. Spune ce ar fi greu și ce ar fi plăcut, apoi încheie cu verdictul tău.",
+  "category": "☕ Viața de zi cu zi",
+  "source_hash": "5716aeded1bb"
+ },
+ "walking": {
+  "title": "De ce e grozav mersul pe jos",
+  "brief": "Convinge sala să meargă mai mult pe jos în fiecare zi.",
+  "audience": "publicul larg",
+  "summary": "Spune ideea ta principală, oferă trei motive simple, povestește despre plimbarea ta preferată și încheie cu o mică provocare pentru sală.",
+  "category": "☕ Viața de zi cu zi",
+  "source_hash": "f7b8591afbc0"
+ },
+ "favourite_app": {
+  "title": "Aplicația mea preferată",
+  "brief": "Povestește-le celor din sală despre aplicația pe care o folosești cel mai mult și de ce merită instalată.",
+  "audience": "publicul larg",
+  "summary": "Numește aplicația, spune într-o singură propoziție ce face, arată cum o folosești și încheie spunând pentru cine este.",
+  "category": "📱 Gadgeturi",
+  "source_hash": "63bbddf4de10"
+ },
+ "no_internet": {
+  "title": "O săptămână fără internet",
+  "brief": "Spune-le celor din sală ce ai face dacă internetul nu ar mai funcționa timp de o săptămână.",
+  "audience": "publicul larg",
+  "summary": "Spune cum te-ai simți în prima zi, enumeră trei lucruri pe care le-ai face în schimb și încheie cu ce ai învăța.",
+  "category": "📱 Gadgeturi",
+  "source_hash": "4f487d8a7e3d"
+ },
+ "video_games_good": {
+  "title": "Jocurile video sunt bune pentru tine",
+  "brief": "Convinge sala că jocurile video pot fi bune pentru tine.",
+  "audience": "publicul larg",
+  "summary": "Spune-ți ideea principală, oferă două lucruri bune pe care le înveți din jocuri, adaugă un exemplu și încheie cu o regulă rezonabilă de joc.",
+  "category": "📱 Gadgeturi",
+  "source_hash": "a26d23552056"
+ },
+ "thing_i_use_daily": {
+  "title": "Un lucru pe care îl folosesc în fiecare zi",
+  "brief": "Alege un lucru pe care îl folosești în fiecare zi și spune-le celor din sală de ce nu ai putea trăi fără el.",
+  "audience": "publicul larg",
+  "summary": "Numește lucrul respectiv, spune când l-ai primit sau cumpărat, descrie cum îl folosești pe parcursul unei zile și încheie explicând de ce contează pentru tine.",
+  "category": "📱 Gadgeturi",
+  "source_hash": "0730437e62ec"
+ },
+ "favourite_sport": {
+  "title": "Sportul meu preferat",
+  "brief": "Spune-le celor din sală despre sportul care îți place cel mai mult — să-l practici sau să-l urmărești.",
+  "audience": "publicul larg",
+  "summary": "Numește sportul, explică-l în două propoziții, povestește despre un moment memorabil și încheie spunând cum poți începe.",
+  "category": "⚽ Sport și sănătate",
+  "source_hash": "e94c3276c59b"
+ },
+ "morning_exercise": {
+  "title": "Zece minute de mișcare",
+  "brief": "Convinge sala să facă zece minute de mișcare în fiecare dimineață.",
+  "audience": "publicul larg",
+  "summary": "Spune ideea principală, oferă două motive simple, arată cum arată cele zece minute și încheie cu o provocare.",
+  "category": "⚽ Sport și sănătate",
+  "source_hash": "329965f82c49"
+ },
+ "drink_water": {
+  "title": "Bea mai multă apă",
+  "brief": "Convinge sala să bea mai multă apă în fiecare zi.",
+  "audience": "publicul larg",
+  "summary": "Spune ideea principală, povestește cum te simți când uiți să bei apă, oferă două sfaturi simple și încheie cu un îndemn clar.",
+  "category": "⚽ Sport și sănătate",
+  "source_hash": "2e837add66c6"
+ },
+ "team_or_solo": {
+  "title": "Sport de echipă sau sport individual",
+  "brief": "Alege o tabără — să joci în echipă sau să te antrenezi singur — și convinge sala.",
+  "audience": "publicul larg",
+  "summary": "Spune mai întâi ce ai ales, oferă trei motive simple, spune o poveste și încheie cu o ultimă frază clară.",
+  "category": "⚽ Sport și sănătate",
+  "source_hash": "6b4aa56e3bd2"
+ },
+ "summer_or_winter": {
+  "title": "Vară sau iarnă",
+  "brief": "Alege o tabără — vara sau iarna — și convinge sala că ai dreptate.",
+  "audience": "publicul larg",
+  "summary": "Spune-ți mai întâi alegerea, oferă trei motive simple, descrie o zi perfectă și încheie cu o ultimă frază clară.",
+  "category": "🌦 Anotimpuri și sărbători",
+  "source_hash": "79542f4b1e4a"
+ },
+ "favourite_holiday": {
+  "title": "Sărbătoarea mea preferată",
+  "brief": "Povestește-le celor din sală despre sărbătoarea care îți place cel mai mult și cum o sărbătorești.",
+  "audience": "publicul larg",
+  "summary": "Numește sărbătoarea, spune cu cine o petreci, descrie ce mănânci și ce faci și încheie cu cea mai frumoasă amintire.",
+  "category": "🌦 Anotimpuri și sărbători",
+  "source_hash": "71d93e60368c"
+ },
+ "rainy_day": {
+  "title": "Ce să faci într-o zi ploioasă",
+  "brief": "Prezintă-le celor din sală cel mai bun plan al tău pentru o zi ploioasă acasă.",
+  "audience": "publicul larg",
+  "summary": "Începe cu ce simți într-o zi ploioasă, enumeră trei lucruri de făcut și încheie cu preferatul tău.",
+  "category": "🌦 Anotimpuri și sărbători",
+  "source_hash": "bc468281e926"
+ },
+ "best_gift": {
+  "title": "Cel mai frumos cadou pe care l-am primit vreodată",
+  "brief": "Povestește-le celor din sală despre cel mai frumos cadou pe care l-ai primit și de ce a fost special.",
+  "audience": "publicul larg",
+  "summary": "Spune care a fost cadoul și cine ți l-a oferit, povestește despre acea zi și încheie spunând unde se află cadoul acum.",
+  "category": "🌦 Anotimpuri și sărbători",
+  "source_hash": "f49237520c77"
+ },
+ "favourite_book": {
+  "title": "O carte pe care o iubesc",
+  "brief": "Povestește-le celor din sală despre o carte pe care o iubești și convinge-i să o citească — fără spoilere.",
+  "audience": "publicul larg",
+  "summary": "Numește cartea, spune despre ce este vorba în două propoziții, oferă două motive pentru a o citi și încheie spunând pentru cine este.",
+  "category": "🎁 Lucruri pe care le iubesc",
+  "source_hash": "468cc6bc1d75"
+ },
+ "favourite_song": {
+  "title": "Melodia mea preferată",
+  "brief": "Povestește-le celor din sală despre o melodie pe care o iubești și cum te face să te simți.",
+  "audience": "publicul larg",
+  "summary": "Numește melodia, spune când ai auzit-o prima dată, descrie sentimentul și încheie cu cel mai bun moment pentru a o asculta.",
+  "category": "🎁 Lucruri pe care le iubesc",
+  "source_hash": "721ddcb27bf7"
+ },
+ "favourite_place_at_home": {
+  "title": "Locul meu preferat de acasă",
+  "brief": "Descrie colțul tău preferat de acasă și ce faci acolo.",
+  "audience": "publicul larg",
+  "summary": "Spune unde se află locul, descrie ce este în jurul tău, spune ce faci acolo și încheie cu motivul pentru care te simți bine în el.",
+  "category": "🎁 Lucruri pe care le iubesc",
+  "source_hash": "c1a0619abc67"
+ },
+ "favourite_colour": {
+  "title": "Culoarea mea preferată",
+  "brief": "Povestește-le celor prezenți despre culoarea ta preferată și unde își face apariția în viața ta.",
+  "audience": "publicul larg",
+  "summary": "Numește culoarea, enumeră trei lucruri pe care le deții în această culoare, spune ce sentimente îți trezește și încheie cu o curiozitate amuzantă.",
+  "category": "🎁 Lucruri pe care le iubesc",
+  "source_hash": "49f20beab912"
+ },
+ "superpower": {
+  "title": "Superputerea mea",
+  "brief": "Spune-le celor prezenți ce superputere ai alege și ce ai face cu ea.",
+  "audience": "publicul larg",
+  "summary": "Numește puterea, spune ce ai face în prima zi, oferă un mod în care aceasta îi ajută pe ceilalți și încheie cu o regulă pentru tine însuți.",
+  "category": "💭 Ce ar fi dacă",
+  "source_hash": "3faf74856cb1"
+ },
+ "million": {
+  "title": "Dacă aș avea un milion",
+  "brief": "Spune-le celor din sală ce ai face dacă ai avea dintr-odată un milion.",
+  "audience": "publicul larg",
+  "summary": "Spune care ar fi prima ta achiziție, apoi un lucru pentru ceilalți și un lucru pentru viitor, iar la final spune ce ar rămâne la fel.",
+  "category": "💭 Ce ar fi dacă",
+  "source_hash": "566f58e5d8c8"
+ },
+ "dinner_guest": {
+  "title": "Cină cu oricine",
+  "brief": "Spune-le celor din sală ce persoană — reală sau dintr-o poveste — ai invita la cină și de ce.",
+  "audience": "publicul larg",
+  "summary": "Numește persoana, spune de ce ai ales-o, menționează două întrebări pe care le-ai pune și încheie cu ce ai găti.",
+  "category": "💭 Ce ar fi dacă",
+  "source_hash": "e736f94287f0"
+ },
+ "one_rule": {
+  "title": "O regulă pentru toată lumea",
+  "brief": "Dacă toată lumea ar trebui să respecte o regulă nouă, care ar fi aceea? Convinge sala.",
+  "audience": "publicul larg",
+  "summary": "Spune regula mai întâi, oferă două motive pentru care ajută, dă un exemplu și repetă regula la final.",
+  "category": "💭 Ce ar fi dacă",
+  "source_hash": "b56dc1b2bc4c"
+ },
+ "social_media_friendships": {
+  "title": "Sunt rețelele sociale bune pentru prietenii?",
+  "brief": "Alege o tabără și convinge sala: rețelele sociale îi apropie pe prieteni sau îi îndepărtează?",
+  "audience": "publicul larg",
+  "summary": "Exprimă-ți poziția, oferă două motive cu câte un exemplu real pentru fiecare, recunoaște un lucru la care cealaltă tabără are dreptate și încheie cu verdictul tău.",
+  "category": "💬 Opinii",
+  "source_hash": "a9ed54980dce"
+ },
+ "phones_in_class": {
+  "title": "Ar trebui permise telefoanele în clasă?",
+  "brief": "Adu argumente pro sau contra telefoanelor în clasă și convinge profesorii.",
+  "audience": "profesori",
+  "summary": "Spune-ți mai întâi poziția, oferă două argumente care contează pentru profesori, răspunde la cea mai puternică obiecție și încheie cu o regulă clară pe care o propui.",
+  "category": "💬 Opinii",
+  "source_hash": "01738cd91ad3"
+ },
+ "rent_or_own": {
+  "title": "Chirie sau locuință proprie",
+  "brief": "Convinge sala că a sta în chirie — sau a avea propria locuință — este alegerea mai inteligentă pentru un tânăr.",
+  "audience": "oameni de afaceri",
+  "summary": "Alege o tabără, compară banii și libertatea oferind un exemplu, menționează riscul alegerii tale și încheie precizând cui i se potrivește sfatul tău.",
+  "category": "💬 Opinii",
+  "source_hash": "7e3d82052129"
+ },
+ "everyone_should_cook": {
+  "title": "Toată lumea ar trebui să învețe să gătească",
+  "brief": "Convinge sala că gătitul este o abilitate de care orice adult are nevoie.",
+  "audience": "publicul larg",
+  "summary": "Începe cu o scurtă poveste, prezintă două beneficii practice și unul legat de oameni, răspunde obiecției legate de livrări și încheie cu un prim fel de mâncare de învățat.",
+  "category": "💬 Opinii",
+  "source_hash": "b51e161651fa"
+ },
+ "better_city": {
+  "title": "O schimbare care ar îmbunătăți orașul meu",
+  "brief": "Propune o schimbare concretă pentru orașul tău și convinge sala că merită făcută.",
+  "audience": "juriul concursului",
+  "summary": "Descrie problema cu un exemplu, prezintă schimbarea propusă, explică cine beneficiază și cât costă, apoi încheie cu primul pas.",
+  "category": "🏙 Viața în oraș",
+  "source_hash": "4a6287118e00"
+ },
+ "cars_or_transit": {
+  "title": "Mașini sau transport public",
+  "brief": "Alege o tabără și convinge sala cum ar trebui să se deplaseze oamenii într-un oraș.",
+  "audience": "publicul larg",
+  "summary": "Spune de ce parte ești, oferă două motive cu exemple din viața de zi cu zi, abordează cel mai dificil caz pentru tabăra ta și încheie cu o solicitare către oraș.",
+  "category": "🏙 Viața în oraș",
+  "source_hash": "25a3f383b82e"
+ },
+ "car_free_centre": {
+  "title": "Un centru fără mașini",
+  "brief": "Argumentează pro sau contra închiderii centrului orașului pentru mașini.",
+  "audience": "oameni de afaceri",
+  "summary": "Prezintă-ți poziția, arată ce se schimbă pentru locuitori și pentru afaceri, răspunde la principala teamă și încheie cu modul în care se poate încerca asta în siguranță.",
+  "category": "🏙 Viața în oraș",
+  "source_hash": "3abbdec9b43b"
+ },
+ "missing_in_neighbourhood": {
+  "title": "Ce îi lipsește cartierului meu",
+  "brief": "Explică ce îi lipsește cartierului tău și convinge sala că ar trebui construit.",
+  "audience": "publicul larg",
+  "summary": "Descrie o zi obișnuită și unde se simte această lipsă, propune soluția, explică cine ar folosi-o și încheie menționând cine ar trebui să plătească.",
+  "category": "🏙 Viața în oraș",
+  "source_hash": "42e937a493ff"
+ },
+ "remote_or_office": {
+  "title": "Munca de la distanță sau de la birou",
+  "brief": "Alege o tabără și convinge oamenii de afaceri care mod de lucru este mai bun.",
+  "audience": "oameni de afaceri",
+  "summary": "Spune de ce parte ești, oferă două motive cu un exemplu concret, abordează încrederea și munca în echipă și încheie cu o regulă pe care o companie ar putea să o adopte.",
+  "category": "💼 Muncă și bani",
+  "source_hash": "6d4512b6ffb8"
+ },
+ "four_day_week_simple": {
+  "title": "Săptămâna de lucru de patru zile",
+  "brief": "Convinge sala că o săptămână de lucru de patru zile este o idee bună — sau una proastă.",
+  "audience": "oameni de afaceri",
+  "summary": "Exprimă-ți poziția, explică ce se schimbă pentru oameni și pentru rezultate, răspunde la întrebarea legată de personal și încheie cu modul în care poate fi testată.",
+  "category": "💼 Muncă și bani",
+  "source_hash": "8c1d2d51591f"
+ },
+ "teen_jobs": {
+  "title": "Ar trebui adolescenții să aibă un job part-time?",
+  "brief": "Adu argumente pro sau contra ideii ca adolescenții să lucreze în timp ce învață.",
+  "audience": "profesori",
+  "summary": "Spune-ți poziția, oferă două argumente cu exemple, stabilește o limită care să asigure siguranța și încheie cu un sfat pentru un părinte.",
+  "category": "💼 Muncă și bani",
+  "source_hash": "98ca9706330d"
+ },
+ "saving_money": {
+  "title": "Cea mai bună metodă de a economisi bani",
+  "brief": "Explică o metodă de economisire a banilor și convinge sala să o încerce.",
+  "audience": "publicul larg",
+  "summary": "Numește metoda, arată cum funcționează cu cifre simple, explică de ce eșuează oamenii și cum se poate evita acest lucru, iar la final propune un prim pas.",
+  "category": "💼 Muncă și bani",
+  "source_hash": "e18fd4c96982"
+ },
+ "learn_a_language": {
+  "title": "Cea mai bună metodă de a învăța o limbă",
+  "brief": "Explică cum se învață o limbă și convinge sala că metoda ta funcționează.",
+  "audience": "profesori",
+  "summary": "Povestește cum ai învățat tu, descrie metoda ta într-o singură propoziție, oferă două motive pentru care funcționează și încheie cu o rutină pentru prima săptămână.",
+  "category": "📚 Învățare",
+  "source_hash": "b72d6b5a95f4"
+ },
+ "are_grades_useful": {
+  "title": "Sunt notele utile?",
+  "brief": "Argumentează dacă notele de la școală ajută sau dăunează învățării și convinge-i pe profesori.",
+  "audience": "profesori",
+  "summary": "Prezintă-ți poziția, oferă două argumente cu exemple de la clasă, propune ce ai schimba și încheie cu un lucru pe care l-ai păstra.",
+  "category": "📚 Învățare",
+  "source_hash": "5fe94638b342"
+ },
+ "is_university_needed": {
+  "title": "Este necesară facultatea?",
+  "brief": "Convinge sala că facultatea este — sau nu este — necesară pentru o carieră bună.",
+  "audience": "juriul concursului",
+  "summary": "Prezintă-ți poziția, compară două căi oferind exemple, recunoaște unde cealaltă cale câștigă și încheie cu un sfat pentru un absolvent de liceu.",
+  "category": "📚 Învățare",
+  "source_hash": "5a8c10ccb052"
+ },
+ "school_does_not_teach": {
+  "title": "Ce nu te învață școala",
+  "brief": "Alege un lucru important pe care școala nu îl predă și convinge sala că ar trebui să o facă.",
+  "audience": "profesori",
+  "summary": "Numește abilitatea lipsă, arată ce merge prost fără ea, descrie o lecție care ar preda-o și încheie cu o rugăminte.",
+  "category": "📚 Învățare",
+  "source_hash": "73f12f4ff1f1"
+ },
+ "planet_habit": {
+  "title": "Un obicei care ajută planeta",
+  "brief": "Convinge sala să adopte un obicei zilnic care face bine mediului.",
+  "audience": "publicul larg",
+  "summary": "Numește obiceiul, explică răul pe care îl previne, arată printr-un exemplu cât de simplu este, răspunde la obiecția „nu schimbă nimic” și încheie cu o provocare.",
+  "category": "🌍 Lumea din jurul nostru",
+  "source_hash": "d3b815e7e992"
+ },
+ "should_zoos_exist": {
+  "title": "Ar trebui să existe grădinile zoologice?",
+  "brief": "Alege o tabără și convinge sala dacă grădinile zoologice ar trebui să existe.",
+  "audience": "publicul larg",
+  "summary": "Spune-ți poziția, oferă un argument despre animale și unul despre oameni, răspunde la cea mai dificilă întrebare și încheie descriind cum arată o grădină zoologică bună — sau alternativa ei.",
+  "category": "🌍 Lumea din jurul nostru",
+  "source_hash": "b4d250fb26b3"
+ },
+ "fast_fashion": {
+  "title": "Este fast fashion o problemă?",
+  "brief": "Explică ce este fast fashion și convinge sala cum ar trebui gestionată această problemă.",
+  "audience": "juriul concursului",
+  "summary": "Explică ideea în două propoziții, arată costul printr-un exemplu, propune o alternativă realistă și încheie cu un lucru de făcut în această lună.",
+  "category": "🌍 Lumea din jurul nostru",
+  "source_hash": "0a3a47b86acb"
+ },
+ "why_volunteer": {
+  "title": "De ce merită să faci voluntariat",
+  "brief": "Convinge sala să dedice câteva ore pe lună voluntariatului.",
+  "audience": "publicul larg",
+  "summary": "Începe cu o poveste, arată ce câștigă voluntarii și ce primesc ceilalți, răspunde obiecției legate de bani și încheie cu un loc de unde se poate începe.",
+  "category": "🌍 Lumea din jurul nostru",
+  "source_hash": "cd664500f630"
+ },
+ "ai_for_students": {
+  "title": "Este IA bună pentru elevi?",
+  "brief": "Argumentează dacă elevii ar trebui să folosească instrumente de IA și convinge-i pe profesori.",
+  "audience": "profesori",
+  "summary": "Exprimă-ți poziția, oferă un beneficiu și un risc cu exemple, propune o regulă pentru o utilizare corectă și încheie cu un sfat pentru un profesor.",
+  "category": "🤖 Tehnologie",
+  "source_hash": "52887a30252e"
+ },
+ "kids_smartphones": {
+  "title": "Ar trebui copiii să aibă smartphone-uri?",
+  "brief": "Alege o tabără și convinge-i pe părinți la ce vârstă ar trebui să primească un copil un smartphone.",
+  "audience": "publicul larg",
+  "summary": "Prezintă-ți poziția și vârsta aleasă, explică două motive, răspunde la obiecția „toată lumea are unul” și încheie cu o regulă a casei.",
+  "category": "🤖 Tehnologie",
+  "source_hash": "d8f2751d856c"
+ },
+ "online_or_shops": {
+  "title": "Cumpărături online sau magazine fizice",
+  "brief": "Convinge sala care mod de a face cumpărături este mai bun și pentru ce.",
+  "audience": "oameni de afaceri",
+  "summary": "Alege o tabără, compară prețul, timpul și încrederea cu exemple, menționează ce pierde tabăra ta și încheie spunând când ar trebui aleasă cealaltă.",
+  "category": "🤖 Tehnologie",
+  "source_hash": "a3babf552851"
+ },
+ "robots_and_jobs": {
+  "title": "Ne vor lua roboții locurile de muncă?",
+  "brief": "Explică ce înseamnă automatizarea pentru locurile de muncă obișnuite și convinge sala cum să se pregătească.",
+  "audience": "juriul concursului",
+  "summary": "Explică teama într-o singură propoziție, dă un exemplu de loc de muncă care se schimbă și unul care rămâne, spune ce abilitate îi protejează pe oameni și încheie cu un sfat.",
+  "category": "🤖 Tehnologie",
+  "source_hash": "c6813eb89a89"
+ },
+ "stoicism": {
+  "title": "Stoicismul",
+  "brief": "Explică în cuvinte simple ce este stoicismul și convinge-i pe profesori că merită discutat cu elevii.",
+  "audience": "profesori",
+  "summary": "Stoicismul este o mișcare filosofică și un ghid practic de viață, care pune accent pe autodisciplina zilnică și perfecționarea morală, avându-și originea în perioada elenistică a Greciei antice și continuând până în perioada imperială romană.",
+  "category": "🏛 Filosofie pentru viață",
+  "source_hash": "bc21acf12a07"
+ },
+ "utilitarianism": {
+  "title": "Utilitarism",
+  "brief": "Explică ideea de „cel mai mare bine pentru cel mai mare număr de oameni” și convinge juriul că aceasta îi ajută pe oameni să ia decizii.",
+  "audience": "juriul concursului",
+  "summary": "Utilitarismul este o familie de teorii din etica normativă care prescriu acțiuni ce maximizează fericirea și starea de bine pentru toate persoanele afectate. Cu alte cuvinte, ideile utilitariste încurajează acțiunile care duc la cel mai mare bine pentru cel mai mare număr de oameni.",
+  "category": "🏛 Filosofie pentru viață",
+  "source_hash": "7b30b604336b"
+ },
+ "existentialism": {
+  "title": "Existențialism",
+  "brief": "Explică ce înseamnă „existența precede esența” și convinge oamenii obișnuiți că această idee aduce libertate, nu disperare.",
+  "audience": "publicul larg",
+  "summary": "Existențialismul este o familie de perspective și investigații filosofice care explorează lupta individului uman de a duce o viață autentică, în ciuda absurdității sau incomprehensibilității aparente a existenței.",
+  "category": "🏛 Filosofie pentru viață",
+  "source_hash": "9248f40d40a8"
+ },
+ "ikigai": {
+  "title": "Ikigai",
+  "brief": "Explică conceptul japonez de ikigai și convinge oamenii de afaceri că acesta ajută la reținerea angajaților.",
+  "audience": "oameni de afaceri",
+  "summary": "Ikigai este un concept japonez despre modul în care un individ definește sensul propriei vieți.",
+  "category": "🏛 Filosofie pentru viață",
+  "source_hash": "fb37c8564733"
+ },
+ "dunning_kruger": {
+  "title": "Efectul Dunning–Kruger",
+  "brief": "Explică de ce începătorii se supraestimează și convinge profesorii să țină cont de asta când pun note.",
+  "audience": "profesori",
+  "summary": "Efectul Dunning–Kruger este o eroare cognitivă care descrie tendința sistematică a persoanelor cu abilități scăzute într-un anumit domeniu de a oferi evaluări exagerat de pozitive asupra propriilor capacități. Termenul se poate referi, de asemenea, la tendința persoanelor cu performanțe ridicate de a-și subestima abilitățile.",
+  "category": "🧠 Capcane de gândire",
+  "source_hash": "59adde4e1160"
+ },
+ "sunk_cost": {
+  "title": "Capcana costurilor irecuperabile",
+  "brief": "Explică printr-un exemplu capcana costurilor irecuperabile și convinge-i pe oamenii de afaceri să oprească la timp proiectele care eșuează.",
+  "audience": "oameni de afaceri",
+  "summary": "În economie și în luarea deciziilor de afaceri, un cost irecuperabil este un cost care a fost deja suportat și nu mai poate fi recuperat. Costurile irecuperabile sunt puse în contrast cu costurile prospective, care sunt costuri viitoare ce pot fi evitate dacă se iau măsuri.",
+  "category": "🧠 Capcane de gândire",
+  "source_hash": "ddbae7e38f11"
+ },
+ "confirmation_bias": {
+  "title": "Eroarea de confirmare",
+  "brief": "Explică de ce observăm doar ceea ce credem deja și convinge oamenii să verifice știrile.",
+  "audience": "publicul larg",
+  "summary": "Eroarea de confirmare este tendința de a căuta, interpreta, favoriza și reține informațiile într-un mod care confirmă sau susține propriile convingeri, valori sau decizii anterioare.",
+  "category": "🧠 Capcane de gândire",
+  "source_hash": "8b562eb603f5"
+ },
+ "impostor_syndrome": {
+  "title": "Sindromul impostorului",
+  "brief": "Explică ce este sindromul impostorului și convinge juriul că trebuie să vorbim deschis despre asta.",
+  "audience": "juriul concursului",
+  "summary": "Sindromul impostorului, cunoscut și sub numele de fenomenul impostorului, impostorism sau gânduri de impostor, este o experiență psihologică în care o persoană se confruntă cu sentimente de impostură intelectuală și/sau profesională.",
+  "category": "🧠 Capcane de gândire",
+  "source_hash": "3cfc7bb268e0"
+ },
+ "first_principles": {
+  "title": "Gândirea de la primele principii",
+  "brief": "Explică cum să descompui o problemă în fapte de bază și convinge oamenii de afaceri să gândească astfel în loc să-și copieze concurenții.",
+  "audience": "oameni de afaceri",
+  "summary": "În filosofie și știință, un prim principiu este o propoziție sau o premisă de bază care nu poate fi dedusă din nicio altă propoziție sau premisă. Primele principii în filosofie provin din perspectivele cauzei prime și sunt predate de aristotelieni, iar versiunile nuanțate ale primelor principii sunt numite postulate de către kantieni.",
+  "category": "💡 Modele mentale",
+  "source_hash": "93fc7a29edd6"
+ },
+ "occams_razor": {
+  "title": "Briciul lui Occam",
+  "brief": "Explică principiul „nu multiplica entitățile mai mult decât este necesar” și convinge profesorii să îl predea elevilor.",
+  "audience": "profesori",
+  "summary": "În filosofie, briciul lui Occam este un principiu de rezolvare a problemelor care recomandă căutarea explicațiilor construite cu cel mai mic set posibil de elemente. Este cunoscut și sub numele de principiul parsimoniei sau legea parsimoniei.",
+  "category": "💡 Modele mentale",
+  "source_hash": "d64b05870e37"
+ },
+ "pareto": {
+  "title": "Principiul lui Pareto (Regula 80/20)",
+  "brief": "Explică regula 80/20 cu exemple din viața de zi cu zi și convinge-i pe oameni să o aplice în propria viață.",
+  "audience": "publicul larg",
+  "summary": "Principiul lui Pareto susține că, pentru multe rezultate, aproximativ 80% din consecințe provin din 20% din cauze.",
+  "category": "💡 Modele mentale",
+  "source_hash": "295855f494a1"
+ },
+ "hanlons_razor": {
+  "title": "Briciul lui Hanlon",
+  "brief": "Explică regula „nu atribui niciodată răutății ceea ce poate fi explicat adecvat prin prostie” și convinge juriul că aceasta reduce conflictele.",
+  "audience": "juriul concursului",
+  "summary": "Briciul lui Hanlon este un adagiu sau o regulă generală care spune: „Nu atribui niciodată răutății ceea ce poate fi explicat adecvat prin prostie.” Este un brici filosofic care oferă o cale de a elimina explicațiile puțin probabile pentru comportamentul uman, numit se pare după scriitorul american Robert J.",
+  "category": "💡 Modele mentale",
+  "source_hash": "500ecdfb4707"
+ },
+ "opportunity_cost": {
+  "title": "Costul de oportunitate",
+  "brief": "Explică faptul că fiecare alegere are un preț ascuns și convinge-i pe oameni să țină cont de el atunci când fac cumpărături sau își aleg un loc de muncă.",
+  "audience": "publicul larg",
+  "summary": "În teoria microeconomică, costul de oportunitate al unei alegeri reprezintă valoarea celei mai bune alternative la care se renunță atunci când, având resurse limitate, trebuie făcută o alegere între mai multe alternative care se exclud reciproc.",
+  "category": "💸 Economia pe înțelesul tuturor",
+  "source_hash": "ca879453b478"
+ },
+ "inflation": {
+  "title": "Inflația",
+  "brief": "Explică de ce banii își pierd valoarea și convinge profesorii să predea educație financiară încă de la vârsta școlară.",
+  "audience": "profesori",
+  "summary": "În economie, inflația reprezintă o creștere a prețului mediu al bunurilor și serviciilor în raport cu banii, deși inițial se referea la creșterea masei monetare care poate provoca o astfel de schimbare generală. Această creștere este măsurată cu ajutorul unui indice al prețurilor, de regulă indicele prețurilor de consum (IPC).",
+  "category": "💸 Economia pe înțelesul tuturor",
+  "source_hash": "58194f643f1f"
+ },
+ "tragedy_of_commons": {
+  "title": "Tragedia bunurilor comune",
+  "brief": "Explică de ce se epuizează resursele comune și propune-i juriului cum să oprim asta.",
+  "audience": "juriul concursului",
+  "summary": "Tragedia bunurilor comune este ideea conform căreia, atunci când o resursă este comună și poate aduce beneficii individului pe cheltuiala comunității, este rațional ca individul să o supraexploateze, deși colectiv acest lucru duce la epuizarea resursei pentru toată lumea.",
+  "category": "💸 Economia pe înțelesul tuturor",
+  "source_hash": "722544fa92b8"
+ },
+ "ubi": {
+  "title": "Venitul de bază universal",
+  "brief": "Explică ideea venitului de bază universal, ia o poziție pro sau contra și convinge oamenii de afaceri.",
+  "audience": "oameni de afaceri",
+  "summary": "Venitul de bază universal (UBI) este o propunere de asistență socială prin care toți membrii unei populații primesc periodic un venit minim sub forma unei plăți necondiționate, adică fără o verificare a veniturilor sau cerința de a munci.",
+  "category": "💸 Economia pe înțelesul tuturor",
+  "source_hash": "3a67f8b82135"
+ },
+ "crispr": {
+  "title": "Editarea genetică CRISPR",
+  "brief": "Explică cum „taie” CRISPR genele și convinge oamenii că este o oportunitate, nu o amenințare.",
+  "audience": "publicul larg",
+  "summary": "CRISPR este o familie de secvențe ADN găsite în genomul organismelor procariote, cum ar fi bacteriile și arheele. Fiecare secvență dintr-un CRISPR procariot individual provine dintr-un fragment de ADN al unui bacteriofag care a infectat anterior procariotul sau unul dintre strămoșii săi.",
+  "category": "🧬 Știința care schimbă lumea",
+  "source_hash": "6e6c6e8b4555"
+ },
+ "herd_immunity": {
+  "title": "Imunitatea colectivă",
+  "brief": "Explică cum vaccinarea unei persoane îi protejează pe ceilalți și convinge-i pe profesori să le vorbească copiilor despre asta.",
+  "audience": "profesori",
+  "summary": "Imunitatea colectivă este o formă de protecție indirectă care se aplică doar bolilor contagioase.",
+  "category": "🧬 Știința care schimbă lumea",
+  "source_hash": "a9e8eb537479"
+ },
+ "quantum_computing": {
+  "title": "Calculul cuantic",
+  "brief": "Explică în cuvinte simple prin ce se deosebește un computer cuantic de unul obișnuit și convinge oamenii de afaceri să fie cu ochii pe această tehnologie.",
+  "audience": "oameni de afaceri",
+  "summary": "Un computer cuantic este un computer care reprezintă și procesează informația folosind stări cuantice. Calculele cuantice exploatează fenomene precum superpoziția, interferența și inseparabilitatea cuantică. Computerele cuantice au potențialul de a efectua anumite calcule exponențial mai rapid decât computerele clasice.",
+  "category": "🧬 Știința care schimbă lumea",
+  "source_hash": "a0bac171fd6d"
+ },
+ "microbiome": {
+  "title": "Microbiomul uman",
+  "brief": "Explică cum bacteriile din interiorul nostru ne influențează sănătatea și starea de spirit și convinge juriul că este una dintre cele mai mari descoperiri din medicină.",
+  "audience": "juriul concursului",
+  "summary": "Microbiomul uman reprezintă totalitatea tuturor microbiotelor care trăiesc pe sau în interiorul țesuturilor și biofluidelor umane, împreună cu zonele anatomice corespunzătoare în care rezidă, inclusiv tractul gastrointestinal, pielea, glandele mamare, lichidul seminal, uterul, foliculii ovarieni, plămânii, saliva, mucoasa orală, suprafața oculară și tractul biliar.",
+  "category": "🧬 Știința care schimbă lumea",
+  "source_hash": "841e7007db42"
+ },
+ "fermi_paradox": {
+  "title": "Paradoxul lui Fermi",
+  "brief": "Explică de ce nu am întâlnit încă extratereștri și convinge publicul de răspunsul tău.",
+  "audience": "publicul larg",
+  "summary": "Paradoxul lui Fermi este discrepanța aparentă dintre lipsa dovezilor privind civilizațiile extraterestre și probabilitatea aparent ridicată a existenței acestora.",
+  "category": "🚀 Spațiul și Universul",
+  "source_hash": "e0dbeb402c52"
+ },
+ "black_holes": {
+  "title": "Găurile negre",
+  "brief": "Explică ce este o gaură neagră fără formule și convinge profesorii că merită discutat despre asta la școală.",
+  "audience": "profesori",
+  "summary": "O gaură neagră este un corp astronomic atât de compact încât gravitația sa împiedică orice, inclusiv lumina, să scape. Teoria relativității generale a lui Albert Einstein, care descrie gravitația ca o curbare a spațiu-timpului, prezice că orice masă suficient de compactă va forma o gaură neagră.",
+  "category": "🚀 Spațiul și Universul",
+  "source_hash": "fba647817add"
+ },
+ "terraforming_mars": {
+  "title": "Terraformarea planetei Marte",
+  "brief": "Explică cum ar putea deveni Marte locuibilă și convinge oamenii de afaceri că merită să investească acum.",
+  "audience": "oameni de afaceri",
+  "summary": "Terraformarea planetei Marte este o procedură ipotetică ce ar consta într-un proiect de inginerie planetară sau proiecte concomitente menite să transforme Marte dintr-o planetă ostilă vieții într-una capabilă să găzduiască în mod sustenabil oameni și alte forme de viață, fără protecție sau mediere.",
+  "category": "🚀 Spațiul și Universul",
+  "source_hash": "d1601f17a4fc"
+ },
+ "kessler_syndrome": {
+  "title": "Deșeurile spațiale și sindromul Kessler",
+  "brief": "Explică cum deșeurile de pe orbită ne-ar putea bloca pe Pământ și propune o soluție juriului.",
+  "audience": "juriul concursului",
+  "summary": "Sindromul Kessler, cunoscut și sub numele de efectul Kessler, cascadă de coliziuni sau cascadă de ablație, este un scenariu propus de cercetătorii NASA Donald J. Kessler și Burton G. Cour-Palais în 1978.",
+  "category": "🚀 Spațiul și Universul",
+  "source_hash": "b9f234343dc0"
+ },
+ "turing_test": {
+  "title": "Testul Turing",
+  "brief": "Explică ce este testul Turing și convinge profesorii dacă chatboturile moderne l-au trecut.",
+  "audience": "profesori",
+  "summary": "Testul Turing a fost conceput de Alan Turing pentru a evalua capacitatea unei mașini de a manifesta un comportament inteligent, echivalent cu cel al unui om, prin imitarea unui dialog interactiv. În versiunea modernă, un evaluator uman analizează o transcriere a unei conversații în limbaj natural dintre un om și o mașină.",
+  "category": "🤖 IA și viitorul",
+  "source_hash": "b0f61587387b"
+ },
+ "llm": {
+  "title": "Modele mari de limbaj",
+  "brief": "Explică cum „prezice” ChatGPT următorul cuvânt și convinge oamenii să îl folosească cu înțelepciune.",
+  "audience": "publicul larg",
+  "summary": "Un model mare de limbaj (LLM) este un model de inteligență artificială antrenat pe o cantitate uriașă de text pentru sarcini de procesare a limbajului natural, în special pentru generarea de limbaj. În mod obișnuit, LLM-urile pot genera, rezuma, traduce și analiza texte într-o multitudine de contexte.",
+  "category": "🤖 IA și viitorul",
+  "source_hash": "cf86e43cd915"
+ },
+ "singularity": {
+  "title": "Singularitatea tehnologică",
+  "brief": "Explică ideea de singularitate și convinge juriul că este aproape — sau că e doar un mit.",
+  "audience": "juriul concursului",
+  "summary": "Singularitatea tehnologică, adesea numită simplu singularitate, este un eveniment ipotetic în care progresul tehnologic scapă de sub controlul uman, generând schimbări imprevizibile în civilizația umană. Conform celei mai populare versiuni a ipotezei singularității, I. J.",
+  "category": "🤖 IA și viitorul",
+  "source_hash": "202a0a40a8ba"
+ },
+ "deepfake": {
+  "title": "Deepfake-uri",
+  "brief": "Explică cum sunt create deepfake-urile și convinge oamenii de afaceri să-și protejeze compania de ele.",
+  "audience": "oameni de afaceri",
+  "summary": "Deepfake-urile sunt imagini, videoclipuri sau materiale audio care au fost editate sau generate folosind inteligența artificială, instrumente bazate pe IA sau software de editare audio-video.",
+  "category": "🤖 IA și viitorul",
+  "source_hash": "c44fdb9a993f"
+ },
+ "growth_mindset": {
+  "title": "Mentalitate de creștere",
+  "brief": "Explică diferența dintre o mentalitate rigidă și una de creștere și convinge profesorii să laude efortul, nu talentul.",
+  "audience": "profesori",
+  "summary": "O mentalitate se referă la un set stabilit de atitudini ale unei persoane sau ale unui grup privind cultura, valorile, filosofia, cadrul de referință, perspectiva sau dispoziția. Se spune că persoana A are o teorie a minții (ToM) despre persoana B, ceea ce leagă cercetarea mentalității de ToM.",
+  "category": "🌱 Psihologie și obiceiuri",
+  "source_hash": "898adec22162"
+ },
+ "flow": {
+  "title": "Starea de flux",
+  "brief": "Explică ce este starea de flux și convinge oamenii de afaceri să organizeze munca astfel încât angajații să o poată atinge.",
+  "audience": "oameni de afaceri",
+  "summary": "Fluxul în psihologia pozitivă, cunoscut colocvial și ca a fi „în zonă” sau concentrat, este starea mentală în care o persoană care desfășoară o activitate este complet cufundată într-un sentiment de concentrare plină de energie, implicare totală și bucurie în procesul activității.",
+  "category": "🌱 Psihologie și obiceiuri",
+  "source_hash": "1d76e2241a0c"
+ },
+ "placebo": {
+  "title": "Efectul placebo",
+  "brief": "Explică de ce o „pastilă de zahăr” poate vindeca și convinge oamenii că arată puterea creierului, nu o păcăleală.",
+  "audience": "publicul larg",
+  "summary": "Un placebo este un medicament sau un tratament conceput să pară autentic pentru cel care îl primește, dar care nu are niciun efect farmaceutic. Tratamentele placebo comune includ tablete inerte, injecții inerte, intervenții chirurgicale simulate și alte proceduri.",
+  "category": "🌱 Psihologie și obiceiuri",
+  "source_hash": "2863c8253ef4"
+ },
+ "procrastination": {
+  "title": "Procrastinarea",
+  "brief": "Explică de ce procrastinăm și convinge juriul că este o problemă emoțională, nu lene.",
+  "audience": "juriul concursului",
+  "summary": "Procrastinarea este un comportament de adaptare prin evitare care implică amânarea inutilă a unui lucru, deși ești conștient că ar putea exista consecințe negative.",
+  "category": "🌱 Psihologie și obiceiuri",
+  "source_hash": "b1234e63774c"
+ },
+ "four_day_week": {
+  "title": "Săptămâna de lucru de patru zile",
+  "brief": "Convinge oamenii de afaceri să treacă la o săptămână de lucru de patru zile — sau demonstrează că este o greșeală.",
+  "audience": "oameni de afaceri",
+  "summary": "O săptămână de lucru de patru zile este un sistem prin care un loc de muncă sau o instituție de învățământ își programează angajații sau elevii și studenții să muncească ori să meargă la cursuri timp de patru zile pe săptămână, în locul săptămânii tradiționale de cinci zile.",
+  "category": "🗳 Societate și dezbateri",
+  "source_hash": "49b58e368abe"
+ },
+ "filter_bubble": {
+  "title": "Bule de filtrare",
+  "brief": "Explică cum ne blochează algoritmii într-o bulă de opinii și convinge-i pe oameni să iasă din ea.",
+  "audience": "publicul larg",
+  "summary": "O bulă de filtrare este o stare de izolare intelectuală care apare atunci când căutările personalizate, sistemele de recomandare și selecția algoritmică prezintă în mod selectiv informații fiecărui utilizator; rezultatele căutării se bazează pe informații despre utilizator, cum ar fi locația acestuia, comportamentul anterior de clic și istoricul căutărilor.",
+  "category": "🗳 Societate și dezbateri",
+  "source_hash": "a918ee9a9ade"
+ },
+ "effective_altruism": {
+  "title": "Altruism eficient",
+  "brief": "Explică cum să-i ajuți pe ceilalți „inteligent”, folosind date, și convinge juriul că actele de caritate ar trebui să fie eficiente.",
+  "audience": "juriul concursului",
+  "summary": "Altruismul eficient (EA) este o mișcare filosofică și socială din secolul XXI care susține calcularea imparțială a beneficiilor și prioritizarea cauzelor pentru a aduce cel mai mare bine.",
+  "category": "🗳 Societate și dezbateri",
+  "source_hash": "21b99bc92c35"
+ },
+ "minimalism": {
+  "title": "Minimalism",
+  "brief": "Explică ideea de „mai puține lucruri, mai multă viață” și convinge-i pe profesori că merită predată tinerilor.",
+  "audience": "profesori",
+  "summary": "Traiul simplu se referă la practici care promovează simplitatea în propriul stil de viață. Practicile obișnuite ale unui trai simplu includ reducerea numărului de bunuri deținute, o dependență mai mică de tehnologie și servicii, ascetismul și cheltuirea a mai puțini bani.",
+  "category": "🗳 Societate și dezbateri",
+  "source_hash": "8042b5ec6b31"
+ },
+ "wabi_sabi": {
+  "title": "Wabi-Sabi",
+  "brief": "Explică frumusețea japoneză a imperfecțiunii și convinge-i pe oameni să nu mai alerge după perfecțiune.",
+  "audience": "publicul larg",
+  "summary": "În estetica tradițională japoneză, wabi-sabi (侘び寂び) se concentrează pe acceptarea efemerității și a imperfecțiunii. Este adesea descris drept aprecierea frumuseții care este \"imperfectă, efemeră și incompletă\". Este întâlnit în multe forme de artă japoneză.",
+  "category": "🎨 Cultură și creativitate",
+  "source_hash": "be0a0ae1a766"
+ },
+ "heros_journey": {
+  "title": "Călătoria eroului",
+  "brief": "Explică structura călătoriei eroului și convinge oamenii de afaceri să își construiască reclamele și pitch-urile în jurul ei.",
+  "audience": "oameni de afaceri",
+  "summary": "În naratologie și mitologie comparată, căutarea sau călătoria eroului, cunoscută și ca monomit, este tiparul comun al poveștilor despre un erou care pleacă într-o aventură, învinge într-o criză decisivă și se întoarce acasă schimbat sau transformat.",
+  "category": "🎨 Cultură și creativitate",
+  "source_hash": "6db5a8c6725d"
+ },
+ "golden_ratio": {
+  "title": "Proporția de aur",
+  "brief": "Explică ce este proporția de aur și convinge-i pe profesori unde apare ea cu adevărat și unde este doar un mit.",
+  "audience": "profesori",
+  "summary": "În matematică, două mărimi sunt în proporția de aur dacă raportul lor este același cu raportul dintre suma lor și cea mai mare dintre cele două mărimi. Exprimat algebric, pentru mărimile ⁠⁠ și ⁠⁠ cu ⁠⁠, ⁠⁠ este în proporție de aur cu ⁠⁠ dacă\n\nunde litera grecească phi reprezintă proporția de aur.",
+  "category": "🎨 Cultură și creativitate",
+  "source_hash": "f9081f449ca7"
+ },
+ "bauhaus": {
+  "title": "Bauhaus",
+  "brief": "Explică principiul „forma urmează funcția” și convinge juriul că Bauhaus încă modelează designul din jurul nostru.",
+  "audience": "juriul concursului",
+  "summary": "Staatliches Bauhaus, cunoscută în mod obișnuit ca Bauhaus, a fost o școală germană de artă activă între 1919 și 1933, care a îmbinat meșteșugurile cu artele plastice. Școala a devenit faimoasă pentru abordarea sa în design, care a încercat să unifice viziunea artistică individuală cu principiile producției de masă și accentul pe funcționalitate.",
+  "category": "🎨 Cultură și creativitate",
+  "source_hash": "6cffe2fcc9b7"
+ },
+ "printing_press": {
+  "title": "Tiparnița",
+  "brief": "Explică cum a schimbat tiparnița lumea și convinge-i pe oameni că internetul este continuarea ei.",
+  "audience": "publicul larg",
+  "summary": "O tiparniță este o mașină care aplică presiune pentru a transfera cerneală pe o suprafață din hârtie, pânză sau un material similar. Cei care lucrează la ea sunt numiți tipografi. Aceasta a reprezentat o îmbunătățire semnificativă față de metodele anterioare, în care hârtia era frecată manual pentru a transfera cerneala aplicată pe suprafața de imprimare.",
+  "category": "📜 Idei care au schimbat istoria",
+  "source_hash": "043c95bdd5cd"
+ },
+ "enlightenment": {
+  "title": "Epoca Iluminismului",
+  "brief": "Explică ideile principale ale Iluminismului și convinge profesorii că încă avem nevoie de ele astăzi.",
+  "audience": "profesori",
+  "summary": "Epoca Iluminismului, cunoscută și sub numele de Epoca Rațiunii sau pur și simplu Iluminismul, a fost o perioadă de înflorire intelectuală și culturală în Europa și civilizația occidentală, apărută la sfârșitul secolului al XVII-lea în Europa de Vest.",
+  "category": "📜 Idei care au schimbat istoria",
+  "source_hash": "b3346e87d0df"
+ },
+ "silk_road": {
+  "title": "Drumul Mătăsii",
+  "brief": "Explică ce a fost Drumul Mătăsii și convinge oamenii de afaceri ce ne învață despre comerțul de astăzi.",
+  "audience": "oameni de afaceri",
+  "summary": "Drumul Mătăsii a fost o rețea de rute comerciale asiatice activă din secolul al II-lea î.Hr. până la mijlocul secolului al XV-lea. Întinzându-se pe mai mult de 6.400 km (4.000 mi) pe uscat, a jucat un rol central în facilitarea interacțiunilor economice, culturale, politice și religioase dintre lumea estică și cea vestică.",
+  "category": "📜 Idei care au schimbat istoria",
+  "source_hash": "db8e00274984"
+ },
+ "scientific_method": {
+  "title": "Metoda științifică",
+  "brief": "Explică cum funcționează metoda științifică și convinge juriul să o aplice în deciziile de zi cu zi.",
+  "audience": "juriul concursului",
+  "summary": "Metoda științifică este o metodă empirică de dobândire a cunoștințelor prin observație atentă, scepticism riguros, testarea ipotezelor și validare experimentală. Dezvoltată din practici antice și medievale, aceasta recunoaște că presupunerile cognitive pot denatura interpretarea observației.",
+  "category": "📜 Idei care au schimbat istoria",
+  "source_hash": "9f9d7783e8fa"
+ },
+ "prisoners_dilemma": {
+  "title": "Dilema prizonierului",
+  "brief": "Explică dilema prizonierului și convinge oamenii de afaceri când cooperarea este mai rentabilă decât competiția.",
+  "audience": "oameni de afaceri",
+  "summary": "În teoria jocurilor, dilema prizonierului este un experiment de gândire care implică doi agenți raționali, fiecare putând fie să coopereze pentru beneficiul reciproc, fie să își trădeze partenerul („să dezerteze”) pentru un câștig individual. Dilema apare din faptul că, deși trădarea este o alegere rațională pentru fiecare agent, cooperarea aduce un rezultat mai bun pentru amândoi.",
+  "category": "🎲 Teoria jocurilor și decizii",
+  "source_hash": "343c7ef3e783"
+ },
+ "nash_equilibrium": {
+  "title": "Echilibrul Nash",
+  "brief": "Explică echilibrul Nash folosind un exemplu din viața reală și convinge profesorii că teoria jocurilor nu este doar pentru matematicieni.",
+  "audience": "profesori",
+  "summary": "În teoria jocurilor, un echilibru Nash este o situație în care niciun jucător nu ar putea câștiga mai mult schimbându-și propria strategie într-un joc. Echilibrul Nash este cel mai utilizat concept de soluție pentru jocurile non-cooperative.",
+  "category": "🎲 Teoria jocurilor și decizii",
+  "source_hash": "63fbc3199b1a"
+ },
+ "gamification": {
+  "title": "Gamificare",
+  "brief": "Explică cum mecanicile de joc schimbă comportamentul și convinge juriul să le folosească în învățare sau la muncă.",
+  "audience": "juriul concursului",
+  "summary": "Gamificarea este procesul de integrare a elementelor și principiilor de design de jocuri în contexte non-ludice pentru a crește implicarea și motivația utilizatorilor. Este o componentă a designului de sisteme.",
+  "category": "🎲 Teoria jocurilor și decizii",
+  "source_hash": "b6e0599206bf"
+ },
+ "butterfly_effect": {
+  "title": "Efectul fluturelui",
+  "brief": "Explică cum lucrurile mărunte duc la consecințe mari și convinge oamenii să prețuiască deciziile mici.",
+  "audience": "publicul larg",
+  "summary": "În teoria haosului, efectul fluturelui reprezintă dependența sensibilă de condițiile inițiale, în care o mică schimbare într-o stare a unui sistem neliniar determinist poate duce la diferențe majore într-o stare ulterioară.",
+  "category": "🎲 Teoria jocurilor și decizii",
+  "source_hash": "b5f84966d2bb"
+ }
+}

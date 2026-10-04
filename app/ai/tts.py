@@ -1,6 +1,7 @@
 """Озвучка реплик жюри в mp3: ElevenLabs (по умолчанию) или OpenAI (TTS_PROVIDER).
 
 Приложение проигрывает mp3 по audio_url, поэтому оба провайдера отдают mp3.
+Жюри говорит на языке речи игрока (en | ru | ro): ElevenLabs получает его в language_code.
 """
 
 from dataclasses import dataclass
@@ -26,13 +27,13 @@ class Voice:
     style: float  # выразительность 0..1
 
 
-async def _elevenlabs(text: str, voice: Voice) -> bytes:
+async def _elevenlabs(text: str, voice: Voice, lang: str) -> bytes:
     s = get_settings()
     stream = elevenlabs_client().text_to_speech.stream(
         voice.elevenlabs_voice_id,
         text=text,
         model_id=s.tts_model,
-        language_code=s.stt_language,
+        language_code=lang,
         output_format=ELEVENLABS_OUTPUT_FORMAT,
         voice_settings=VoiceSettings(stability=voice.stability, similarity_boost=0.75, style=voice.style),
         seed=0,
@@ -51,14 +52,15 @@ async def _openai(text: str, voice: Voice) -> bytes:
     return response.content
 
 
-async def synthesize(text: str, voice: Voice) -> bytes:
+async def synthesize(text: str, voice: Voice, lang: str = "en") -> bytes:
+    """lang — язык текста; OpenAI определяет его по тексту сам, язык тона задаёт voice.openai_instructions."""
     s = get_settings()
-    key = cache.make_key(s.tts_provider, s.tts_model, repr(voice), text)
+    key = cache.make_key(s.tts_provider, s.tts_model, repr(voice), lang, text)
     if cached := await cache.get("tts", key, "mp3"):
         return cached
 
     if s.tts_provider == "elevenlabs":
-        mp3 = await elevenlabs_call("tts", lambda: _elevenlabs(text, voice))
+        mp3 = await elevenlabs_call("tts", lambda: _elevenlabs(text, voice, lang))
     else:
         mp3 = await _openai(text, voice)
     await cache.put("tts", key, "mp3", mp3)

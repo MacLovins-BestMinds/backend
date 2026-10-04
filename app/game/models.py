@@ -50,6 +50,8 @@ class Round(SQLModel, table=True):
     own_audience: Optional[str] = None
     status: str = Field(default="created", index=True)  # created, pitching, jury, finished
     difficulty: str = Field(default="easy")  # уровень сложности всего раунда: easy | medium | hard
+    # язык интерфейса раунда: en | ru | ro — для тем и текстов ошибок; разбор идёт на языке речи (по записи)
+    lang: str = Field(default="en")
     created_at: datetime = Field(default_factory=now_utc)
     finished_at: Optional[datetime] = None
 

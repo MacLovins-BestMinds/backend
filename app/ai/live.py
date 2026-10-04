@@ -1,6 +1,9 @@
 """WS /api/ai/live: поток PCM 16 кГц → потоковое распознавание → события зала filler / long_pause / pace (~1 с).
 
 Провайдер — LIVE_STT_PROVIDER: elevenlabs (Scribe v2 Realtime, по умолчанию) или deepgram.
+Язык речи Scribe определяет сам; Deepgram в потоке так не умеет — ему передаётся язык речи раунда из прошлого
+разбора, иначе STT_LANGUAGE. Паразиты отмечаются на всех языках (en | ru | ro), подсказки по содержанию — на языке,
+на котором игрок говорит. Язык интерфейса на живой зал не влияет.
 Ключ провайдера остаётся на сервере: телефон шлёт звук только в наш бэкенд.
 Состояние анализа хранится по round_id: при переподключении телефона время продолжается с того же места.
 """
@@ -25,9 +28,10 @@ from app.ai.clients import MissingKeyError, require
 from app.ai.config import AiSettings, get_settings
 from app.ai.limits import release_live_slot, try_live_slot
 from app.ai.delivery_metrics import PACE_RANGE_WPM, PACE_RANGES, PACE_WINDOW_SEC, find_fillers, find_profanity
-from app.ai.pitch import Pitch, resolve_pitch
+from app.ai.pitch import Pitch, known_speech_lang, resolve_pitch
 from app.ai.schemas import ContentEvent, FillerEvent, LiveEvent, LongPauseEvent, PaceEvent, ProfanityEvent
 from app.ai.stt import Word
+from app.core.lang import default_lang
 
 logger = logging.getLogger(__name__)
 
@@ -46,8 +50,9 @@ CHECK_EVERY_SEC = 7.0
 CHECK_MIN_WORDS = 12
 CHECK_LATEST_WORDS = 60  # сколько последних слов оценивается
 CHECK_EARLIER_WORDS = 120  # сколько слов перед ними даётся для контекста
-# В живом потоке сразу отмечаются только однозначные паразиты («um», «э-э», «типа»).
-# «like», «so», «you know» бывают обычными словами — их по смыслу отмечает проверка содержания.
+# В живом потоке сразу отмечаются только однозначные паразиты («um», «э-э», «типа», «păi»).
+# «like», «so», «you know», «deci» бывают обычными словами — их по смыслу отмечает проверка содержания.
+# Язык речи заранее неизвестен, поэтому паразиты ищутся сразу для всех языков (lang=None).
 _NO_AMBIGUOUS: dict[int, bool] = {}
 
 
@@ -135,7 +140,7 @@ class LiveAnalyzer:
         if self.first_word_t is None:
             self.first_word_t = self.audio_t
         self._note_speech(self.audio_t, text)
-        fillers = find_fillers([Word(w, self.audio_t, self.audio_t) for w in text.split()], _NO_AMBIGUOUS)
+        fillers = find_fillers([Word(w, self.audio_t, self.audio_t) for w in text.split()], _NO_AMBIGUOUS, lang=None)
         new = fillers[self.segment_fillers_sent :]
         self.segment_fillers_sent = max(self.segment_fillers_sent, len(fillers))
         partial_words = [Word(w, self.audio_t, self.audio_t) for w in text.split()]
@@ -155,7 +160,7 @@ class LiveAnalyzer:
             return []
 
         self.committed.extend(w.text for w in words)
-        fillers = find_fillers(words, _NO_AMBIGUOUS)
+        fillers = find_fillers(words, _NO_AMBIGUOUS, lang=None)
         # паразиты, уже отправленные по промежуточному тексту, не дублируем
         events: list[LiveEvent] = [self._filler_event(t, w) for t, w in fillers[self.segment_fillers_sent :]]
         # ругань, уже отправленную по промежуточному тексту, тоже не дублируем
@@ -206,13 +211,15 @@ class SttStream(Protocol):
 
 
 class ElevenLabsStream:
-    """Scribe v2 Realtime: PCM 16 кГц в base64-JSON, фиксация фраз по VAD, таймкоды слов в committed-событиях."""
+    """Scribe v2 Realtime: PCM 16 кГц в base64-JSON, фиксация фраз по VAD, таймкоды слов в committed-событиях.
 
-    def __init__(self, s: AiSettings) -> None:
+    language_code не передаётся: Scribe определяет язык речи сам, игрок может говорить на любом из трёх.
+    """
+
+    def __init__(self, s: AiSettings, lang: str) -> None:  # noqa: ARG002 — язык нужен только Deepgram
         params = {
             "model_id": s.live_stt_model,
             "audio_format": f"pcm_{SAMPLE_RATE}",
-            "language_code": s.stt_language,
             "commit_strategy": "vad",
             "vad_silence_threshold_secs": VAD_SILENCE_SEC,
             "include_timestamps": "true",
@@ -254,12 +261,15 @@ class ElevenLabsStream:
 
 
 class DeepgramStream:
-    """Deepgram: сырой PCM linear16, промежуточные результаты с таймкодами слов."""
+    """Deepgram: сырой PCM linear16, промежуточные результаты с таймкодами слов.
 
-    def __init__(self, s: AiSettings) -> None:
+    В потоке Deepgram язык сам не определяет — распознаём на языке речи раунда (прошлый разбор или STT_LANGUAGE).
+    """
+
+    def __init__(self, s: AiSettings, lang: str) -> None:
         params = {
             "model": s.deepgram_model,
-            "language": s.stt_language,
+            "language": lang,
             "encoding": "linear16",
             "sample_rate": SAMPLE_RATE,
             "channels": 1,
@@ -288,8 +298,9 @@ class DeepgramStream:
         return analyzer.on_words(words, bool(data.get("is_final")))
 
 
-def make_stream(s: AiSettings) -> SttStream:
-    return ElevenLabsStream(s) if s.live_stt_provider == "elevenlabs" else DeepgramStream(s)
+def make_stream(s: AiSettings, lang: str) -> SttStream:
+    """lang — ожидаемый язык речи: подсказка для провайдера, который не определяет язык сам (Deepgram)."""
+    return ElevenLabsStream(s, lang) if s.live_stt_provider == "elevenlabs" else DeepgramStream(s, lang)
 
 
 # --- проксирование приложение ↔ распознавание ---
@@ -318,7 +329,10 @@ def content_score(check: LiveCheck) -> int:
 
 
 async def _check_content(websocket: WebSocket, analyzer: LiveAnalyzer, pitch: Pitch) -> None:
-    """LLM оценивает последние слова: по теме ли, есть ли содержание, какие слова — паразиты по смыслу."""
+    """LLM оценивает последние слова: по теме ли, есть ли содержание, какие слова — паразиты по смыслу.
+
+    Подсказка на экране — на языке, на котором игрок говорит (его видно по самим словам).
+    """
     spoken = analyzer.spoken()
     analyzer.checking = True
     analyzer.last_check_t = analyzer.audio_t
@@ -347,7 +361,11 @@ async def _check_content(websocket: WebSocket, analyzer: LiveAnalyzer, pitch: Pi
 
 
 async def _stt_to_app(
-    websocket: WebSocket, stt: ClientConnection, stream: SttStream, analyzer: LiveAnalyzer, pitch: Pitch | None
+    websocket: WebSocket,
+    stt: ClientConnection,
+    stream: SttStream,
+    analyzer: LiveAnalyzer,
+    pitch: Pitch | None,
 ) -> None:
     checks: set[asyncio.Task[None]] = set()
     try:
@@ -374,7 +392,12 @@ async def run_live(websocket: WebSocket, round_id: str, pace: str = "normal", ma
     """max_sec — длина питча, которую выбрал игрок: по ней ограничено время, пока поток держит слот ElevenLabs."""
     settings = get_settings()
     try:
-        stream = make_stream(settings)
+        pitch: Pitch | None = await asyncio.to_thread(resolve_pitch, round_id)
+        speech = await asyncio.to_thread(known_speech_lang, round_id)
+    except Exception:
+        pitch, speech = None, None  # тема неизвестна (тестовый раунд) — работаем без оценки содержания
+    try:
+        stream = make_stream(settings, speech or default_lang())
     except MissingKeyError as e:
         logger.error("live: %s", e)
         await websocket.close(code=status.WS_1011_INTERNAL_ERROR, reason="speech service is not configured")
@@ -388,22 +411,24 @@ async def run_live(websocket: WebSocket, round_id: str, pace: str = "normal", ma
         await _close(websocket, "live slots busy", status.WS_1013_TRY_AGAIN_LATER)
         return
     try:
-        await _run_stream(websocket, round_id, pace, max_sec, stream, settings)
+        await _run_stream(websocket, round_id, pace, max_sec, stream, settings, pitch)
     finally:
         if holds_slot:
             release_live_slot()
 
 
 async def _run_stream(
-    websocket: WebSocket, round_id: str, pace: str, max_sec: int | None, stream: SttStream, settings: AiSettings
+    websocket: WebSocket,
+    round_id: str,
+    pace: str,
+    max_sec: int | None,
+    stream: SttStream,
+    settings: AiSettings,
+    pitch: Pitch | None,
 ) -> None:
     analyzer = get_session(round_id)
     analyzer.pace_range = PACE_RANGES.get(pace, PACE_RANGE_WPM)
     analyzer.begin_stream()
-    try:
-        pitch: Pitch | None = await asyncio.to_thread(resolve_pitch, round_id)
-    except Exception:
-        pitch = None  # тема неизвестна (тестовый раунд) — работаем без оценки содержания
     limit = min(max_sec or (pitch.max_sec if pitch else LIVE_LIMIT_MAX_SEC), LIVE_LIMIT_MAX_SEC) + LIVE_LIMIT_SLACK_SEC
     try:
         async with asyncio.timeout(limit), connect(stream.url, additional_headers=stream.headers) as stt:

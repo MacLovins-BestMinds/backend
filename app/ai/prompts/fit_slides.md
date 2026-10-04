@@ -14,9 +14,13 @@ $slides
 
 Return `slides` — one entry per slide of the deck, in order, none skipped:
 - `n` — the slide number, starting from 1.
-- `title` — what the slide is about, at most 5 words (use the slide's own title when it has one).
+- `title` — what the slide is about, at most 5 words (use the slide's own title when it has one, translated into the language of the texts if needed).
 - `kind` — "demo" if the slide is devoted to a demonstration: its title or content says demo, live demo, product demo, walkthrough, "let me show you", a screen recording, or it is only a product screenshot meant to be shown live. Otherwise "talk".
-- `text` — for a "talk" slide: one to three short spoken sentences in plain English that match what is on this slide. Say what the slide shows, do not read it out word for word. For a "demo" slide the text is exactly: Demo time.
+- `text` — for a "talk" slide: one to three short spoken sentences in plain everyday language that match what is on this slide. Say what the slide shows, do not read it out word for word. For a "demo" slide the text is exactly: Demo time.
+
+Also return `language` — the ISO 639-1 code of the language you wrote the texts in: en, ru, ro, ….
+
+Language: write every `title` and `text` in the language of the speaker's own text above, whatever language the slides are in. If the speaker has not written anything yet, write in $fallback_language.
 
 Rules:
 - Look at what is actually on each slide and follow it. If the speaker's text has nothing for a slide, write a short neutral line about the slide instead of leaving it empty.

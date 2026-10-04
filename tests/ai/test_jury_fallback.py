@@ -36,11 +36,12 @@ def test_every_difficulty_has_question_rules_and_answer_scoring() -> None:
     for level, rules in QUESTION_LEVELS.items():
         prompt = llm.load_prompt("jury_questions").substitute(
             title="t", brief="b", audience="a", audience_focus="f", own_text="", transcript="x", jurors="-", quirk_rule="-",
-            level_intro=rules["intro"], level_rules=rules["rules"], level_length=rules["length"],
+            level_intro=rules["intro"], level_rules=rules["rules"], level_length=rules["length"], speech_language="English",
         )  # fmt: skip
         assert rules["intro"] in prompt and "$" not in prompt
         answer = llm.load_prompt("jury_answer").substitute(
-            juror_name="n", juror_persona="p", title="t", audience="a", question="q", answer="x", level_scoring=ANSWER_LEVELS[level]
+            juror_name="n", juror_persona="p", title="t", audience="a", question="q", answer="x", level_scoring=ANSWER_LEVELS[level],
+            answer_language="English", feedback_language="English",
         )
         assert ANSWER_LEVELS[level] in answer
     # лёгкий уровень не требует цифр, тяжёлый — требует конкретики

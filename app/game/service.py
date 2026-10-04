@@ -243,7 +243,7 @@ def get_ai_result(round_id: str, kind: str, session: Optional[Session] = None) -
         stmt = (
             select(AiResult)
             .where(AiResult.round_id == round_id, AiResult.kind == kind)
-            .order_by(desc(AiResult.created_at))
+            .order_by(desc(AiResult.created_at), desc(AiResult.id))
         )
         res = session.exec(stmt).first()
     else:
@@ -251,7 +251,7 @@ def get_ai_result(round_id: str, kind: str, session: Optional[Session] = None) -
             stmt = (
                 select(AiResult)
                 .where(AiResult.round_id == round_id, AiResult.kind == kind)
-                .order_by(desc(AiResult.created_at))
+                .order_by(desc(AiResult.created_at), desc(AiResult.id))
             )
             res = s.exec(stmt).first()
 
@@ -881,6 +881,7 @@ def get_round_review(session: Session, user: User, round_id: str, lang: str = "e
     results = session.exec(select(AiResult).where(AiResult.round_id == round_id).order_by(AiResult.id)).all()
     questions: list[dict] = []
     answers: dict[str, dict] = {}
+    insights: dict[str, dict] = {}  # ход мысли и лучшая версия: последнее состояние каждого вида
     for res in results:
         try:
             data = json.loads(res.payload)
@@ -890,7 +891,11 @@ def get_round_review(session: Session, user: User, round_id: str, lang: str = "e
             questions = data.get("questions", [])
         elif res.kind == "jury_answer" and data.get("question_id"):
             answers[data["question_id"]] = data  # повторный ответ на тот же вопрос заменяет прежний
+        elif res.kind in ("flow", "better_version"):
+            insights[res.kind] = data
     order = [q.get("id") for q in questions]
+    delivery = _delivery_payload(session, round_id)
+    from app.ai.jobs import review_view  # noqa: PLC0415 — app.ai импортирует app.game, наверху нельзя
     return RoundReview(
         round=_history_round(session, rnd, sc, titles, lang),
         result=RoundFinishResponse(
@@ -900,10 +905,12 @@ def get_round_review(session: Session, user: User, round_id: str, lang: str = "e
             jury=round(sc.jury_score, 1),
             rank=calculate_user_rank(session, user.id),
         ),
-        delivery=_delivery_payload(session, round_id),
+        delivery=delivery,
         jury_questions=questions,
         jury_answers=sorted(answers.values(), key=lambda a: order.index(a["question_id"]) if a["question_id"] in order else 99),
         audio_url=recording_url(round_id),
+        flow=review_view("flow", round_id, insights.get("flow"), delivery, lang),
+        better_version=review_view("better_version", round_id, insights.get("better_version"), delivery, lang),
     )
 
 

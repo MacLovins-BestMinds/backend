@@ -273,11 +273,29 @@ def find_profanity(words: Sequence[Word]) -> list[tuple[int, str]]:
     return found
 
 
+def _parallel(words: Sequence[Word], norm: Sequence[str], i: int, n: int, lo: int) -> bool:
+    """Повтор через другие слова в начале или в конце соседних частей фразы — параллельная конструкция, приём,
+    а не ошибка: «если я ругаюсь, им это не нравится, если я молчу, им это не нравится».
+    Оборванное прошлое вхождение («если он сейчас-- вот, если он сейчас начнёт») — фальстарт, это ошибка."""
+    gram = list(norm[i : i + n])
+    j = max((k for k in range(lo, i - n + 1) if list(norm[k : k + n]) == gram), default=None)
+    if j is None or words[j + n - 1].text.rstrip().endswith("-"):
+        return False
+    between = [t for t in norm[j + n : i] if t and t not in FILLER_WORDS and not _is_hesitation(t)]
+    # подряд или через «um» — запинка; через одно слово — только если между ними закончилось предложение
+    if len(between) < (1 if _ends(words[i - 1].text, _SENTENCE_END) else 2):
+        return False
+    starts = all(k == 0 or _ends(words[k - 1].text, _CLAUSE_END) for k in (j, i))
+    ends = all(_ends(words[k + n - 1].text, _CLAUSE_END) for k in (j, i))
+    return starts or ends
+
+
 def find_repeats(words: Sequence[Word]) -> list[tuple[int, int]]:
     """Повторы слов и выражений: (номер первого слова повтора, сколько слов).
 
     Ошибкой считается: слово, сказанное два раза подряд («Telegram. Telegram»), фраза из трёх и более слов,
     повторённая рядом («they will leave… they will leave»), и пара слов, прозвучавшая рядом в третий раз.
+    Параллельная конструкция (см. _parallel) — приём, а не ошибка.
     """
     norm = [_norm(w.text).replace("-", "") for w in words]
     found: list[tuple[int, int]] = []
@@ -295,7 +313,7 @@ def find_repeats(words: Sequence[Word]) -> list[tuple[int, int]]:
             earlier = sum(norm[j : j + n] == gram for j in range(lo, i - n + 1))
             adjacent = i >= n and norm[i - n : i] == gram
             if earlier >= (1 if n >= 3 or adjacent else 2):
-                length = n
+                length = 0 if _parallel(words, norm, i, n, lo) else n
                 break
         if not length and i > 0 and norm[i] and norm[i] == norm[i - 1] and norm[i] not in _REPEAT_OK:
             length = 1

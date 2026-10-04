@@ -61,7 +61,7 @@ class AiResult(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     round_id: str = Field(index=True)
-    kind: str = Field(index=True)  # delivery | content | jury | live
+    kind: str = Field(index=True)  # delivery | jury_questions | jury_answer | flow | better_version (старые: content, jury)
     payload: str  # JSON строка с результатами анализа
     created_at: datetime = Field(default_factory=now_utc)
 

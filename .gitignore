@@ -19,3 +19,5 @@ node_modules/
 
 # записи выступлений пользователей (POST delivery) — не в git
 static/recordings/
+# «лучшая версия» питча голосом пользователя (app/ai/better.py) — не в git
+static/better/

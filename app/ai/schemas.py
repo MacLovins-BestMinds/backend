@@ -213,3 +213,37 @@ class JuryQuestionsResponse(BaseModel):
 class JuryAnswerResponse(BaseModel):
     score: int = Field(ge=0, le=100)
     comment: str
+
+
+# --- GET /api/ai/rounds/{id}/flow: ход мысли по расшифровке ---
+
+
+type FlowKind = Literal["hook", "strong", "weak", "off_topic", "rambling", "strong_close", "weak_close"]
+GOOD_FLOW_KINDS = frozenset({"hook", "strong", "strong_close"})
+
+
+class FlowMoment(BaseModel):
+    """Момент питча на таймлайне разбора: где зацепил зал, где сильная мысль, где поплыл."""
+
+    t: float = Field(description="секунды от начала выступления")
+    end: float
+    kind: FlowKind
+    tone: Literal["good", "bad"] = Field(description="good — hook, strong, strong_close; bad — остальные")
+    quote: str = Field(description="дословно из расшифровки")
+    comment: str
+
+
+class FlowResponse(BaseModel):
+    status: Literal["pending", "ready", "failed"]
+    summary: str | None = None
+    moments: list[FlowMoment] = Field(default_factory=list, description="по времени; пусто у очень короткого питча")
+
+
+# --- GET /api/ai/rounds/{id}/better-version: тот же питч своим голосом, без паразитов и запинок ---
+
+
+class BetterVersionResponse(BaseModel):
+    status: Literal["pending", "ready", "failed", "unavailable"]
+    audio_url: str | None = Field(None, description="/static/better/<round_id>.mp3, когда status=ready")
+    text: str | None = Field(None, description="очищенный текст, который прочитал голос")
+    reason: str | None = Field(None, description="почему нет (unavailable, failed) — на языке интерфейса")

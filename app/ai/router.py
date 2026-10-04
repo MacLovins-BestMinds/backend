@@ -27,7 +27,7 @@ from google.genai import errors as genai_errors
 from openai import OpenAIError
 from pydantic import TypeAdapter, ValidationError
 
-from app.ai import mocks
+from app.ai import jobs, mocks
 from app.ai.audio import AudioConversionError
 from app.ai.clients import MissingKeyError
 from app.ai.config import get_settings
@@ -41,7 +41,9 @@ from app.ai.refine import run_refine
 from app.recordings import save_recording
 from app.ai.slides import FitSlide, FitSlidesResponse, SlidesError, assemble, FitSlidesDraft, run_fit_slides
 from app.ai.schemas import (
+    BetterVersionResponse,
     DeliveryResponse,
+    FlowResponse,
     GazePoint,
     JuryAnswerResponse,
     JuryQuestionsResponse,
@@ -213,7 +215,36 @@ async def delivery(
         result = await run_delivery(round_id, data, gaze, notes, pace, limits)
     # звук остаётся на сервере, чтобы раунд из истории можно было переслушать
     save_recording(round_id, audio.filename, data)
+    # ход мысли и лучшая версия своим голосом считаются в фоне — ответ delivery их не ждёт
+    jobs.after_delivery(round_id, result.model_dump(mode="json"))
     return result
+
+
+@router.get("/rounds/{round_id}/flow")
+async def flow_review(round_id: RoundId, use_mock: UseMock, lang: UiLang) -> FlowResponse:
+    """Ход мысли: где зацепил зал, сильные и слабые места, уход от темы, вода, концовка — моменты со временем.
+
+    Считается в фоне сразу после delivery. Нет результата (старый раунд) — этот запрос запускает расчёт и отвечает
+    status=pending: опрашивать раз в 2–3 с. Тексты — на языке речи раунда, Accept-Language — для ошибок.
+    """
+    if use_mock:
+        return mocks.flow()
+    with ai_errors("flow", round_id, lang):
+        return jobs.flow_view(await jobs.state("flow", round_id))
+
+
+@router.get("/rounds/{round_id}/better-version")
+async def better_version(round_id: RoundId, use_mock: UseMock, lang: UiLang) -> BetterVersionResponse:
+    """Тот же питч голосом игрока, но без паразитов, оговорок, повторов и запинок: mp3 и прочитанный текст.
+
+    Считается в фоне после delivery (клон голоса ElevenLabs удаляется сразу после озвучки). Нет результата —
+    запрос запускает расчёт и отвечает pending. unavailable — сделать нельзя (короткая запись, нет записи…),
+    причина в reason на языке интерфейса (Accept-Language); текст версии — на языке речи.
+    """
+    if use_mock:
+        return mocks.better_version()
+    with ai_errors("better_version", round_id, lang):
+        return jobs.better_view(round_id, await jobs.state("better_version", round_id), lang)
 
 
 @router.post("/rounds/{round_id}/jury/questions")

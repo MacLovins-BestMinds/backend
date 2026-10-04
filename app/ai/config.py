@@ -69,6 +69,15 @@ class AiSettings(BaseSettings):
     azure_max_parallel: int = 8  # запись режется по паузам на куски, они оцениваются параллельно
     azure_timeout_sec: float = 20.0
 
+    # Фоновые задачи после delivery (app/ai/jobs.py): ход мысли (flow) и «лучшая версия» своим голосом.
+    # false — задачи не запускаются, GET отдаёт только сохранённое (тесты всегда выключают)
+    review_jobs_enabled: bool = True
+    # «Лучшая версия»: клон голоса игрока (ElevenLabs Instant Voice Cloning) читает очищенный текст питча
+    better_version_enabled: bool = True
+    better_version_model: str = ""  # пусто — TTS_MODEL, если это модель ElevenLabs, иначе eleven_flash_v2_5
+    better_version_max_chars: int = Field(default=3500, ge=100)  # длиннее — unavailable (кредиты ElevenLabs)
+    better_version_min_speech_sec: float = Field(default=10.0, ge=1.0)  # меньше речи — голос не склонировать
+
     static_dir: str = "static"
     ai_cache: bool = True
     ai_cache_dir: str = ".ai_cache"

@@ -213,12 +213,14 @@ async def jury_skip(round_id: RoundId, question_id: Annotated[str, Form()], use_
 
 
 @router.websocket("/live")
-async def live(websocket: WebSocket, round_id: str, mock: bool = False, pace: str = "normal") -> None:
+async def live(
+    websocket: WebSocket, round_id: str, mock: bool = False, pace: str = "normal", max_sec: int | None = None
+) -> None:
     """Приложение шлёт бинарные куски PCM 16 кГц по 250 мс, сервер отвечает событиями filler/long_pause/pace."""
     if mock or get_settings().ai_mock:
         await _live_mock(websocket)
     else:
-        await run_live(websocket, round_id, pace)
+        await run_live(websocket, round_id, pace, max_sec)
 
 
 async def _live_mock(websocket: WebSocket) -> None:

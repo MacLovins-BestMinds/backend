@@ -23,6 +23,7 @@ from websockets.exceptions import WebSocketException
 from app.ai import llm
 from app.ai.clients import MissingKeyError, require
 from app.ai.config import AiSettings, get_settings
+from app.ai.limits import release_live_slot, try_live_slot
 from app.ai.delivery_metrics import PACE_RANGE_WPM, PACE_RANGES, PACE_WINDOW_SEC, find_fillers, find_profanity
 from app.ai.pitch import Pitch, resolve_pitch
 from app.ai.schemas import ContentEvent, FillerEvent, LiveEvent, LongPauseEvent, PaceEvent, ProfanityEvent
@@ -36,6 +37,8 @@ LONG_PAUSE_SEC = 3.0
 BURST_COUNT, BURST_WINDOW_SEC = 3, 20.0
 PACE_COOLDOWN_SEC = 15.0
 SESSION_TTL_SEC = 3600
+LIVE_LIMIT_SLACK_SEC = 60  # слот держится не дольше питча и минуты запаса — на случай зависшего соединения
+LIVE_LIMIT_MAX_SEC = 1800
 VAD_SILENCE_SEC = 1.0  # Scribe фиксирует фразу после секунды тишины → точные таймкоды для темпа
 _SENTENCE_END = (".", "!", "?", "…")
 # Оценка содержания: раз в CHECK_EVERY_SEC, когда набралось CHECK_MIN_WORDS новых слов, LLM смотрит последние слова
@@ -360,14 +363,15 @@ async def _stt_to_app(
             task.cancel()
 
 
-async def _close(websocket: WebSocket, reason: str) -> None:
+async def _close(websocket: WebSocket, reason: str, code: int = status.WS_1011_INTERNAL_ERROR) -> None:
     try:
-        await websocket.close(code=status.WS_1011_INTERNAL_ERROR, reason=reason)  # reason ≤ 123 байт
+        await websocket.close(code=code, reason=reason)  # reason ≤ 123 байт
     except RuntimeError:
         pass  # уже закрыт
 
 
-async def run_live(websocket: WebSocket, round_id: str, pace: str = "normal") -> None:
+async def run_live(websocket: WebSocket, round_id: str, pace: str = "normal", max_sec: int | None = None) -> None:
+    """max_sec — длина питча, которую выбрал игрок: по ней ограничено время, пока поток держит слот ElevenLabs."""
     settings = get_settings()
     try:
         stream = make_stream(settings)
@@ -376,6 +380,23 @@ async def run_live(websocket: WebSocket, round_id: str, pace: str = "normal") ->
         await websocket.close(code=status.WS_1011_INTERNAL_ERROR, reason="speech service is not configured")
         return
     await websocket.accept()
+    # слотов ElevenLabs мало: кому не хватило, тот питчит без живых реакций на паразитов и темп (зал по-прежнему
+    # слышит голос и тишину — это считается в приложении), а разбор и жюри получает как все. Приложение повторит позже.
+    holds_slot = settings.live_stt_provider == "elevenlabs"
+    if holds_slot and not try_live_slot():
+        logger.info("live: все слоты распознавания заняты, round=%s — без живых реакций", round_id)
+        await _close(websocket, "live slots busy", status.WS_1013_TRY_AGAIN_LATER)
+        return
+    try:
+        await _run_stream(websocket, round_id, pace, max_sec, stream, settings)
+    finally:
+        if holds_slot:
+            release_live_slot()
+
+
+async def _run_stream(
+    websocket: WebSocket, round_id: str, pace: str, max_sec: int | None, stream: SttStream, settings: AiSettings
+) -> None:
     analyzer = get_session(round_id)
     analyzer.pace_range = PACE_RANGES.get(pace, PACE_RANGE_WPM)
     analyzer.begin_stream()
@@ -383,18 +404,24 @@ async def run_live(websocket: WebSocket, round_id: str, pace: str = "normal") ->
         pitch: Pitch | None = await asyncio.to_thread(resolve_pitch, round_id)
     except Exception:
         pitch = None  # тема неизвестна (тестовый раунд) — работаем без оценки содержания
+    limit = min(max_sec or (pitch.max_sec if pitch else LIVE_LIMIT_MAX_SEC), LIVE_LIMIT_MAX_SEC) + LIVE_LIMIT_SLACK_SEC
     try:
-        async with connect(stream.url, additional_headers=stream.headers) as stt:
+        async with asyncio.timeout(limit), connect(stream.url, additional_headers=stream.headers) as stt:
             app_task = asyncio.create_task(_app_to_stt(websocket, stt, stream, analyzer))
             stt_task = asyncio.create_task(_stt_to_app(websocket, stt, stream, analyzer, pitch))
-            done, pending = await asyncio.wait({app_task, stt_task}, return_when=asyncio.FIRST_COMPLETED)
-            for task in pending:
-                task.cancel()
+            try:
+                done, pending = await asyncio.wait({app_task, stt_task}, return_when=asyncio.FIRST_COMPLETED)
+            finally:
+                for task in (app_task, stt_task):
+                    task.cancel()
             for task in done:
                 if exc := task.exception():
                     raise exc
             if stt_task in done:  # распознавание закрыло поток само — пусть приложение переподключится
                 await _close(websocket, "speech stream ended, reconnect")
+    except TimeoutError:
+        logger.warning("live: поток держал слот дольше %s с, закрываю, round=%s", limit, round_id)
+        await _close(websocket, "time limit", status.WS_1000_NORMAL_CLOSURE)
     except LiveSttError as e:
         logger.error("live: ошибка распознавания (%s), round=%s: %s", settings.live_stt_provider, round_id, e)
         await _close(websocket, "speech service error")

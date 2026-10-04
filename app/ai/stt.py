@@ -6,6 +6,7 @@ from dataclasses import asdict, dataclass
 from app.ai import cache
 from app.ai.clients import elevenlabs_client, openai_client
 from app.ai.config import get_settings
+from app.ai.limits import elevenlabs_call
 
 # Whisper по умолчанию «вычищает» речь; подсказка с паразитами заставляет их сохранять.
 # Scribe распознаёт дословно (no_verbatim=false), подсказка ему не нужна.
@@ -88,7 +89,10 @@ async def transcribe(wav: bytes) -> Transcript:
     if cached := await cache.get("stt", key, "json"):
         return _in_language(Transcript.from_json(cached), s.stt_language)
 
-    transcript = await (_elevenlabs(wav) if s.stt_provider == "elevenlabs" else _openai(wav))
+    if s.stt_provider == "elevenlabs":
+        transcript = await elevenlabs_call("stt", lambda: _elevenlabs(wav))
+    else:
+        transcript = await _openai(wav)
     await cache.put("stt", key, "json", transcript.to_json())
     return _in_language(transcript, s.stt_language)
 

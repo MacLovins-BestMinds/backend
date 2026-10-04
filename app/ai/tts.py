@@ -10,6 +10,7 @@ from elevenlabs import VoiceSettings
 from app.ai import cache
 from app.ai.clients import elevenlabs_client, openai_client
 from app.ai.config import get_settings
+from app.ai.limits import elevenlabs_call
 
 ELEVENLABS_OUTPUT_FORMAT = "mp3_44100_128"
 
@@ -56,6 +57,9 @@ async def synthesize(text: str, voice: Voice) -> bytes:
     if cached := await cache.get("tts", key, "mp3"):
         return cached
 
-    mp3 = await (_elevenlabs(text, voice) if s.tts_provider == "elevenlabs" else _openai(text, voice))
+    if s.tts_provider == "elevenlabs":
+        mp3 = await elevenlabs_call("tts", lambda: _elevenlabs(text, voice))
+    else:
+        mp3 = await _openai(text, voice)
     await cache.put("tts", key, "mp3", mp3)
     return mp3

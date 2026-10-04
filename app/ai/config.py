@@ -10,6 +10,7 @@
 from functools import lru_cache
 from typing import Literal
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -50,6 +51,10 @@ class AiSettings(BaseSettings):
     elevenlabs_realtime_url: str = "wss://api.elevenlabs.io/v1/speech-to-text/realtime"
     deepgram_url: str = "wss://api.deepgram.com/v1/listen"
     deepgram_model: str = "nova-3"
+    # одновременные запросы к ElevenLabs (тариф — 3 на аккаунт): живая сцена держит слот весь питч,
+    # короткие запросы (распознавание записи и ответов, озвучка) идут через свои слоты по очереди (app/ai/limits.py)
+    elevenlabs_live_slots: int = Field(default=2, ge=0)
+    elevenlabs_short_slots: int = Field(default=1, ge=1)
 
     # озвучка
     tts_provider: Literal["elevenlabs", "openai"] = "elevenlabs"

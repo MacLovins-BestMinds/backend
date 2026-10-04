@@ -290,6 +290,7 @@ async def run_jury_questions(round_id: str, difficulty: str | None = None) -> Ju
         for i, q in enumerate(draft.questions, start=1)
     ]
     _audio_dir(round_id).mkdir(parents=True, exist_ok=True)
+    # озвучки идут через слоты ElevenLabs (app/ai/limits.py): при одном коротком слоте — по очереди, не тремя сразу
     await asyncio.gather(*(_voice(round_id, q.id, q.juror, q.text) for q in questions))
 
     response = JuryQuestionsResponse(questions=questions)

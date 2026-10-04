@@ -6,6 +6,7 @@
 import asyncio
 import logging
 from collections.abc import Sequence
+from dataclasses import replace
 
 from pydantic import BaseModel, Field
 
@@ -151,9 +152,17 @@ def with_pronunciation(score: DeliveryScore, pron: PronunciationAssessment | Non
 
 
 async def run_delivery(
-    round_id: str, audio: bytes, gaze: Sequence[GazePoint], notes: str = "", pace: PaceMode = "normal"
+    round_id: str,
+    audio: bytes,
+    gaze: Sequence[GazePoint],
+    notes: str = "",
+    pace: PaceMode = "normal",
+    limits: tuple[int, int] | None = None,
 ) -> DeliveryResponse:
+    """limits — своя длина питча (мин, макс в секундах), которую игрок выбрал вместо лимитов уровня."""
     pitch = await asyncio.to_thread(resolve_pitch, round_id)
+    if limits:
+        pitch = replace(pitch, min_sec=limits[0], max_sec=limits[1])
     wav = await to_wav16k(audio)
     # произношение (Azure) оценивается параллельно с распознаванием и оценкой содержания; сбой → None
     pronunciation_task = asyncio.create_task(pronunciation.assess(wav))

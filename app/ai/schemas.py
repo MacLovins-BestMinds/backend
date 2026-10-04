@@ -181,6 +181,8 @@ class WordMark(BaseModel):
     end: int
     t: float
     t_end: float
+    # начало каждой буквы слова в записи (секунды), по одной на символ transcript[start:end]; None — нет данных
+    c: list[float] | None = None
 
 
 class DeliveryResponse(BaseModel):

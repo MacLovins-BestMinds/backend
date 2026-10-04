@@ -5,11 +5,14 @@ from itertools import cycle
 
 from app.ai.refine import DraftBlock, render, to_blocks
 from app.ai.schemas import (
+    BetterVersionResponse,
     ContentScore,
     CriterionScore,
     DeliveryResponse,
     DeliveryScore,
     FillerEvent,
+    FlowMoment,
+    FlowResponse,
     JuryAnswerResponse,
     JuryQuestion,
     JuryQuestionsResponse,
@@ -154,4 +157,42 @@ def live_events() -> Iterator[LiveEvent]:
             LongPauseEvent(t=0, duration=3.4),
             FillerEvent(t=0, word="you know"),
         ]
+    )
+
+
+def flow() -> FlowResponse:
+    return FlowResponse(
+        status="ready",
+        summary=(
+            "The pitch runs in a clear line: a picture of the problem, the solution, proof and a concrete ask. "
+            "The weak link is the proof — the pilot numbers say how many, not how well. "
+            "Add one result from the pilot and the whole argument gets stronger."
+        ),
+        moments=[
+            FlowMoment(
+                t=0.2, end=6.8, kind="hook", tone="good", quote="Imagine it's eight in the morning",
+                comment="A vivid picture right away: the room sees the problem through one grandmother.",
+            ),
+            FlowMoment(
+                t=15.2, end=24.0, kind="strong", tone="good", quote="it beeps, lights up and notifies the family",
+                comment="The solution fits in one breath: what it does and who it helps.",
+            ),
+            FlowMoment(
+                t=24.0, end=31.5, kind="weak", tone="bad",
+                quote="A pilot in three pharmacies, two hundred families in a month",
+                comment="Numbers without a result: say what changed for those families — fewer missed pills?",
+            ),
+            FlowMoment(
+                t=31.5, end=38.0, kind="strong_close", tone="good", quote="let's talk after the pitch",
+                comment="A concrete ask and a next step — the ending lands.",
+            ),
+        ],
+    )  # fmt: skip
+
+
+def better_version() -> BetterVersionResponse:
+    return BetterVersionResponse(
+        status="ready",
+        audio_url="/static/audio/q1.mp3",  # мок: любой mp3 из статики
+        text=_TRANSCRIPT.replace("Um, this", "This"),
     )

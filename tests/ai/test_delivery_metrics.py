@@ -124,3 +124,16 @@ def test_chosen_pace_decides_what_counts_as_too_slow() -> None:
     fast = analyze(Transcript(" ".join(w.text for w in words), words, duration=60), [], 60, 180, pace="fast")
     assert [e for e in slow.events if e.type == "pace"] == []
     assert all("too slow" in e.text for e in fast.events if e.type == "pace") and any(e.type == "pace" for e in fast.events)
+
+
+def test_parallel_constructions_are_not_repeats_but_false_starts_are() -> None:
+    # повтор в начале и в конце соседних частей фразы — приём, а не ошибка; запинка «если я, если я» — ошибка
+    text = "Да, если я, если я ругаюсь, им это не нравится, если я молчу, им это не нравится."
+    result = analyze(_spoken(text), gaze=[], min_sec=60, max_sec=180, lang="ru")
+    assert [text[e.start : e.end] for e in result.events if e.type == "repeat"] == ["если я"]
+    anaphora = "We help farmers. We help them sell. We help them grow."
+    assert [e for e in analyze(_spoken(anaphora), gaze=[], min_sec=60, max_sec=180).events if e.type == "repeat"] == []
+    # оборванное начало и повтор с начала — фальстарт, даже если между ними пара слов
+    restart = "Если он сейчас-- вот какая-то тема, если он сейчас начнёт говорить, все проснутся."
+    result = analyze(_spoken(restart), gaze=[], min_sec=60, max_sec=180, lang="ru")
+    assert [restart[e.start : e.end] for e in result.events if e.type == "repeat"] == ["если он сейчас"]

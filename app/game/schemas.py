@@ -160,6 +160,9 @@ class RoundReview(BaseModel):
     jury_answers: List[dict] = []
     # /static/recordings/<round_id>.<ext>; None — записи нет (раунды до хранения записей, моки)
     audio_url: Optional[str] = None
+    # как ответы GET /api/ai/rounds/{id}/flow и /better-version; None — ещё не считались (их запускает тот GET)
+    flow: Optional[dict] = None
+    better_version: Optional[dict] = None
 
 
 class LeaderboardEntry(BaseModel):

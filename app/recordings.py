@@ -44,11 +44,17 @@ def save_recording(round_id: str, filename: str | None, data: bytes) -> None:
         logger.warning("recordings: не сохранил запись round=%s: %s", round_id, e)
 
 
-def recording_url(round_id: str) -> str | None:
-    """Адрес записи раунда (/static/...) или None, если её нет (раунды до этой версии, моки)."""
+def recording_path(round_id: str) -> Path | None:
+    """Файл записи раунда или None, если её нет (раунды до этой версии, моки)."""
     if not _SAFE_ID.match(round_id):
         return None
     for path in sorted(_folder().glob(f"{round_id}.*")):
         if path.suffix.lower() in EXTENSIONS:
-            return f"/static/recordings/{path.name}"
+            return path
     return None
+
+
+def recording_url(round_id: str) -> str | None:
+    """Адрес записи раунда (/static/...) или None, если её нет (раунды до этой версии, моки)."""
+    path = recording_path(round_id)
+    return f"/static/recordings/{path.name}" if path else None

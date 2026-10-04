@@ -156,12 +156,18 @@ async def delivery(
     use_mock: UseMock,
     notes: Annotated[str, Form(description="заметки с подготовки, необязательно")] = "",
     pace: Annotated[PaceMode, Form(description="темп, который выбрал игрок: slow | normal | fast")] = "normal",
+    min_sec: Annotated[int | None, Form(ge=10, le=1800, description="свой лимит питча, нижняя граница, с")] = None,
+    max_sec: Annotated[int | None, Form(ge=10, le=1800, description="свой лимит питча, верхняя граница, с")] = None,
 ) -> DeliveryResponse:
     if use_mock:
         return mocks.delivery()
+    # игрок сам выбрал длину питча — тайминг оценивается по ней, а не по лимитам уровня
+    if (min_sec is None) != (max_sec is None) or (min_sec is not None and max_sec is not None and min_sec >= max_sec):
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "min_sec and max_sec go together, min_sec < max_sec")
+    limits = (min_sec, max_sec) if min_sec is not None and max_sec is not None else None
     data = await read_audio(audio)
     with ai_errors("delivery", round_id):
-        result = await run_delivery(round_id, data, gaze, notes, pace)
+        result = await run_delivery(round_id, data, gaze, notes, pace, limits)
     # звук остаётся на сервере, чтобы раунд из истории можно было переслушать
     save_recording(round_id, audio.filename, data)
     return result

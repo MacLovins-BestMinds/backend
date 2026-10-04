@@ -43,7 +43,9 @@ class AiSettings(BaseSettings):
     # распознавание записей
     stt_provider: Literal["elevenlabs", "openai"] = "elevenlabs"
     stt_model: str = "scribe_v2"  # openai: whisper-1
-    stt_language: str = "en"  # язык выступлений: распознавание, живой зал, голоса жюри
+    # Язык речи распознавание определяет само (en | ru | ro); это язык по умолчанию: для речи — когда распознавание
+    # его не узнало и в раунде он ещё не известен, для интерфейса — запрос без Accept-Language
+    stt_language: str = "en"
 
     # живой поток
     live_stt_provider: Literal["elevenlabs", "deepgram"] = "elevenlabs"

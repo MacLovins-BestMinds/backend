@@ -11,6 +11,7 @@ from app.core.config import settings
 from app.core.db import engine
 from app.game.models import User, Case, Round, AiResult, RoundScore, now_utc
 from app.game import content
+from app.core.lang import pick
 from app.recordings import recording_url
 from app.game.schemas import (
     SpinResponse,
@@ -34,6 +35,29 @@ from app.game.schemas import (
 
 
 logger = logging.getLogger(__name__)
+
+# Тексты ошибок, которые видит игрок, — на языке интерфейса
+ERROR_TEXTS: dict[str, dict[str, str]] = {
+    "en": {
+        "daily_limit": "Topic of the day is limited to 5 attempts per hour. Try Training mode or come back later.",
+        "no_round": "Round {round_id} not found",
+        "no_delivery": "Send the pitch for review (delivery) first",
+        "not_finished": "This round was not finished",
+    },
+    "ru": {
+        "daily_limit": "Тему дня можно пройти не больше 5 раз в час. Попробуй тренировку или вернись позже.",
+        "no_round": "Раунд {round_id} не найден",
+        "no_delivery": "Сначала отправь питч на разбор (delivery)",
+        "not_finished": "Этот раунд не был завершён",
+    },
+    "ro": {
+        "daily_limit": "Tema zilei poate fi jucată de cel mult 5 ori pe oră. Încearcă modul Antrenament sau revino mai târziu.",
+        "no_round": "Runda {round_id} nu a fost găsită",
+        "no_delivery": "Trimite mai întâi pitch-ul la analiză (delivery)",
+        "not_finished": "Această rundă nu a fost terminată",
+    },
+}
+
 
 def get_rank_title(avg_score: float) -> str:
     """
@@ -202,6 +226,7 @@ def get_round(round_id: str, session: Optional[Session] = None) -> Optional[Dict
         "case_id": r.case_id,
         "status": r.status,
         "difficulty": r.difficulty or "easy",
+        "lang": r.lang or "en",
         "own": own,
         "own_title": r.own_title,
         "own_text": r.own_text,
@@ -281,29 +306,44 @@ def _active_cases(session: Session, level: Optional[str] = None) -> List[Case]:
     return cases
 
 
-def _public_case(case: Case) -> CasePublic:
-    """Тема для приложения: без прикола, но с выжимкой и ссылками для подготовки."""
+def _public_case(case: Case, lang: str = "en") -> CasePublic:
+    """Тема для приложения на языке интерфейса: без прикола, но с выжимкой и ссылками для подготовки."""
     summary, sources = content.reading(case.id)
+
+    def text(field: str, english: Optional[str]) -> Optional[str]:
+        return content.translated(case.id, field, english, lang)
+
     return CasePublic(
-        id=case.id, title=case.title, brief=case.brief, audience=case.audience, summary=summary, sources=sources
+        id=case.id,
+        title=text("title", case.title),
+        brief=text("brief", case.brief),
+        audience=text("audience", case.audience),
+        summary=text("summary", summary),
+        sources=sources,
     )
 
 
-def spin_case(session: Session, level: str = "easy") -> SpinResponse:
+def _case_titles(session: Session, lang: str) -> dict[str, str]:
+    """Названия всех тем (и старых, не из topics.json) на языке интерфейса — для истории раундов."""
+    return {c.id: content.translated(c.id, "title", c.title, lang) for c in session.exec(select(Case)).all()}
+
+
+def spin_case(session: Session, level: str = "easy", lang: str = "en") -> SpinResponse:
     """
-    Колесо тем: возвращает случайный кейс выбранного уровня БЕЗ прикола.
+    Колесо тем: возвращает случайный кейс выбранного уровня БЕЗ прикола, на языке интерфейса.
     """
     cases = _active_cases(session, level)
     chosen = random.choice(cases)
+    category = content.translated(chosen.id, "category", chosen.category_title, lang)
     return SpinResponse(
-        category=CategoryOut(id=chosen.category_id, title=chosen.category_title),
-        case=_public_case(chosen),
+        category=CategoryOut(id=chosen.category_id, title=category),
+        case=_public_case(chosen, lang),
     )
 
 
-def get_daily_case(session: Session, target_date: Optional[str] = None) -> DailyResponse:
+def get_daily_case(session: Session, target_date: Optional[str] = None, lang: str = "en") -> DailyResponse:
     """
-    Тема дня: детерминированный выбор кейса по хэшу даты (одинаковый для всех).
+    Тема дня: детерминированный выбор кейса по хэшу даты (одинаковый для всех), на языке интерфейса.
     """
     if not target_date:
         target_date = date.today().isoformat()
@@ -313,12 +353,13 @@ def get_daily_case(session: Session, target_date: Optional[str] = None) -> Daily
     date_hash = int(hashlib.md5(target_date.encode("utf-8")).hexdigest(), 16)
     chosen = cases_sorted[date_hash % len(cases_sorted)]
 
-    return DailyResponse(date=target_date, case=_public_case(chosen))
+    return DailyResponse(date=target_date, case=_public_case(chosen, lang))
 
 
-def create_round(session: Session, req: RoundCreateRequest) -> RoundCreateResponse:
+def create_round(session: Session, req: RoundCreateRequest, lang: str = "en") -> RoundCreateResponse:
     """
     Создание раунда выступления: training, daily, own, warmup.
+    lang — язык интерфейса раунда (роутер уже выбрал его из req.lang и Accept-Language).
     """
     user = get_or_create_user(session, req.user_id)
 
@@ -333,10 +374,7 @@ def create_round(session: Session, req: RoundCreateRequest) -> RoundCreateRespon
         ).one()
         # Лимит 5 попыток в час для предотвращения спама лидерборда
         if recent_daily_count >= 5:
-            raise HTTPException(
-                status_code=429,
-                detail="Topic of the day is limited to 5 attempts per hour. Try Training mode or come back later."
-            )
+            raise HTTPException(status_code=429, detail=pick(ERROR_TEXTS, lang)["daily_limit"])
 
     round_id = f"rnd_{hashlib.md5(f'{user.id}_{datetime.now(timezone.utc).isoformat()}_{random.random()}'.encode()).hexdigest()[:12]}"
 
@@ -368,16 +406,20 @@ def create_round(session: Session, req: RoundCreateRequest) -> RoundCreateRespon
         own_text=own_text,
         own_audience=own_audience,
         difficulty=req.difficulty,
+        lang=lang,
         status="created"
     )
     session.add(round_obj)
     session.commit()
 
+    case = session.get(Case, case_id) if case_id and req.mode in ("training", "daily") else None
     return RoundCreateResponse(
         round_id=round_id,
         prep_sec=prep_sec,
         pitch_min_sec=pitch_min_sec,
-        pitch_max_sec=pitch_max_sec
+        pitch_max_sec=pitch_max_sec,
+        lang=lang,
+        case=_public_case(case, lang) if case else None,
     )
 
 
@@ -425,7 +467,7 @@ def _collect_ai_scores(ai_results) -> tuple[Optional[float], Optional[float], Op
     return content_score, delivery_score, jury_score
 
 
-def finish_round(session: Session, round_id: str) -> RoundFinishResponse:
+def finish_round(session: Session, round_id: str, lang: str = "en") -> RoundFinishResponse:
     """
     Завершение раунда:
     - собирает AiResult (content, delivery, jury)
@@ -434,14 +476,14 @@ def finish_round(session: Session, round_id: str) -> RoundFinishResponse:
     """
     round_obj = session.get(Round, round_id)
     if not round_obj:
-        raise HTTPException(status_code=404, detail=f"Round {round_id} not found")
+        raise HTTPException(status_code=404, detail=pick(ERROR_TEXTS, lang)["no_round"].format(round_id=round_id))
 
     ai_results = session.exec(select(AiResult).where(AiResult.round_id == round_id)).all()
     content_score, delivery_score, jury_score = _collect_ai_scores(ai_results)
 
     if content_score is None or delivery_score is None:
         if not settings.MOCK_FALLBACK:
-            raise HTTPException(status_code=409, detail="Send the pitch for review (delivery) first")
+            raise HTTPException(status_code=409, detail=pick(ERROR_TEXTS, lang)["no_delivery"])
         # MOCK_FALLBACK: раунд прошёл на моках AI — условные баллы, чтобы игровой цикл работал целиком
         content_score = 74.0 if content_score is None else content_score
         delivery_score = 78.0 if delivery_score is None else delivery_score
@@ -562,7 +604,106 @@ def get_daily_leaderboard(session: Session, target_date: Optional[str] = None) -
 
 RANKS = [("Novice", 0.0), ("Speaker", 40.0), ("Pitcher", 60.0), ("Orator", 75.0), ("Legend", 88.0)]
 PACE_OK = (100, 180)  # слов в минуту — тот же коридор, что в разборе подачи
-MODE_TITLES = {"daily": "Topic of the day", "warmup": "Warm-up", "own": "Own pitch", "training": "Training"}
+# Подписи истории и прогресса — на языке интерфейса (en | ru | ro)
+MODE_TITLES_BY_LANG: dict[str, dict[str, str]] = {
+    "en": {"daily": "Topic of the day", "warmup": "Warm-up", "own": "Own pitch", "training": "Training"},
+    "ru": {"daily": "Тема дня", "warmup": "Разминка", "own": "Свой питч", "training": "Тренировка"},
+    "ro": {"daily": "Tema zilei", "warmup": "Încălzire", "own": "Pitch propriu", "training": "Antrenament"},
+}
+MODE_TITLES = MODE_TITLES_BY_LANG["en"]
+# названия навыков и привычек и единицы: key → (название, единица)
+SKILL_TITLES: dict[str, dict[str, tuple[str, str]]] = {
+    "en": {
+        "content": ("Content", ""),
+        "delivery": ("Delivery", ""),
+        "jury": ("Jury answers", ""),
+        "fillers_per_min": ("Filler words", "per min"),
+        "wpm": ("Pace", "words/min"),
+        "long_pauses": ("Long pauses", "per pitch"),
+        "repeats": ("Repeats", "per pitch"),
+    },
+    "ru": {
+        "content": ("Содержание", ""),
+        "delivery": ("Подача", ""),
+        "jury": ("Ответы жюри", ""),
+        "fillers_per_min": ("Слова-паразиты", "в мин"),
+        "wpm": ("Темп", "слов/мин"),
+        "long_pauses": ("Длинные паузы", "за питч"),
+        "repeats": ("Повторы", "за питч"),
+    },
+    "ro": {
+        "content": ("Conținut", ""),
+        "delivery": ("Prezentare", ""),
+        "jury": ("Răspunsuri la juriu", ""),
+        "fillers_per_min": ("Cuvinte de umplutură", "pe min"),
+        "wpm": ("Ritm", "cuvinte/min"),
+        "long_pauses": ("Pauze lungi", "pe pitch"),
+        "repeats": ("Repetări", "pe pitch"),
+    },
+}
+# советы прогресса: key → (заголовок, текст); в тексте — подстановки str.format
+INSIGHT_TEXTS: dict[str, dict[str, tuple[str, str]]] = {
+    "en": {
+        "first": ("Play your first round", "One pitch is enough to see your pace, fillers and pauses."),
+        "strong": ("Your strong side: {skill}", "{value} on average over your last rounds."),
+        "weak": ("Work on: {skill}", "{value} on average. {advice}"),
+        "fewer_fillers": ("Fewer filler words", "Down to {value} per minute from {before}. Keep replacing them with a short pause."),
+        "fillers": ("Filler words", "{value} per minute. When you feel one coming, close your mouth and breathe — silence sounds confident."),
+        "fast": ("You speak too fast", "{value} words per minute; the room follows best at 120–160. Pause after every finished thought."),
+        "slow": ("You speak too slowly", "{value} words per minute; aim for 120–160. Prepare your first two sentences so you start with energy."),
+        "pauses": ("Long pauses mid-phrase", "About {value} per pitch. Finish the sentence first, then think about the next one."),
+        "repeats": ("Repeated phrases", "About {value} per pitch. If you lose the thread, say the next point instead of restarting the sentence."),
+        "improving": ("You are improving", "Your last three rounds average {recent}, your first three — {first}."),
+    },
+    "ru": {
+        "first": ("Сыграй первый раунд", "Одного питча хватит, чтобы увидеть твой темп, слова-паразиты и паузы."),
+        "strong": ("Твоя сильная сторона: {skill}", "{value} в среднем за последние раунды."),
+        "weak": ("Над чем поработать: {skill}", "{value} в среднем. {advice}"),
+        "fewer_fillers": ("Меньше слов-паразитов", "Теперь {value} в минуту вместо {before}. Продолжай заменять их короткой паузой."),
+        "fillers": ("Слова-паразиты", "{value} в минуту. Когда чувствуешь, что сейчас вырвется паразит, закрой рот и вдохни — тишина звучит уверенно."),
+        "fast": ("Ты говоришь слишком быстро", "{value} слов в минуту; зал лучше всего успевает за 120–160. Делай паузу после каждой законченной мысли."),
+        "slow": ("Ты говоришь слишком медленно", "{value} слов в минуту; целься в 120–160. Подготовь первые два предложения, чтобы начать энергично."),
+        "pauses": ("Длинные паузы посреди фразы", "Около {value} за питч. Сначала договори предложение, потом думай о следующем."),
+        "repeats": ("Повторы фраз", "Около {value} за питч. Если потерял нить, переходи к следующей мысли, а не начинай предложение заново."),
+        "improving": ("Ты растёшь", "Последние три раунда — в среднем {recent}, первые три — {first}."),
+    },
+    "ro": {
+        "first": ("Joacă prima rundă", "Un singur pitch e de ajuns ca să-ți vezi ritmul, cuvintele de umplutură și pauzele."),
+        "strong": ("Punctul tău forte: {skill}", "{value} în medie în ultimele runde."),
+        "weak": ("Lucrează la: {skill}", "{value} în medie. {advice}"),
+        "fewer_fillers": ("Mai puține cuvinte de umplutură", "Ai coborât la {value} pe minut de la {before}. Continuă să le înlocuiești cu o scurtă pauză."),
+        "fillers": ("Cuvinte de umplutură", "{value} pe minut. Când simți că vine unul, închide gura și respiră — tăcerea sună a încredere."),
+        "fast": ("Vorbești prea repede", "{value} cuvinte pe minut; sala te urmărește cel mai bine la 120–160. Fă o pauză după fiecare idee încheiată."),
+        "slow": ("Vorbești prea încet", "{value} cuvinte pe minut; țintește 120–160. Pregătește primele două propoziții ca să pornești cu energie."),
+        "pauses": ("Pauze lungi în mijlocul frazei", "Cam {value} pe pitch. Termină întâi propoziția, apoi gândește-te la următoarea."),
+        "repeats": ("Fraze repetate", "Cam {value} pe pitch. Dacă pierzi firul, spune următoarea idee în loc să reiei propoziția."),
+        "improving": ("Progresezi", "Ultimele trei runde au media {recent}, primele trei — {first}."),
+    },
+}
+# совет к самому слабому навыку
+ADVICE_TEXTS: dict[str, dict[str, str]] = {
+    "en": {
+        "content": "Before you speak, decide on one main point and two reasons. Say the point first.",
+        "delivery": "Slow down at the start and keep a steady pace — delivery is where you lose the most points.",
+        "jury": "Answer the question in the first sentence, then explain. The jury scores the first ten seconds hardest.",
+    },
+    "ru": {
+        "content": "Перед выступлением выбери одну главную мысль и две причины. Начни с главной мысли.",
+        "delivery": "Начинай медленнее и держи ровный темп — больше всего баллов ты теряешь на подаче.",
+        "jury": "Отвечай на вопрос в первом же предложении, потом объясняй. Первые десять секунд жюри оценивает строже всего.",
+    },
+    "ro": {
+        "content": "Înainte să vorbești, alege o idee principală și două argumente. Spune ideea la început.",
+        "delivery": "Începe mai încet și păstrează un ritm constant — la prezentare pierzi cele mai multe puncte.",
+        "jury": "Răspunde la întrebare din prima propoziție, apoi explică. Juriul punctează cel mai sever primele zece secunde.",
+    },
+}
+
+
+def _num(value: float, digits: int, lang: str) -> str:
+    """Число для текста: в русском и румынском дробная часть — через запятую."""
+    text = f"{value:.{digits}f}"
+    return text if lang == "en" else text.replace(".", ",")
 
 
 def _delivery_payload(session: Session, round_id: str) -> Optional[dict]:
@@ -577,11 +718,14 @@ def _delivery_payload(session: Session, round_id: str) -> Optional[dict]:
         return None
 
 
-def _history_round(session: Session, rnd: Round, sc: RoundScore, titles: dict[str, str]) -> HistoryRound:
+def _history_round(
+    session: Session, rnd: Round, sc: RoundScore, titles: dict[str, str], lang: str = "en"
+) -> HistoryRound:
+    """Заголовок — свой питч, название темы (titles — уже на языке интерфейса) или режим раунда."""
     payload = _delivery_payload(session, rnd.id) or {}
     metrics = payload.get("metrics") or {}
     events = payload.get("events") or []
-    title = rnd.own_title or titles.get(rnd.case_id or "") or MODE_TITLES.get(rnd.mode, rnd.mode)
+    title = rnd.own_title or titles.get(rnd.case_id or "") or pick(MODE_TITLES_BY_LANG, lang).get(rnd.mode, rnd.mode)
     return HistoryRound(
         id=rnd.id,
         mode=rnd.mode,
@@ -606,11 +750,12 @@ def _mean(values: list) -> Optional[float]:
     return round(sum(values) / len(values), 1) if values else None
 
 
-def _trend(key: str, title: str, rounds: List[HistoryRound], better: str = "higher", unit: str = "") -> SkillTrend:
+def _trend(key: str, rounds: List[HistoryRound], better: str = "higher", lang: str = "en") -> SkillTrend:
     """Среднее за последние 5 раундов против 5 предыдущих (rounds — от новых к старым)."""
     recent = _mean([getattr(r, key) for r in rounds[:5]])
     before = _mean([getattr(r, key) for r in rounds[5:10]])
     delta = round(recent - before, 1) if recent is not None and before is not None else None
+    title, unit = pick(SKILL_TITLES, lang)[key]
     return SkillTrend(key=key, title=title, value=recent, delta=delta, better=better, unit=unit)
 
 
@@ -627,53 +772,61 @@ def _streak_days(rounds: List[HistoryRound]) -> int:
     return streak
 
 
-def _insights(rounds: List[HistoryRound], skills: List[SkillTrend], habits: List[SkillTrend]) -> List[Insight]:
+def _insights(
+    rounds: List[HistoryRound], skills: List[SkillTrend], habits: List[SkillTrend], lang: str = "en"
+) -> List[Insight]:
     """Что получается и над чем работать — по цифрам последних раундов, без общих слов."""
+    texts = pick(INSIGHT_TEXTS, lang)
+
+    def insight(kind: str, key: str, **values: object) -> Insight:
+        title, text = texts[key]
+        return Insight(kind=kind, title=title.format(**values), text=text.format(**values))
+
     out: List[Insight] = []
     if not rounds:
-        return [Insight(kind="focus", title="Play your first round", text="One pitch is enough to see your pace, fillers and pauses.")]
+        return [insight("focus", "first")]
 
     scored = [s for s in skills if s.value is not None and (s.key != "jury" or s.value > 0)]
     if len(scored) >= 2:
         best, worst = max(scored, key=lambda s: s.value), min(scored, key=lambda s: s.value)
         if best.value - worst.value >= 5:
-            out.append(Insight(kind="good", title=f"Your strong side: {best.title.lower()}", text=f"{best.value:.0f} on average over your last rounds."))
-            advice = {
-                "content": "Before you speak, decide on one main point and two reasons. Say the point first.",
-                "delivery": "Slow down at the start and keep a steady pace — delivery is where you lose the most points.",
-                "jury": "Answer the question in the first sentence, then explain. The jury scores the first ten seconds hardest.",
-            }[worst.key]
-            out.append(Insight(kind="focus", title=f"Work on: {worst.title.lower()}", text=f"{worst.value:.0f} on average. {advice}"))
+            out.append(insight("good", "strong", skill=best.title.lower(), value=_num(best.value, 0, lang)))
+            advice = pick(ADVICE_TEXTS, lang)[worst.key]
+            out.append(insight("focus", "weak", skill=worst.title.lower(), value=_num(worst.value, 0, lang), advice=advice))
 
     by_key = {h.key: h for h in habits}
     fillers = by_key.get("fillers_per_min")
     if fillers and fillers.value is not None:
         if fillers.delta is not None and fillers.delta <= -0.5:
-            out.append(Insight(kind="good", title="Fewer filler words", text=f"Down to {fillers.value:.1f} per minute from {fillers.value - fillers.delta:.1f}. Keep replacing them with a short pause."))
+            before = _num(fillers.value - fillers.delta, 1, lang)
+            out.append(insight("good", "fewer_fillers", value=_num(fillers.value, 1, lang), before=before))
         elif fillers.value >= 3:
-            out.append(Insight(kind="focus", title="Filler words", text=f"{fillers.value:.1f} per minute. When you feel one coming, close your mouth and breathe — silence sounds confident."))
+            out.append(insight("focus", "fillers", value=_num(fillers.value, 1, lang)))
     pace = by_key.get("wpm")
     if pace and pace.value is not None:
         if pace.value > PACE_OK[1]:
-            out.append(Insight(kind="focus", title="You speak too fast", text=f"{pace.value:.0f} words per minute; the room follows best at 120–160. Pause after every finished thought."))
+            out.append(insight("focus", "fast", value=_num(pace.value, 0, lang)))
         elif pace.value < PACE_OK[0]:
-            out.append(Insight(kind="focus", title="You speak too slowly", text=f"{pace.value:.0f} words per minute; aim for 120–160. Prepare your first two sentences so you start with energy."))
+            out.append(insight("focus", "slow", value=_num(pace.value, 0, lang)))
     pauses = by_key.get("long_pauses")
     if pauses and pauses.value is not None and pauses.value >= 1.5:
-        out.append(Insight(kind="focus", title="Long pauses mid-phrase", text=f"About {pauses.value:.0f} per pitch. Finish the sentence first, then think about the next one."))
+        out.append(insight("focus", "pauses", value=_num(pauses.value, 0, lang)))
     repeats = by_key.get("repeats")
     if repeats and repeats.value is not None and repeats.value >= 3:
-        out.append(Insight(kind="focus", title="Repeated phrases", text=f"About {repeats.value:.0f} per pitch. If you lose the thread, say the next point instead of restarting the sentence."))
+        out.append(insight("focus", "repeats", value=_num(repeats.value, 0, lang)))
 
     if len(rounds) >= 3:
         recent, first = _mean([r.total for r in rounds[:3]]), _mean([r.total for r in rounds[-3:]])
         if recent is not None and first is not None and recent - first >= 5 and len(rounds) >= 6:
-            out.append(Insight(kind="good", title="You are improving", text=f"Your last three rounds average {recent:.0f}, your first three — {first:.0f}."))
+            out.append(insight("good", "improving", recent=_num(recent, 0, lang), first=_num(first, 0, lang)))
     return out[:5]
 
 
-def get_progress(session: Session, user: User) -> ProgressResponse:
-    """История всех раундов и трекер прогресса: баллы, привычки речи, серия дней, советы."""
+def get_progress(session: Session, user: User, lang: str = "en") -> ProgressResponse:
+    """История всех раундов и трекер прогресса: баллы, привычки речи, серия дней, советы.
+
+    lang — язык интерфейса: подписи, советы и названия тем (переводы из content/topics.<lang>.json).
+    """
     rows = session.exec(
         select(Round, RoundScore)
         .where(Round.user_id == user.id)
@@ -682,22 +835,22 @@ def get_progress(session: Session, user: User) -> ProgressResponse:
         .order_by(desc(Round.finished_at))
         .limit(200)
     ).all()
-    titles = {c.id: c.title for c in session.exec(select(Case)).all()}
-    history = [_history_round(session, rnd, sc, titles) for rnd, sc in rows]
+    titles = _case_titles(session, lang)
+    history = [_history_round(session, rnd, sc, titles, lang) for rnd, sc in rows]
 
     rank = calculate_user_rank(session, user.id)
     rank_score = _mean([r.total for r in history[:5]]) or 0.0
     upcoming = next(((title, floor) for title, floor in RANKS if floor > rank_score), None)
     skills = [
-        _trend("content", "Content", history),
-        _trend("delivery", "Delivery", history),
-        _trend("jury", "Jury answers", [r for r in history if r.mode != "warmup"]),
+        _trend("content", history, lang=lang),
+        _trend("delivery", history, lang=lang),
+        _trend("jury", [r for r in history if r.mode != "warmup"], lang=lang),
     ]
     habits = [
-        _trend("fillers_per_min", "Filler words", history, better="lower", unit="per min"),
-        _trend("wpm", "Pace", history, better="range", unit="words/min"),
-        _trend("long_pauses", "Long pauses", history, better="lower", unit="per pitch"),
-        _trend("repeats", "Repeats", history, better="lower", unit="per pitch"),
+        _trend("fillers_per_min", history, better="lower", lang=lang),
+        _trend("wpm", history, better="range", lang=lang),
+        _trend("long_pauses", history, better="lower", lang=lang),
+        _trend("repeats", history, better="lower", lang=lang),
     ]
     return ProgressResponse(
         nick=user.nick,
@@ -711,20 +864,20 @@ def get_progress(session: Session, user: User) -> ProgressResponse:
         streak_days=_streak_days(history),
         skills=skills,
         habits=habits,
-        insights=_insights(history, skills, habits),
+        insights=_insights(history, skills, habits, lang),
         history=history,
     )
 
 
-def get_round_review(session: Session, user: User, round_id: str) -> RoundReview:
+def get_round_review(session: Session, user: User, round_id: str, lang: str = "en") -> RoundReview:
     """Разбор раунда из истории. Чужой раунд открыть нельзя."""
     rnd = session.get(Round, round_id)
     if not rnd or rnd.user_id != user.id:
-        raise HTTPException(status_code=404, detail=f"Round {round_id} not found")
+        raise HTTPException(status_code=404, detail=pick(ERROR_TEXTS, lang)["no_round"].format(round_id=round_id))
     sc = session.exec(select(RoundScore).where(RoundScore.round_id == round_id)).first()
     if not sc:
-        raise HTTPException(status_code=409, detail="This round was not finished")
-    titles = {c.id: c.title for c in session.exec(select(Case)).all()}
+        raise HTTPException(status_code=409, detail=pick(ERROR_TEXTS, lang)["not_finished"])
+    titles = _case_titles(session, lang)
     results = session.exec(select(AiResult).where(AiResult.round_id == round_id).order_by(AiResult.id)).all()
     questions: list[dict] = []
     answers: dict[str, dict] = {}
@@ -739,7 +892,7 @@ def get_round_review(session: Session, user: User, round_id: str) -> RoundReview
             answers[data["question_id"]] = data  # повторный ответ на тот же вопрос заменяет прежний
     order = [q.get("id") for q in questions]
     return RoundReview(
-        round=_history_round(session, rnd, sc, titles),
+        round=_history_round(session, rnd, sc, titles, lang),
         result=RoundFinishResponse(
             total=sc.total_score,
             content=round(sc.content_score, 1),

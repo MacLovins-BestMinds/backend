@@ -1,6 +1,8 @@
 from typing import List, Optional, Literal
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import datetime
+
+from app.core.lang import Lang
 
 
 class CategoryOut(BaseModel):
@@ -48,6 +50,8 @@ class RoundCreateRequest(BaseModel):
     difficulty: Difficulty = "easy"  # уровень всего раунда: тема, время, строгость разбора, жюри и зала
     case_id: Optional[str] = None
     own: Optional[OwnPitchInput] = None
+    # язык интерфейса: en | ru | ro; нет или другой — из Accept-Language, иначе en
+    lang: Optional[str] = None
 
 
 class RoundCreateResponse(BaseModel):
@@ -55,6 +59,8 @@ class RoundCreateResponse(BaseModel):
     prep_sec: int
     pitch_min_sec: int
     pitch_max_sec: int
+    lang: Lang = Field("en", description="язык интерфейса раунда: темы и тексты ошибок; разбор — на языке речи")
+    case: Optional[CasePublic] = Field(None, description="тема раунда на языке интерфейса; нет — свой питч или разминка")
 
 
 class RankInfo(BaseModel):

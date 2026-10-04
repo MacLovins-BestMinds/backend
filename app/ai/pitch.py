@@ -1,9 +1,10 @@
-"""Что питчит игрок в раунде: тема, бриф, аудитория, свой текст и прикол кейса."""
+"""Что питчит игрок в раунде: тема, бриф, аудитория, свой текст, прикол кейса; язык речи раунда."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from app.ai import game_api
 from app.ai.schemas import Audience
+from app.core.lang import default_lang, normalize_lang
 
 AUDIENCE_RU = {
     Audience.CONTEST_JURY: "contest jury",
@@ -32,6 +33,7 @@ class Pitch:
     min_sec: int = 60
     max_sec: int = 180
     difficulty: str = "easy"  # уровень раунда: от него зависят строгость разбора и жюри
+    ui_lang: str = "en"  # язык интерфейса раунда (rounds.lang) — для справки: на разбор и жюри он не влияет
 
     @property
     def audience_ru(self) -> str:
@@ -44,6 +46,12 @@ class Pitch:
 
 # минимальная длительность питча по уровням — как LEVEL_TIMING игрового движка
 MIN_SEC_BY_LEVEL = {"easy": 60, "medium": 60, "hard": 90}
+
+
+def known_speech_lang(round_id: str) -> str | None:
+    """Язык речи раунда по последнему разбору выступления; разбора ещё не было — None."""
+    delivery = game_api.get_ai_result(round_id, "delivery")
+    return normalize_lang((delivery or {}).get("speech_lang"))
 
 
 class RoundNotFoundError(LookupError):
@@ -75,8 +83,9 @@ def resolve_pitch(round_id: str) -> Pitch:
     rnd = game_api.get_round(round_id)
     if rnd is None:
         raise RoundNotFoundError(f"Round {round_id} not found")
+    ui_lang = normalize_lang(rnd.get("lang")) or default_lang()
     if rnd.get("mode") == "warmup":
-        return WARMUP
+        return replace(WARMUP, ui_lang=ui_lang)
     difficulty = rnd.get("difficulty") or "easy"
     min_sec = MIN_SEC_BY_LEVEL.get(difficulty, 60)
     if own := rnd.get("own"):
@@ -87,6 +96,7 @@ def resolve_pitch(round_id: str) -> Pitch:
             own_text=own["text"],
             difficulty=difficulty,
             min_sec=min_sec,
+            ui_lang=ui_lang,
         )
     case = game_api.get_case(rnd["case_id"]) if rnd.get("case_id") else None
     if case is None:
@@ -98,4 +108,5 @@ def resolve_pitch(round_id: str) -> Pitch:
         quirk=case["quirk"],
         difficulty=difficulty,
         min_sec=min_sec,
+        ui_lang=ui_lang,
     )

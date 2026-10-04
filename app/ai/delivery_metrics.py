@@ -7,40 +7,97 @@ from itertools import pairwise
 from typing import Literal
 
 from app.ai.schemas import DeliveryScore, GazePoint, Metrics, TimelineEvent
-from app.ai.stt import Transcript, Word, to_latin
+from app.ai.stt import Transcript, Word
+from app.core.lang import pick
 
-# Паразиты, которые паразиты всегда (звуки-заминки и русские слова на случай STT_LANGUAGE=ru)
-_RU_FILLERS = {"ну", "вот", "короче", "типа", "значит", "блин", "собственно", "кстати"}
-_RU_BIGRAMS = {("как", "бы"), ("это", "самое"), ("в", "общем"), ("так", "сказать"), ("в", "принципе")}
-# русские паразиты ищем и латиницей: в английском режиме расшифровка переведена в латиницу («nu», «koroche»)
-FILLER_WORDS = frozenset({"um", "uh", "er", "erm", "ah", "hmm"} | _RU_FILLERS | {to_latin(w) for w in _RU_FILLERS})
-FILLER_BIGRAMS = frozenset(_RU_BIGRAMS | {(to_latin(a), to_latin(b)) for a, b in _RU_BIGRAMS})
-# Английские слова, которые бывают и паразитами, и нормальными словами («I like it», «Do you know why…»):
-# считаем их паразитами только в «паразитной» позиции — см. _filler_position
-DISCOURSE_WORDS = frozenset({"like", "so", "well", "actually", "basically", "literally", "right", "okay"})
-DISCOURSE_BIGRAMS = frozenset({("you", "know"), ("i", "mean")})
-HEDGE_BIGRAMS = frozenset({("kind", "of"), ("sort", "of")})
+# Паразиты по языкам речи (en | ru | ro).
+# Однозначные — паразиты всегда («um», «ну», «păi»); их не спутать со словом другого языка, поэтому они считаются
+# в речи на любом языке. Двусмысленные («like», «deci», «знаете») бывают и обычными словами: паразитами они
+# считаются только в «паразитной» позиции (см. _filler_position) или по решению LLM, и только для языка речи.
+_EN_FILLERS = {"um", "uh", "er", "erm", "ah", "hmm"}
+_RU_FILLERS = {"ну", "вот", "короче", "типа", "значит", "блин", "собственно", "кстати", "э", "эм"}
+_RU_PHRASES = {("как", "бы"), ("это", "самое"), ("в", "общем"), ("так", "сказать"), ("в", "принципе")}
+_RO_FILLERS = {"păi", "pai", "ă", "ăă", "îî"}
+_RO_PHRASES = {("cum", "să", "zic"), ("cum", "să", "spun"), ("cum", "sa", "zic"), ("cum", "sa", "spun")}
+FILLER_WORDS = frozenset(_EN_FILLERS | _RU_FILLERS | _RO_FILLERS)
+FILLER_PHRASES = frozenset(_RU_PHRASES | _RO_PHRASES)
 # «a kind of tool» — нормальная речь; «it's kind of simple» — паразит-смягчение
 _HEDGE_LEGIT_BEFORE = frozenset(
     {"a", "an", "the", "this", "that", "what", "which", "any", "some", "every", "one", "same"}
 )
-# «e-e-e», «aaa» — так выглядит русское «э-э-э» после перевода расшифровки в латиницу
-_HESITATION = re.compile(r"(u+[hm]+|e+r+m*|a+h+|h+m+|m+|e{2,}|a{2,}|y{2,}|э+м*|м+|а+м+|ы+)")
+
+
+@dataclass(frozen=True, slots=True)
+class FillerSet:
+    """Двусмысленные паразиты одного языка: слова и фразы из 2–3 слов."""
+
+    discourse: frozenset[str] = frozenset()  # «like», «so», «deci»: паразит, если стоит вставкой
+    discourse_phrases: frozenset[tuple[str, ...]] = frozenset()  # «you know», «știi ce»
+    hedges: frozenset[tuple[str, ...]] = frozenset()  # «kind of»: паразит, если перед ним нет артикля
+
+
+FILLER_SETS: dict[str, FillerSet] = {
+    # английские слова, которые бывают и паразитами, и нормальными словами («I like it», «Do you know why…»)
+    "en": FillerSet(
+        discourse=frozenset({"like", "so", "well", "actually", "basically", "literally", "right", "okay"}),
+        discourse_phrases=frozenset({("you", "know"), ("i", "mean")}),
+        hedges=frozenset({("kind", "of"), ("sort", "of")}),
+    ),
+    "ru": FillerSet(
+        discourse=frozenset({"знаете", "понимаете", "слушайте", "скажем", "допустим"}),
+        discourse_phrases=frozenset({("как", "говорится")}),
+    ),
+    "ro": FillerSet(
+        discourse=frozenset(
+            {"deci", "adică", "adica", "gen", "practic", "efectiv", "bine", "na", "uite", "așa", "asa", "știi",
+             "stii", "cumva"}
+        ),  # fmt: skip
+        discourse_phrases=frozenset({("știi", "ce"), ("stii", "ce"), ("mă", "rog"), ("ma", "rog"), ("să", "zicem")}),
+    ),
+}
+# живой поток: язык речи заранее неизвестен — двусмысленные слова всех языков (их там всё равно не отмечают сразу)
+_ANY_LANGUAGE = FillerSet(
+    discourse=frozenset().union(*(f.discourse for f in FILLER_SETS.values())),
+    discourse_phrases=frozenset().union(*(f.discourse_phrases for f in FILLER_SETS.values())),
+    hedges=frozenset().union(*(f.hedges for f in FILLER_SETS.values())),
+)
+
+
+def filler_set(lang: str | None) -> FillerSet:
+    """Двусмысленные паразиты языка речи; None — язык неизвестен (живой поток), берутся все языки."""
+    return _ANY_LANGUAGE if lang is None else FILLER_SETS.get(lang, FILLER_SETS["en"])
+
+
+# звуки-заминки: «um», «e-e-e», русское «э-э», «ммм», румынское «ăăă», «îîî»
+_HESITATION = re.compile(r"(u+[hm]+|e+r+m*|a+h+|h+m+|m+|e{2,}|a{2,}|y{2,}|э+м*|м+|а{2,}|а+м+|ы+|ă+m*|â+m*|î+m*)")
 # слова, которые повторяют нарочно («very, very good») или по грамматике («that that», «had had»)
-_REPEAT_OK = frozenset({"very", "really", "so", "much", "many", "long", "no", "yes", "bye", "ha", "that", "had", "is"})
+_REPEAT_OK = frozenset(
+    {"very", "really", "so", "much", "many", "long", "no", "yes", "bye", "ha", "that", "had", "is",
+     "очень", "да", "нет", "foarte", "da", "nu"}
+)  # fmt: skip
+# служебные слова: фраза только из них повтором не считается
 _STOPWORDS = frozenset(
     "a an the and or but of to in on at for from with by as is are was were be it its this that these those "
-    "i you he she we they my your our their me him her us them do does did not no so if then there here".split()
+    "i you he she we they my your our their me him her us them do does did not no so if then there here "
+    "и в во на с со к ко по о об от до за из у а но или что это как не же ли бы то я ты он она мы вы они "
+    "și si în pe la cu de din că ca să sa nu e este al un o eu tu el ea noi voi ei ce".split()
 )
 # Ругань: слово считается бранным, если начинается с одного из корней. Русские корни — и кириллицей,
-# и в том виде, в каком они выходят после перевода расшифровки в латиницу («blyat», «khuy», «pizdets»).
+# и латиницей («blyat», «khuy», «pizdets»): так их иногда пишут распознавание и сами игроки.
 _SWEAR_EN = ("fuck", "motherfuck", "shit", "bullshit", "bitch", "asshole", "bastard", "cunt", "dickhead", "piss", "wtf")
 _SWEAR_RU = (
     "бля", "сука", "сучк", "хуй", "хуя", "хуе", "хуё", "хую", "хуи", "нахуй", "нахуя", "похуй", "нихуя",
     "пизд", "ебат", "ебал", "ебан", "ебуч", "ёб", "заеб", "заёб", "уеб", "уёб", "наеб", "мудак", "мудил", "говн",
     "пидор", "пидар",
 )  # fmt: skip
-SWEAR_STEMS = _SWEAR_EN + _SWEAR_RU + tuple(to_latin(s) for s in _SWEAR_RU)
+_SWEAR_RO = ("futu-", "fututi", "futut")  # «pizdă» ловит русский корень латиницей «pizd»
+# короткие румынские слова — только целиком: корнем они задели бы обычные слова («pulover», «muiere»)
+SWEAR_WORDS = frozenset({"pula", "pulă", "muie", "cacat", "căcat", "curvă", "curva"})
+_CYR = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя"
+_LAT = ("a", "b", "v", "g", "d", "e", "yo", "zh", "z", "i", "y", "k", "l", "m", "n", "o", "p", "r", "s", "t", "u",
+        "f", "kh", "ts", "ch", "sh", "shch", "", "y", "", "e", "yu", "ya")  # fmt: skip
+_TRANSLIT = {ord(c): lat for c, lat in zip(_CYR, _LAT, strict=True)}
+SWEAR_STEMS = _SWEAR_EN + _SWEAR_RU + tuple(st.translate(_TRANSLIT) for st in _SWEAR_RU) + _SWEAR_RO
 _CENSORED = re.compile(r"[a-zа-яё]\*{2,}\w*")  # распознавание иногда само ставит звёздочки: «f***»
 PROFANITY_COST, PROFANITY_MAX = 8, 32  # столько баллов подачи снимает каждое бранное слово и не больше скольких всего
 REPEAT_WINDOW_WORDS = 15  # повтор фразы считается ошибкой, только если он рядом; дальше — нормальный возврат к мысли
@@ -76,7 +133,8 @@ class DeliveryAnalysis:
 
 
 def _norm(word: str) -> str:
-    return word.lower().strip(_STRIP).replace("ё", "е")
+    # ё → е; румынские ş/ţ с седилью (их выдают старые раскладки) → ș/ț с запятой
+    return word.lower().strip(_STRIP).replace("ё", "е").replace("ş", "ș").replace("ţ", "ț")
 
 
 def _is_hesitation(word: str) -> bool:
@@ -106,71 +164,100 @@ def _filler_position(raw: Sequence[str], i: int, j: int, prev_is_filler: bool) -
     return (starts_clause and _ends(raw[j], _CLAUSE_END)) or prev_is_filler
 
 
-def find_fillers(words: Sequence[Word], verdicts: Mapping[int, bool] | None = None) -> list[tuple[float, str]]:
-    """Слова-паразиты по контексту: «so, the idea…», «about, like, stoicism», но не «Do you know why…»."""
-    return [(words[i].start, hit) for i, _, hit in filler_hits(words, verdicts)]
+def find_fillers(
+    words: Sequence[Word], verdicts: Mapping[int, bool] | None = None, lang: str | None = "en"
+) -> list[tuple[float, str]]:
+    """Слова-паразиты по контексту: «so, the idea…», «about, like, stoicism», но не «Do you know why…».
+
+    lang — язык речи (en | ru | ro), от него зависят двусмысленные слова; None — язык неизвестен (живой поток).
+    """
+    return [(words[i].start, hit) for i, _, hit in filler_hits(words, verdicts, lang)]
 
 
-def filler_candidates(words: Sequence[Word]) -> list[tuple[int, int, str]]:
-    """Слова, которые бывают и паразитами, и обычными словами («like», «so», «you know», «kind of»):
+PHRASE_LENGTHS = (3, 2)  # сначала длинные фразы: «cum să zic» раньше, чем «să zic»
+
+
+def _ambiguous_phrase(norm: Sequence[str], i: int, fs: FillerSet) -> int:
+    """Длина двусмысленной фразы («you know», «kind of», «știi ce»), которая начинается со слова i; 0 — её нет."""
+    for n in PHRASE_LENGTHS:
+        gram = tuple(norm[i : i + n])
+        if len(gram) == n and (gram in fs.discourse_phrases or gram in fs.hedges):
+            return n
+    return 0
+
+
+def filler_candidates(words: Sequence[Word], lang: str | None = "en") -> list[tuple[int, int, str]]:
+    """Слова, которые бывают и паразитами, и обычными словами («like», «so», «you know», «kind of», «deci»):
     (номер первого слова, сколько слов, фраза). Паразит ли это здесь — решается по смыслу, см. verdicts."""
+    fs = filler_set(lang)
     norm = [_norm(w.text) for w in words]
     found: list[tuple[int, int, str]] = []
     i = 0
     while i < len(norm):
-        pair = (norm[i], norm[i + 1]) if i + 1 < len(norm) else None
-        if pair in DISCOURSE_BIGRAMS or pair in HEDGE_BIGRAMS:
-            found.append((i, 2, f"{pair[0]} {pair[1]}"))
-            i += 2
+        if n := _ambiguous_phrase(norm, i, fs):
+            found.append((i, n, " ".join(norm[i : i + n])))
+            i += n
             continue
-        if norm[i] in DISCOURSE_WORDS:
+        if norm[i] in fs.discourse:
             found.append((i, 1, norm[i]))
         i += 1
     return found
 
 
-def filler_hits(words: Sequence[Word], verdicts: Mapping[int, bool] | None = None) -> list[tuple[int, int, str]]:
+def _hit_at(
+    raw: Sequence[str],
+    norm: Sequence[str],
+    i: int,
+    fs: FillerSet,
+    verdicts: Mapping[int, bool] | None,
+    prev_is_filler: bool,
+) -> tuple[str | None, int]:
+    """Паразит, который начинается со слова i, и сколько слов он занимает: (паразит или None, длина)."""
+    for n in PHRASE_LENGTHS:
+        gram = tuple(norm[i : i + n])
+        if len(gram) < n:
+            continue
+        phrase = " ".join(gram)
+        if gram in FILLER_PHRASES:
+            return phrase, n
+        if gram not in fs.discourse_phrases and gram not in fs.hedges:
+            continue
+        if verdicts is not None:
+            # двусмысленная фраза — по смыслу; обычную фразу («you know the answer») по словам дальше не проверяем
+            return (phrase if verdicts.get(i, False) else None), n
+        if gram in fs.discourse_phrases and _filler_position(raw, i, i + n - 1, prev_is_filler):
+            return phrase, n
+        if gram in fs.hedges and (i == 0 or norm[i - 1] not in _HEDGE_LEGIT_BEFORE):
+            return phrase, n
+    word = norm[i]
+    if word in FILLER_WORDS or _is_hesitation(word):
+        return word, 1
+    if word in fs.discourse:
+        is_filler = verdicts.get(i, False) if verdicts is not None else _filler_position(raw, i, i, prev_is_filler)
+        return (word if is_filler else None), 1
+    return None, 1
+
+
+def filler_hits(
+    words: Sequence[Word], verdicts: Mapping[int, bool] | None = None, lang: str | None = "en"
+) -> list[tuple[int, int, str]]:
     """То же, что find_fillers, но с местом в тексте: (номер первого слова, сколько слов, паразит).
 
     verdicts — решение по смыслу для двусмысленных слов (номер первого слова → паразит или нет), его даёт LLM.
     Без него (None) такие слова оцениваются по положению во фразе; пустой словарь — двусмысленные не считаются.
+    Однозначные паразиты («um», «э-э», «типа», «păi») считаются всегда.
     """
+    fs = filler_set(lang)
     raw = [w.text for w in words]
     norm = [_norm(r) for r in raw]
     found: list[tuple[int, int, str]] = []
     prev_is_filler = False
     i = 0
     while i < len(words):
-        pair = (norm[i], norm[i + 1]) if i + 1 < len(words) else None
-        word = norm[i]
-        hit: str | None = None
-        span = 1
-        if verdicts is not None:
-            # двусмысленные слова — по смыслу; однозначные («um», «э-э», «типа») — всегда паразиты
-            if pair in FILLER_BIGRAMS or (pair in DISCOURSE_BIGRAMS or pair in HEDGE_BIGRAMS) and verdicts.get(i, False):
-                hit, span = f"{pair[0]} {pair[1]}", 2
-            elif pair in DISCOURSE_BIGRAMS or pair in HEDGE_BIGRAMS:
-                span = 2  # обычная фраза («you know the answer») — второе слово отдельно не проверяем
-            elif word in FILLER_WORDS or _is_hesitation(word) or word in DISCOURSE_WORDS and verdicts.get(i, False):
-                hit = word
-        elif (
-            pair in FILLER_BIGRAMS
-            or pair in DISCOURSE_BIGRAMS
-            and _filler_position(raw, i, i + 1, prev_is_filler)
-            or pair in HEDGE_BIGRAMS
-            and (i == 0 or norm[i - 1] not in _HEDGE_LEGIT_BEFORE)
-        ):
-            hit, span = f"{pair[0]} {pair[1]}", 2
-        elif (
-            word in FILLER_WORDS
-            or _is_hesitation(word)
-            or word in DISCOURSE_WORDS
-            and _filler_position(raw, i, i, prev_is_filler)
-        ):
-            hit = word
+        hit, span = _hit_at(raw, norm, i, fs, verdicts, prev_is_filler)
         if hit:
             found.append((i, span, hit))
-        prev_is_filler = hit is not None and (word in FILLER_WORDS or _is_hesitation(word))
+        prev_is_filler = hit is not None and (norm[i] in FILLER_WORDS or _is_hesitation(norm[i]))
         i += span
     return found
 
@@ -181,7 +268,7 @@ def find_profanity(words: Sequence[Word]) -> list[tuple[int, str]]:
     for i, w in enumerate(words):
         raw = w.text.lower().strip(_STRIP.replace("*", ""))
         word = _norm(w.text)
-        if word.startswith(SWEAR_STEMS) or _CENSORED.fullmatch(raw):
+        if word.startswith(SWEAR_STEMS) or word in SWEAR_WORDS or _CENSORED.fullmatch(raw):
             found.append((i, word or raw))
     return found
 
@@ -339,6 +426,47 @@ def timing_score(duration: float, min_sec: float, max_sec: float) -> int:
     return round(_interp(duration, [(0, 0), (min_sec, 100), (max_sec, 100), (max_sec + 60, 0)]))
 
 
+# Подписи маркеров таймлайна — на языке речи
+EVENT_TEXTS: dict[str, dict[str, str]] = {
+    "en": {
+        "repeat": "Repeated: «{phrase}»",
+        "profanity": "Swearing: «{word}»",
+        "long_pause": "Pause of {sec} s mid-phrase",
+        "hesitation": "Hesitation of {sec} s mid-phrase",
+        "gaze_off": "Looking away for {sec} s",
+        "pace": "Pace {wpm} words/min — {verdict}",
+        "fast": "too fast",
+        "slow": "too slow",
+    },
+    "ru": {
+        "repeat": "Повтор: «{phrase}»",
+        "profanity": "Ругань: «{word}»",
+        "long_pause": "Пауза {sec} с посреди фразы",
+        "hesitation": "Заминка {sec} с посреди фразы",
+        "gaze_off": "Взгляд в сторону {sec} с",
+        "pace": "Темп {wpm} слов/мин — {verdict}",
+        "fast": "слишком быстро",
+        "slow": "слишком медленно",
+    },
+    "ro": {
+        "repeat": "Repetiție: «{phrase}»",
+        "profanity": "Înjurătură: «{word}»",
+        "long_pause": "Pauză de {sec} s în mijlocul frazei",
+        "hesitation": "Ezitare de {sec} s în mijlocul frazei",
+        "gaze_off": "Privire în altă parte {sec} s",
+        "pace": "Ritm {wpm} cuvinte/min — {verdict}",
+        "fast": "prea rapid",
+        "slow": "prea lent",
+    },
+}
+
+
+def _seconds(value: float, digits: int, lang: str) -> str:
+    """Число секунд для подписи: в русском и румынском дробная часть — через запятую."""
+    text = f"{value:.{digits}f}"
+    return text if lang == "en" else text.replace(".", ",")
+
+
 def analyze(
     transcript: Transcript,
     gaze: Sequence[GazePoint],
@@ -346,12 +474,16 @@ def analyze(
     max_sec: float,
     filler_verdicts: Mapping[int, bool] | None = None,
     pace: str = "normal",
+    lang: str = "en",
 ) -> DeliveryAnalysis:
+    """lang — язык речи: от него зависят паразиты и язык подписей маркеров."""
     words = transcript.words
     duration = transcript.duration
     speech_min = speech_minutes(words)
+    texts = pick(EVENT_TEXTS, lang)
+    lang = lang if lang in EVENT_TEXTS else "en"
 
-    hits = filler_hits(words, filler_verdicts)
+    hits = filler_hits(words, filler_verdicts, lang)
     fillers = [(words[i].start, hit) for i, _, hit in hits]
     filler_starts = {t for t, _ in fillers}
     spans_in_text = word_spans(transcript)
@@ -399,28 +531,42 @@ def analyze(
     for i, n in find_repeats(words):
         if filler_words.isdisjoint(range(i, i + n)):  # «um, um» уже отмечено как паразит
             phrase = " ".join(_norm(w.text) for w in words[i : i + n])
-            events.append(TimelineEvent(type="repeat", t=words[i].start, text=f"Repeated: «{phrase}»", **over_words(i, n)))
+            events.append(
+                TimelineEvent(type="repeat", t=words[i].start, text=texts["repeat"].format(phrase=phrase), **over_words(i, n))
+            )
     swears = find_profanity(words)
     total = max(0, total - min(PROFANITY_MAX, PROFANITY_COST * len(swears)))  # ругань бьёт по подаче напрямую
     events += [
-        TimelineEvent(type="profanity", t=words[i].start, text=f"Swearing: «{word}»", **over_words(i, 1)) for i, word in swears
+        TimelineEvent(type="profanity", t=words[i].start, text=texts["profanity"].format(word=word), **over_words(i, 1))
+        for i, word in swears
     ]
     events += [
-        TimelineEvent(type="long_pause", t=t, text=f"Pause of {d:.1f} s mid-phrase", **after_word(t))
+        TimelineEvent(
+            type="long_pause", t=t, text=texts["long_pause"].format(sec=_seconds(d, 1, lang)), **after_word(t)
+        )
         for t, d in long_pauses
     ]
     events += [
-        TimelineEvent(type="hesitation", t=t, text=f"Hesitation of {d:.1f} s mid-phrase", **after_word(t))
+        TimelineEvent(
+            type="hesitation", t=t, text=texts["hesitation"].format(sec=_seconds(d, 1, lang)), **after_word(t)
+        )
         for t, d in pauses["hesitation"]
     ]
     events += [
-        TimelineEvent(type="gaze_off", t=round(start, 2), text=f"Looking away for {end - start:.0f} s", **at_time(start))
+        TimelineEvent(
+            type="gaze_off",
+            t=round(start, 2),
+            text=texts["gaze_off"].format(sec=_seconds(end - start, 0, lang)),
+            **at_time(start),
+        )
         for start, end, on in spans
         if not on and end - start > GAZE_OFF_SEC
     ]
     for t, window_wpm in pace_alerts(words, filler_starts, PACE_RANGES[pace]):
-        verdict = "too fast" if window_wpm > PACE_RANGES[pace][1] else "too slow"
-        events.append(TimelineEvent(type="pace", t=t, text=f"Pace {window_wpm} words/min — {verdict}", **before_word(t)))
+        verdict = texts["fast"] if window_wpm > PACE_RANGES[pace][1] else texts["slow"]
+        events.append(
+            TimelineEvent(type="pace", t=t, text=texts["pace"].format(wpm=window_wpm, verdict=verdict), **before_word(t))
+        )
     events.sort(key=lambda e: e.t)
 
     return DeliveryAnalysis(

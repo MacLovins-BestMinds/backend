@@ -1,6 +1,8 @@
 """POST /api/ai/rounds/{id}/delivery: запись → WAV → Whisper → метрики кодом + оценка содержания Gemini.
 
 Разминка (mode=warmup) идёт через тот же пайплайн: 20–40 с и упрощённая рубрика.
+Язык речи определяет распознавание (speech_lang в ответе); на нём весь разбор: советы, подписи, оценки.
+Не определило — язык речи этого раунда из прошлого разбора, иначе STT_LANGUAGE. Язык интерфейса не участвует.
 """
 
 import asyncio
@@ -13,7 +15,7 @@ from pydantic import BaseModel, Field
 from app.ai import game_api, llm, pronunciation
 from app.ai.audio import to_wav16k
 from app.ai.delivery_metrics import PaceMode, analyze, filler_candidates, word_spans
-from app.ai.pitch import Pitch, resolve_pitch
+from app.ai.pitch import Pitch, known_speech_lang, resolve_pitch
 from app.ai.schemas import (
     ContentScore,
     CriterionScore,
@@ -25,11 +27,17 @@ from app.ai.schemas import (
     Scores,
     WordMark,
 )
-from app.ai.stt import Transcript, transcribe
+from app.ai.stt import Transcript, speech_lang, transcribe
+from app.core.lang import default_lang, language_name, pick
 
 logger = logging.getLogger(__name__)
 
-NO_SPEECH_TIP = "We didn't hear any speech — check the microphone and speak louder."
+NO_SPEECH_TIPS = {
+    "en": "We didn't hear any speech — check the microphone and speak louder.",
+    "ru": "Мы не услышали речи — проверь микрофон и говори громче.",
+    "ro": "Nu am auzit nimic — verifică microfonul și vorbește mai tare.",
+}
+NO_SPEECH_TIP = NO_SPEECH_TIPS["en"]
 
 
 class FillerVerdicts(BaseModel):
@@ -39,14 +47,14 @@ class FillerVerdicts(BaseModel):
 CONTEXT_WORDS = 6
 
 
-async def judge_fillers(transcript: Transcript) -> dict[int, bool] | None:
-    """Паразит ли «like», «so», «you know» в этом месте — решает LLM по смыслу фразы.
+async def judge_fillers(transcript: Transcript, lang: str = "en") -> dict[int, bool] | None:
+    """Паразит ли «like», «so», «you know» («deci», «знаете») в этом месте — решает LLM по смыслу фразы.
 
-    Возвращает {номер слова: паразит?} для всех двусмысленных слов; None — LLM не ответил,
+    lang — язык речи. Возвращает {номер слова: паразит?} для всех двусмысленных слов; None — LLM не ответил,
     тогда разбор оценивает такие слова по положению во фразе.
     """
     words = transcript.words
-    candidates = filler_candidates(words)
+    candidates = filler_candidates(words, lang)
     if not candidates:
         return {}
     lines = []
@@ -56,7 +64,13 @@ async def judge_fillers(transcript: Transcript) -> dict[int, bool] | None:
         after = " ".join(w.text for w in words[i + span : i + span + CONTEXT_WORDS])
         lines.append(f"{n}. …{before} [{marked}] {after}…")
     try:
-        verdict = await llm.generate("filler_judge", FillerVerdicts, transcript=transcript.text, candidates="\n".join(lines))
+        verdict = await llm.generate(
+            "filler_judge",
+            FillerVerdicts,
+            transcript=transcript.text,
+            candidates="\n".join(lines),
+            speech_language=language_name(lang),
+        )
     except Exception:
         logger.exception("delivery: не удалось оценить паразиты по смыслу — считаю по положению во фразе")
         return None
@@ -113,9 +127,12 @@ def _notes_block(pitch: Pitch, notes: str) -> str:
     return f'- Preparation notes of the player (what they planned to say):\n"""\n{notes}\n"""'
 
 
-async def assess_content(pitch: Pitch, transcript: str, metrics: Metrics, notes: str = "") -> ContentAssessment:
+async def assess_content(
+    pitch: Pitch, transcript: str, metrics: Metrics, notes: str = "", speech: str = "en"
+) -> ContentAssessment:
+    """speech — язык речи: на нём и цитаты, и советы."""
     if not transcript:
-        return ContentAssessment(criteria=[], tips=[NO_SPEECH_TIP])
+        return ContentAssessment(criteria=[], tips=[pick(NO_SPEECH_TIPS, speech)])
     if pitch.is_warmup:
         return await llm.generate(
             "warmup_score",
@@ -123,6 +140,7 @@ async def assess_content(pitch: Pitch, transcript: str, metrics: Metrics, notes:
             brief=pitch.brief,
             transcript=transcript,
             metrics=_metrics_summary(metrics),
+            speech_language=language_name(speech),
         )
     own = pitch.is_own
     return await llm.generate(
@@ -137,6 +155,7 @@ async def assess_content(pitch: Pitch, transcript: str, metrics: Metrics, notes:
         transcript=transcript,
         metrics=_metrics_summary(metrics),
         level_rules=CONTENT_LEVELS.get(pitch.difficulty, CONTENT_LEVELS["easy"]),
+        speech_language=language_name(speech),
     )
 
 
@@ -164,17 +183,29 @@ async def run_delivery(
     if limits:
         pitch = replace(pitch, min_sec=limits[0], max_sec=limits[1])
     wav = await to_wav16k(audio)
-    # произношение (Azure) оценивается параллельно с распознаванием и оценкой содержания; сбой → None
-    pronunciation_task = asyncio.create_task(pronunciation.assess(wav))
-    transcript = await transcribe(wav)
-    analysis = analyze(transcript, gaze, pitch.min_sec, pitch.max_sec, await judge_fillers(transcript), pace)
-    # без LLM честной оценки содержания нет: ошибка уходит клиенту (502), повтор берёт распознавание из кэша
+    # язык речи, если распознавание его не определит: как в прошлом разборе этого раунда, иначе STT_LANGUAGE
+    expected = await asyncio.to_thread(known_speech_lang, round_id) or default_lang()
+    # Произношение (Azure) оценивается только для английской речи, параллельно с распознаванием и оценкой
+    # содержания; сбой → None. Ждём английскую речь — оценка стартует сразу и отменяется, если речь не английская;
+    # иначе стартует, когда распознавание скажет, что речь английская.
+    pronunciation_task = asyncio.create_task(pronunciation.assess(wav)) if expected == "en" else None
     try:
-        content = await assess_content(pitch, transcript.text, analysis.metrics, notes)
+        transcript = await transcribe(wav)
+        speech = speech_lang(transcript, expected)
+        if speech != "en" and pronunciation_task is not None:
+            pronunciation_task.cancel()
+            pronunciation_task = None
+        elif speech == "en" and pronunciation_task is None:
+            pronunciation_task = asyncio.create_task(pronunciation.assess(wav))
+        verdicts = await judge_fillers(transcript, speech)
+        analysis = analyze(transcript, gaze, pitch.min_sec, pitch.max_sec, verdicts, pace, speech)
+        # без LLM честной оценки содержания нет: ошибка уходит клиенту (502), повтор берёт распознавание из кэша
+        content = await assess_content(pitch, transcript.text, analysis.metrics, notes, speech)
     except BaseException:
-        pronunciation_task.cancel()
+        if pronunciation_task is not None:
+            pronunciation_task.cancel()
         raise
-    pron = await pronunciation_task
+    pron = await pronunciation_task if pronunciation_task is not None else None
     delivery_score = with_pronunciation(analysis.score, pron)
 
     content_total = round(sum(c.score for c in content.criteria) / len(content.criteria)) if content.criteria else 0
@@ -190,6 +221,7 @@ async def run_delivery(
         events=analysis.events,
         tips=content.tips,
         pronunciation=pron,
+        speech_lang=speech,
     )
     await asyncio.to_thread(game_api.save_ai_result, round_id, "delivery", response.model_dump(mode="json"))
     return response

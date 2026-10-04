@@ -60,7 +60,7 @@ async def run_health() -> HealthResponse:
     checks: dict[str, Callable[[], Awaitable[str]]] = {"gemini": _gemini}
     if "elevenlabs" in {s.stt_provider, s.live_stt_provider, s.tts_provider}:
         checks["elevenlabs"] = _elevenlabs
-    if s.azure_speech_key and s.stt_language == "en":
+    if s.azure_speech_key:  # оценивается только английская речь, но ключ проверяем всегда
         checks["azure_pronunciation"] = _azure
     results = await asyncio.gather(*(_run(fn) for fn in checks.values()))
     by_name = dict(zip(checks, results, strict=True))

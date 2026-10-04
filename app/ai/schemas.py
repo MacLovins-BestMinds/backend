@@ -5,6 +5,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from app.core.lang import Lang
+
 
 class Audience(StrEnum):
     CONTEST_JURY = "contest_jury"
@@ -189,6 +191,9 @@ class DeliveryResponse(BaseModel):
     events: list[TimelineEvent]
     tips: list[str] = Field(max_length=3)
     pronunciation: PronunciationAssessment | None = Field(None, description="null — Azure не настроен или не ответил")
+    speech_lang: Lang = Field(
+        "en", description="язык речи по распознаванию; не определило — как в прошлом разборе раунда, иначе STT_LANGUAGE"
+    )
 
 
 # --- жюри ---

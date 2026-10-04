@@ -15,7 +15,8 @@ $text
 - `call_to_action` — the call to action: what the listener should do after the pitch.
 
 ## Rules
-- Use the speaker's sentences verbatim. You may move them between blocks and drop repetitions and connectors like "so" or "basically", but you may not rewrite phrases or add new facts, numbers or promises.
+- Use the speaker's sentences verbatim, in their original language — never translate them. You may move them between blocks and drop repetitions and connectors like "so", "basically", "ну", "короче", "deci", "păi", but you may not rewrite phrases or add new facts, numbers or promises.
 - Every sentence of the speaker goes into exactly one block.
 - If the text has nothing for a block, return an empty `text` for it — do not make anything up.
 - Return all five blocks in the order above.
+- `language` — the ISO 639-1 code of the language of the speaker's text (en, ru, ro, …); if you cannot tell, the code of $fallback_language.

@@ -1,4 +1,8 @@
-"""Роутер /api/ai. При ?mock=1 или AI_MOCK=1 все эндпоинты отвечают примерами ответов (моками)."""
+"""Роутер /api/ai. При ?mock=1 или AI_MOCK=1 все эндпоинты отвечают примерами ответов (моками).
+
+Язык интерфейса — заголовок Accept-Language (en | ru | ro): только тексты ошибок. Всё о выступлении (расшифровка,
+оценки, советы, жюри, живой зал) — на языке речи игрока, refine и fit-slides — на языке его текста.
+"""
 
 import logging
 from collections.abc import Iterator
@@ -30,7 +34,7 @@ from app.ai.config import get_settings
 from app.ai.delivery import run_delivery
 from app.ai.delivery_metrics import PaceMode
 from app.ai.health import HealthResponse, run_health
-from app.ai.jury import Difficulty, RoundStateError, run_jury_answer, run_jury_questions, run_jury_skip
+from app.ai.jury import ANSWER_TEXTS, Difficulty, RoundStateError, run_jury_answer, run_jury_questions, run_jury_skip
 from app.ai.live import PCM_BYTES_PER_SEC, run_live
 from app.ai.pitch import RoundNotFoundError
 from app.ai.refine import run_refine
@@ -44,6 +48,7 @@ from app.ai.schemas import (
     RefineRequest,
     RefineResponse,
 )
+from app.core.lang import UiLang, default_lang, pick
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/ai", tags=["ai"])
@@ -70,35 +75,63 @@ def parse_gaze(gaze: Annotated[str, Form()] = "[]") -> list[GazePoint]:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, f"gaze: {e.errors(include_url=False)}") from e
 
 
-async def read_audio(upload: UploadFile) -> bytes:
+# тексты ошибок, которые приложение показывает игроку
+ERROR_TEXTS: dict[str, dict[str, str]] = {
+    "en": {
+        "audio": "audio: could not read the recording, m4a/AAC is expected",
+        "audio_empty": "audio: empty file",
+        "audio_too_large": "audio: file is too large",
+        "ai_down": "The AI service is unavailable, please try again",
+        "slides_too_big": "The file is larger than {mb} MB",
+        "no_question": "Question {question_id} not found",
+    },
+    "ru": {
+        "audio": "audio: не удалось прочитать запись, нужен m4a/AAC",
+        "audio_empty": "audio: пустой файл",
+        "audio_too_large": "audio: файл слишком большой",
+        "ai_down": "AI-сервис недоступен, попробуй ещё раз",
+        "slides_too_big": "Файл больше {mb} МБ",
+        "no_question": "Вопрос {question_id} не найден",
+    },
+    "ro": {
+        "audio": "audio: înregistrarea nu a putut fi citită, se așteaptă m4a/AAC",
+        "audio_empty": "audio: fișier gol",
+        "audio_too_large": "audio: fișierul este prea mare",
+        "ai_down": "Serviciul AI nu este disponibil, încearcă din nou",
+        "slides_too_big": "Fișierul este mai mare de {mb} MB",
+        "no_question": "Întrebarea {question_id} nu a fost găsită",
+    },
+}
+
+
+async def read_audio(upload: UploadFile, lang: str = "en") -> bytes:
     data = await upload.read()
     if not data:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "audio: empty file")
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, pick(ERROR_TEXTS, lang)["audio_empty"])
     if len(data) > get_settings().max_audio_mb * 1024 * 1024:
-        raise HTTPException(status.HTTP_413_CONTENT_TOO_LARGE, "audio: file is too large")
+        raise HTTPException(status.HTTP_413_CONTENT_TOO_LARGE, pick(ERROR_TEXTS, lang)["audio_too_large"])
     return data
 
 
 @contextmanager
-def ai_errors(op: str, round_id: str) -> Iterator[None]:
-    """Единое отображение ошибок пайплайна в HTTP-ответы."""
+def ai_errors(op: str, round_id: str, lang: str = "en") -> Iterator[None]:
+    """Единое отображение ошибок пайплайна в HTTP-ответы; lang — язык интерфейса для текста ошибки."""
+    texts = pick(ERROR_TEXTS, lang)
     try:
         yield
     except AudioConversionError as e:
         logger.warning("%s: ffmpeg не прочитал запись, round=%s: %s", op, round_id, e)
-        raise HTTPException(
-            status.HTTP_422_UNPROCESSABLE_CONTENT, "audio: could not read the recording, m4a/AAC is expected"
-        ) from e
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, texts["audio"]) from e
     except RoundNotFoundError as e:
         raise HTTPException(status.HTTP_404_NOT_FOUND, str(e)) from e
     except RoundStateError as e:
-        raise HTTPException(status.HTTP_409_CONFLICT, str(e)) from e
+        raise HTTPException(status.HTTP_409_CONFLICT, e.message(lang)) from e
     except MissingKeyError as e:
         logger.error("%s: %s", op, e)
         raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, str(e)) from e
     except (OpenAIError, genai_errors.APIError, ElevenLabsApiError) as e:
         logger.exception("%s: ошибка внешнего AI-сервиса, round=%s", op, round_id)
-        raise HTTPException(status.HTTP_502_BAD_GATEWAY, "The AI service is unavailable, please try again") from e
+        raise HTTPException(status.HTTP_502_BAD_GATEWAY, texts["ai_down"]) from e
 
 
 @router.get("/health")
@@ -108,12 +141,15 @@ async def health() -> HealthResponse:
 
 
 @router.post("/refine")
-async def refine(body: RefineRequest, use_mock: UseMock) -> RefineResponse:
-    """structure — разложить свой текст по блокам почти без правок; improve — слабые места и переписанная версия."""
+async def refine(body: RefineRequest, use_mock: UseMock, lang: UiLang) -> RefineResponse:
+    """structure — разложить свой текст по блокам почти без правок; improve — слабые места и переписанная версия.
+
+    Ответ — на языке текста игрока; Accept-Language — только для текста ошибок и заметки «AI недоступен».
+    """
     if use_mock:
         return mocks.refine(body.mode)
-    with ai_errors("refine", "-"):
-        return await run_refine(body)
+    with ai_errors("refine", "-", lang):
+        return await run_refine(body, lang)
 
 
 MAX_SLIDES_MB = 20
@@ -123,11 +159,15 @@ MAX_SLIDES_MB = 20
 async def fit_slides(
     file: Annotated[UploadFile, File(description="презентация: PDF или PPTX")],
     use_mock: UseMock,
+    lang: UiLang,
     title: Annotated[str, Form()] = "",
     text: Annotated[str, Form(description="текст или тезисы питча — их раскладываем по слайдам")] = "",
     audience: Annotated[str, Form()] = "public",
 ) -> FitSlidesResponse:
-    """Подогнать питч под презентацию: что говорить на каждом слайде. Слайд про демо → «Demo time.»."""
+    """Подогнать питч под презентацию: что говорить на каждом слайде. Слайд про демо → «Demo time.».
+
+    Тексты слайдов — на языке текста игрока; текста нет — STT_LANGUAGE. Accept-Language — только для ошибок.
+    """
     if use_mock:
         return assemble(
             FitSlidesDraft(
@@ -140,12 +180,14 @@ async def fit_slides(
         )
     data = await file.read()
     if len(data) > MAX_SLIDES_MB * 1024 * 1024:
-        raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, f"The file is larger than {MAX_SLIDES_MB} MB")
-    with ai_errors("fit_slides", "-"):
+        raise HTTPException(
+            status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, pick(ERROR_TEXTS, lang)["slides_too_big"].format(mb=MAX_SLIDES_MB)
+        )
+    with ai_errors("fit_slides", "-", lang):
         try:
             return await run_fit_slides(file.filename or "", data, title, text, audience)
         except SlidesError as e:
-            raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(e)) from e
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, e.message(lang)) from e
 
 
 @router.post("/rounds/{round_id}/delivery")
@@ -154,6 +196,7 @@ async def delivery(
     audio: Annotated[UploadFile, File(description="запись выступления, m4a/AAC")],
     gaze: Annotated[list[GazePoint], Depends(parse_gaze)],
     use_mock: UseMock,
+    lang: UiLang,
     notes: Annotated[str, Form(description="заметки с подготовки, необязательно")] = "",
     pace: Annotated[PaceMode, Form(description="темп, который выбрал игрок: slow | normal | fast")] = "normal",
     min_sec: Annotated[int | None, Form(ge=10, le=1800, description="свой лимит питча, нижняя граница, с")] = None,
@@ -165,8 +208,8 @@ async def delivery(
     if (min_sec is None) != (max_sec is None) or (min_sec is not None and max_sec is not None and min_sec >= max_sec):
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "min_sec and max_sec go together, min_sec < max_sec")
     limits = (min_sec, max_sec) if min_sec is not None and max_sec is not None else None
-    data = await read_audio(audio)
-    with ai_errors("delivery", round_id):
+    data = await read_audio(audio, lang)
+    with ai_errors("delivery", round_id, lang):
         result = await run_delivery(round_id, data, gaze, notes, pace, limits)
     # звук остаётся на сервере, чтобы раунд из истории можно было переслушать
     save_recording(round_id, audio.filename, data)
@@ -174,11 +217,16 @@ async def delivery(
 
 
 @router.post("/rounds/{round_id}/jury/questions")
-async def jury_questions(round_id: RoundId, use_mock: UseMock, difficulty: Difficulty | None = None) -> JuryQuestionsResponse:
-    """2–3 вопроса жюри с mp3-озвучкой. Требует выполненного delivery; повторный вызов отдаёт те же вопросы."""
+async def jury_questions(
+    round_id: RoundId, use_mock: UseMock, lang: UiLang, difficulty: Difficulty | None = None
+) -> JuryQuestionsResponse:
+    """2–3 вопроса жюри с mp3-озвучкой. Требует выполненного delivery; повторный вызов отдаёт те же вопросы.
+
+    Вопросы и голос — на языке, на котором игрок питчил (speech_lang разбора); Accept-Language — для ошибок.
+    """
     if use_mock:
         return mocks.jury_questions(round_id)
-    with ai_errors("jury_questions", round_id):
+    with ai_errors("jury_questions", round_id, lang):
         return await run_jury_questions(round_id, difficulty)
 
 
@@ -188,35 +236,51 @@ async def jury_answer(
     question_id: Annotated[str, Form()],
     audio: Annotated[UploadFile, File(description="ответ на вопрос, m4a")],
     use_mock: UseMock,
+    lang: UiLang,
     difficulty: Annotated[Difficulty | None, Form(description="переопределить уровень раунда: easy | medium | hard")] = None,
 ) -> JuryAnswerResponse:
     if use_mock:
         return mocks.jury_answer()
-    data = await read_audio(audio)
-    with ai_errors("jury_answer", round_id):
+    data = await read_audio(audio, lang)
+    with ai_errors("jury_answer", round_id, lang):
         try:
             return await run_jury_answer(round_id, question_id, data, difficulty)
         except KeyError as e:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, f"Question {question_id} not found") from e
+            raise HTTPException(
+                status.HTTP_404_NOT_FOUND, pick(ERROR_TEXTS, lang)["no_question"].format(question_id=question_id)
+            ) from e
 
 
 @router.post("/rounds/{round_id}/jury/skip")
-async def jury_skip(round_id: RoundId, question_id: Annotated[str, Form()], use_mock: UseMock) -> JuryAnswerResponse:
+async def jury_skip(
+    round_id: RoundId, question_id: Annotated[str, Form()], use_mock: UseMock, lang: UiLang
+) -> JuryAnswerResponse:
     """Пропустить вопрос жюри: ответ засчитывается с 0 баллов."""
     if use_mock:
-        return JuryAnswerResponse(score=0, comment="Skipped — no points for this question.")
-    with ai_errors("jury_skip", round_id):
+        return JuryAnswerResponse(score=0, comment=pick(ANSWER_TEXTS, default_lang())["skipped"])
+    with ai_errors("jury_skip", round_id, lang):
         try:
             return await run_jury_skip(round_id, question_id)
         except KeyError as e:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, f"Question {question_id} not found") from e
+            raise HTTPException(
+                status.HTTP_404_NOT_FOUND, pick(ERROR_TEXTS, lang)["no_question"].format(question_id=question_id)
+            ) from e
 
 
 @router.websocket("/live")
 async def live(
-    websocket: WebSocket, round_id: str, mock: bool = False, pace: str = "normal", max_sec: int | None = None
+    websocket: WebSocket,
+    round_id: str,
+    mock: bool = False,
+    pace: str = "normal",
+    max_sec: int | None = None,
+    lang: str | None = None,  # noqa: ARG001 — см. описание
 ) -> None:
-    """Приложение шлёт бинарные куски PCM 16 кГц по 250 мс, сервер отвечает событиями filler/long_pause/pace."""
+    """Приложение шлёт бинарные куски PCM 16 кГц по 250 мс, сервер отвечает событиями filler/long_pause/pace.
+
+    lang — язык интерфейса; принимается для совместимости, но на распознавание и подсказки не влияет:
+    Scribe определяет язык речи сам, подсказки зала — на языке, на котором игрок говорит.
+    """
     if mock or get_settings().ai_mock:
         await _live_mock(websocket)
     else:

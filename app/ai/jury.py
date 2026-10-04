@@ -1,6 +1,8 @@
 """Вопросы жюри с озвучкой и оценка ответов.
 
 POST /api/ai/rounds/{id}/jury/questions и POST /api/ai/rounds/{id}/jury/answer.
+Всё — на языке речи игрока: вопросы и голос жюри — на языке питча (speech_lang из разбора), оценка ответа
+и комментарий — на языке ответа. Язык интерфейса здесь только для текстов ошибок.
 """
 
 import asyncio
@@ -18,8 +20,9 @@ from app.ai.audio import to_wav16k
 from app.ai.config import get_settings
 from app.ai.pitch import AUDIENCE_FOCUS, Pitch, resolve_pitch
 from app.ai.schemas import Audience, JurorId, JuryAnswerResponse, JuryQuestion, JuryQuestionsResponse
-from app.ai.stt import transcribe
+from app.ai.stt import speech_lang, transcribe
 from app.ai.tts import Voice, synthesize
+from app.core.lang import default_lang, language_name, normalize_lang, pick
 
 logger = logging.getLogger(__name__)
 
@@ -63,8 +66,43 @@ JURORS: dict[JurorId, Juror] = {
 }
 
 
+# key → текст ошибки на языке интерфейса (роутер отдаёт его в 409)
+ROUND_STATE_ERRORS: dict[str, dict[str, str]] = {
+    "en": {
+        "warmup": "The warm-up has no jury questions",
+        "no_delivery": "Send the pitch for review (delivery) first",
+        "no_questions": "Request the jury questions first",
+    },
+    "ru": {
+        "warmup": "В разминке нет вопросов жюри",
+        "no_delivery": "Сначала отправь питч на разбор (delivery)",
+        "no_questions": "Сначала запроси вопросы жюри",
+    },
+    "ro": {
+        "warmup": "Încălzirea nu are întrebări de la juriu",
+        "no_delivery": "Trimite mai întâi pitch-ul la analiză (delivery)",
+        "no_questions": "Cere mai întâi întrebările juriului",
+    },
+}
+
+
 class RoundStateError(RuntimeError):
     """Действие невозможно в текущем состоянии раунда: нет delivery, нет вопросов, разминка без жюри."""
+
+    def __init__(self, key: str) -> None:
+        super().__init__(ROUND_STATE_ERRORS["en"][key])
+        self.key = key
+
+    def message(self, lang: str) -> str:
+        return pick(ROUND_STATE_ERRORS, lang)[self.key]
+
+
+# ответы, которые жюри даёт без LLM, — на языке речи игрока
+ANSWER_TEXTS: dict[str, dict[str, str]] = {
+    "en": {"silence": "We didn't hear an answer.", "skipped": "Skipped — no points for this question."},
+    "ru": {"silence": "Мы не услышали ответа.", "skipped": "Пропущено — за этот вопрос баллов нет."},
+    "ro": {"silence": "Nu am auzit niciun răspuns.", "skipped": "Ai sărit peste — nu primești puncte pentru întrebare."},
+}
 
 
 class DraftQuestion(BaseModel):
@@ -143,14 +181,17 @@ ANSWER_LEVELS: dict[str, str] = {
 }
 
 
-def voice_for(juror_id: JurorId) -> Voice:
-    """Голос ElevenLabs: свой у члена жюри (ELEVENLABS_VOICE_ID_<ID>) или общий ELEVENLABS_VOICE_ID."""
+def voice_for(juror_id: JurorId, lang: str = "en") -> Voice:
+    """Голос ElevenLabs: свой у члена жюри (ELEVENLABS_VOICE_ID_<ID>) или общий ELEVENLABS_VOICE_ID.
+
+    lang — язык речи: для OpenAI TTS он попадает в инструкцию тона («Speak Russian in a strict…»).
+    """
     s = get_settings()
     j = JURORS[juror_id]
     own_voice_id = getattr(s, f"elevenlabs_voice_id_{juror_id}")
     return Voice(
         openai_voice=j.openai_voice,
-        openai_instructions=j.voice_style,
+        openai_instructions=j.voice_style.replace("English", language_name(lang)),
         elevenlabs_voice_id=own_voice_id or s.elevenlabs_voice_id,
         stability=j.stability,
         style=j.style,
@@ -222,7 +263,67 @@ AUDIENCE_FALLBACK_QUESTIONS: dict[Audience, list[DraftQuestion]] = {
 }
 
 
-async def _draft(pitch: Pitch, transcript: str, difficulty: str = "easy") -> DraftQuestions:
+# Заготовленные вопросы на русском и румынском — для игроков, которые питчат на этих языках
+_FALLBACK_TEXTS: dict[str, dict[Audience, tuple[str, str, str]]] = {
+    "ru": {
+        Audience.CONTEST_JURY: (
+            "Какие у вас сроки запуска и какой бюджет нужен, чтобы это сделать?",
+            "Расскажите подробнее: какую настоящую проблему людей решает ваш проект?",
+            "Чем вы отличаетесь от существующих решений и почему вас не скопируют за пару месяцев?",
+        ),
+        Audience.BUSINESS: (
+            "Какая у вас юнит-экономика и когда вы выйдете на окупаемость?",
+            "Кто ваш первый платящий клиент и почему он выберет именно вас?",
+            "Рынок переполнен. Как вы будете привлекать клиентов дешевле конкурентов?",
+        ),
+        Audience.TEACHERS: (
+            "На каких исследованиях или данных основан ваш подход?",
+            "Как ваш проект поможет ученикам больше вовлекаться?",
+            "Какие долгосрочные риски у вашего подхода в образовании?",
+        ),
+        Audience.PUBLIC: (
+            "Простыми словами: сколько это будет стоить обычному человеку?",
+            "Зачем обычному человеку пользоваться вашим продуктом каждый день?",
+            "А не надуманная ли это проблема? Люди вроде и так неплохо справляются.",
+        ),
+    },
+    "ro": {
+        Audience.CONTEST_JURY: (
+            "Care este termenul de lansare și ce buget vă trebuie ca să construiți asta?",
+            "Spuneți-ne mai multe: ce problemă reală a oamenilor rezolvă proiectul vostru?",
+            "Prin ce vă deosebiți de soluțiile existente și de ce nu vă poate copia cineva în câteva luni?",
+        ),
+        Audience.BUSINESS: (
+            "Care este economia pe unitate și când vă recuperați investiția?",
+            "Cine este primul vostru client plătitor și de ce v-ar alege pe voi?",
+            "Piața e aglomerată. Cum veți atrage clienți mai ieftin decât concurenții?",
+        ),
+        Audience.TEACHERS: (
+            "Pe ce cercetări sau date se bazează abordarea voastră?",
+            "Cum îi va face proiectul vostru pe elevi mai implicați?",
+            "Care sunt riscurile pe termen lung ale abordării voastre în educație?",
+        ),
+        Audience.PUBLIC: (
+            "Pe scurt: cât o să coste asta pentru un om obișnuit?",
+            "De ce ar vrea un om obișnuit să folosească produsul vostru în fiecare zi?",
+            "Nu e o problemă inventată? Oamenii par să se descurce bine și fără asta.",
+        ),
+    },
+}
+FALLBACK_QUESTIONS: dict[str, dict[Audience, list[DraftQuestion]]] = {
+    "en": AUDIENCE_FALLBACK_QUESTIONS,
+    **{
+        lang: {
+            audience: [DraftQuestion(juror=juror, text=text) for juror, text in zip(JURORS, texts, strict=True)]
+            for audience, texts in by_audience.items()
+        }
+        for lang, by_audience in _FALLBACK_TEXTS.items()
+    },
+}
+
+
+async def _draft(pitch: Pitch, transcript: str, difficulty: str = "easy", lang: str = "en") -> DraftQuestions:
+    """lang — язык речи игрока: на нём вопросы, их озвучит голос жюри."""
     level = QUESTION_LEVELS.get(difficulty, QUESTION_LEVELS["easy"])
     try:
         return await llm.generate(
@@ -239,36 +340,42 @@ async def _draft(pitch: Pitch, transcript: str, difficulty: str = "easy") -> Dra
             level_intro=level["intro"],
             level_rules=level["rules"],
             level_length=level["length"],
+            speech_language=language_name(lang),
         )
     except (OpenAIError, genai_errors.APIError) as e:
         logger.warning("_draft: сбой LLM (%s), запасные вопросы для аудитории %s", e, pitch.audience)
-        return fallback_questions(pitch)
+        return fallback_questions(pitch, lang)
 
 
-def fallback_questions(pitch: Pitch) -> DraftQuestions:
-    """Заготовленные английские вопросы по аудитории.
+def fallback_questions(pitch: Pitch, lang: str = "en") -> DraftQuestions:
+    """Заготовленные вопросы по аудитории на языке речи игрока (en | ru | ro).
 
-    Прикол кейса записан по-русски, а без LLM его не перевести, поэтому скептик задаёт заготовленный вопрос.
+    Прикол кейса без LLM под сказанное не переформулировать, поэтому скептик задаёт заготовленный вопрос.
     """
-    return DraftQuestions(questions=list(AUDIENCE_FALLBACK_QUESTIONS[pitch.audience]))
+    return DraftQuestions(questions=list(pick(FALLBACK_QUESTIONS, lang)[pitch.audience]))
 
 
-def one_per_juror(draft: DraftQuestions, pitch: Pitch) -> DraftQuestions:
+def one_per_juror(draft: DraftQuestions, pitch: Pitch, lang: str = "en") -> DraftQuestions:
     """Ровно три вопроса — по одному от каждого члена жюри, в порядке стола: строгий, добрый, скептик.
 
     Лишние вопросы одного члена жюри отбрасываются; если кто-то промолчал, берётся его заготовленный вопрос.
     """
-    spare = {q.juror: q for q in AUDIENCE_FALLBACK_QUESTIONS[pitch.audience]}
+    spare = {q.juror: q for q in pick(FALLBACK_QUESTIONS, lang)[pitch.audience]}
     asked: dict[JurorId, DraftQuestion] = {}
     for q in draft.questions:
         asked.setdefault(q.juror, q)
     return DraftQuestions(questions=[asked.get(juror_id, spare[juror_id]) for juror_id in JURORS])
 
 
-async def _voice(round_id: str, question_id: str, juror: JurorId, text: str) -> None:
-    mp3 = await synthesize(text, voice_for(juror))
+async def _voice(round_id: str, question_id: str, juror: JurorId, text: str, lang: str) -> None:
+    mp3 = await synthesize(text, voice_for(juror, lang), lang)
     path = _audio_dir(round_id) / f"{question_id}.mp3"
     await asyncio.to_thread(path.write_bytes, mp3)
+
+
+def _round_speech_lang(delivery: dict | None) -> str:
+    """Язык речи раунда — из разбора выступления; разбора нет или в нём нет языка (старый) — STT_LANGUAGE."""
+    return normalize_lang((delivery or {}).get("speech_lang")) or default_lang()
 
 
 async def run_jury_questions(round_id: str, difficulty: str | None = None) -> JuryQuestionsResponse:
@@ -278,12 +385,14 @@ async def run_jury_questions(round_id: str, difficulty: str | None = None) -> Ju
 
     pitch = await asyncio.to_thread(resolve_pitch, round_id)
     if pitch.is_warmup:
-        raise RoundStateError("The warm-up has no jury questions")
+        raise RoundStateError("warmup")
     delivery = await asyncio.to_thread(game_api.get_ai_result, round_id, "delivery")
     if delivery is None:
-        raise RoundStateError("Send the pitch for review (delivery) first")
+        raise RoundStateError("no_delivery")
+    # вопросы и голос жюри — на языке, на котором игрок питчил
+    lang = _round_speech_lang(delivery)
     # уровень задан раундом; параметр запроса нужен только чтобы переопределить его
-    draft = one_per_juror(await _draft(pitch, delivery["transcript"], difficulty or pitch.difficulty), pitch)
+    draft = one_per_juror(await _draft(pitch, delivery["transcript"], difficulty or pitch.difficulty, lang), pitch, lang)
 
     questions = [
         JuryQuestion(id=f"q{i}", juror=q.juror, text=q.text, audio_url=_audio_url(round_id, f"q{i}"))
@@ -291,7 +400,7 @@ async def run_jury_questions(round_id: str, difficulty: str | None = None) -> Ju
     ]
     _audio_dir(round_id).mkdir(parents=True, exist_ok=True)
     # озвучки идут через слоты ElevenLabs (app/ai/limits.py): при одном коротком слоте — по очереди, не тремя сразу
-    await asyncio.gather(*(_voice(round_id, q.id, q.juror, q.text) for q in questions))
+    await asyncio.gather(*(_voice(round_id, q.id, q.juror, q.text, lang) for q in questions))
 
     response = JuryQuestionsResponse(questions=questions)
     await asyncio.to_thread(game_api.save_ai_result, round_id, "jury_questions", response.model_dump(mode="json"))
@@ -301,7 +410,7 @@ async def run_jury_questions(round_id: str, difficulty: str | None = None) -> Ju
 async def _find_question(round_id: str, question_id: str) -> JuryQuestion:
     saved = await asyncio.to_thread(game_api.get_ai_result, round_id, "jury_questions")
     if saved is None:
-        raise RoundStateError("Request the jury questions first")
+        raise RoundStateError("no_questions")
     question = next((q for q in JuryQuestionsResponse.model_validate(saved).questions if q.id == question_id), None)
     if question is None:
         raise KeyError(question_id)
@@ -312,9 +421,12 @@ async def run_jury_answer(
     round_id: str, question_id: str, audio: bytes, difficulty: str | None = None
 ) -> JuryAnswerResponse:
     question = await _find_question(round_id, question_id)
-    answer = (await transcribe(await to_wav16k(audio))).text
+    delivery = await asyncio.to_thread(game_api.get_ai_result, round_id, "delivery")
+    # язык ответа определяет распознавание; не определило — язык, на котором игрок питчил, иначе STT_LANGUAGE
+    transcript = await transcribe(await to_wav16k(audio))
+    answer, answer_lang = transcript.text, speech_lang(transcript, _round_speech_lang(delivery))
     if not answer:
-        result = JuryAnswerResponse(score=0, comment="We didn't hear an answer.")
+        result = JuryAnswerResponse(score=0, comment=pick(ANSWER_TEXTS, answer_lang)["silence"])
     else:
         pitch = await asyncio.to_thread(resolve_pitch, round_id)
         juror = JURORS[question.juror]
@@ -329,10 +441,11 @@ async def run_jury_answer(
             question=question.text,
             answer=answer,
             level_scoring=ANSWER_LEVELS.get(difficulty or pitch.difficulty, ANSWER_LEVELS["easy"]),
+            answer_language=language_name(answer_lang),
         )
         result = JuryAnswerResponse(score=assessment.score, comment=assessment.comment)
 
-    payload = {"question_id": question_id, "answer": answer, **result.model_dump(mode="json")}
+    payload = {"question_id": question_id, "answer": answer, "speech_lang": answer_lang, **result.model_dump(mode="json")}
     await asyncio.to_thread(game_api.save_ai_result, round_id, "jury_answer", payload)
     return result
 
@@ -340,7 +453,8 @@ async def run_jury_answer(
 async def run_jury_skip(round_id: str, question_id: str) -> JuryAnswerResponse:
     """Игрок пропустил вопрос: 0 баллов, иначе трудные вопросы выгодно пропускать — балл жюри это среднее ответов."""
     await _find_question(round_id, question_id)
-    result = JuryAnswerResponse(score=0, comment="Skipped — no points for this question.")
+    delivery = await asyncio.to_thread(game_api.get_ai_result, round_id, "delivery")
+    result = JuryAnswerResponse(score=0, comment=pick(ANSWER_TEXTS, _round_speech_lang(delivery))["skipped"])
     payload = {"question_id": question_id, "answer": "", "skipped": True, **result.model_dump(mode="json")}
     await asyncio.to_thread(game_api.save_ai_result, round_id, "jury_answer", payload)
     return result

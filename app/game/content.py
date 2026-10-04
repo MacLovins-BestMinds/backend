@@ -20,6 +20,11 @@ def active_ids() -> set[str]:
     return set(_topics())
 
 
+def level(case_id: str) -> str:
+    """Уровень сложности темы: easy | medium | hard."""
+    return _topics().get(case_id, {}).get("level", "easy")
+
+
 def reading(case_id: str) -> tuple[str | None, list[dict[str, str]]]:
     """Короткая выжимка (англ.) и проверенные ссылки на статьи по теме."""
     topic = _topics().get(case_id, {})

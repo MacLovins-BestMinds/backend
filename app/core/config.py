@@ -32,6 +32,18 @@ class Settings(BaseSettings):
     # принимать тестовые Google-токены вида mock_<id> (только для тестов и локальной разработки)
     AUTH_MOCK_GOOGLE: bool = False
 
+    # Почта для кода подтверждения при регистрации. Пусто — письма не уходят, код пишется в лог сервера
+    # и отдаётся в ответе регистрации (dev_code), чтобы вход работал на локальной машине.
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_FROM: str = ""
+    EMAIL_CODE_TTL_MIN: int = 15
+    # false — регистрация по почте сразу пускает в игру, код из письма не нужен (пока так);
+    # true — аккаунт работает только после подтверждения кода
+    EMAIL_VERIFICATION: bool = False
+
     # Пути
     BASE_DIR: Path = Path(__file__).resolve().parent.parent.parent
     TOPICS_JSON_PATH: Path = BASE_DIR / "content" / "topics.json"

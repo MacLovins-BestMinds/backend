@@ -62,6 +62,7 @@ _MOCK_CASE = CasePublic(
 
 @router.get("/spin", response_model=SpinResponse)
 def spin(
+    difficulty: str = Query("easy", description="уровень темы: easy | medium | hard"),
     mock: int = Query(0, description="1 для мок-ответа"),
     session: Session = Depends(get_session)
 ):
@@ -73,7 +74,7 @@ def spin(
             category=CategoryOut(id="philosophy", title="🏛 Philosophy for Life"),
             case=_MOCK_CASE
         )
-    return service.spin_case(session)
+    return service.spin_case(session, difficulty if difficulty in service.LEVEL_TIMING else "easy")
 
 
 @router.get("/daily", response_model=DailyResponse)

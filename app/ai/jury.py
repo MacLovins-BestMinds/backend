@@ -5,6 +5,7 @@ POST /api/ai/rounds/{id}/jury/questions и POST /api/ai/rounds/{id}/jury/answer.
 
 import asyncio
 import logging
+from typing import Literal
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -37,7 +38,7 @@ class Juror:
 JURORS: dict[JurorId, Juror] = {
     "strict": Juror(
         name="Marina",
-        persona="Strict, a former accelerator director. Speaks dryly and to the point, demands numbers and deadlines.",
+        persona="Strict and a bit grumpy, but not an expert in anything. Speaks dryly and asks plain, short questions.",
         openai_voice="coral",
         voice_style="Speak English in a strict, dry, precise tone, medium pace, no smile in the voice.",
         stability=0.75,
@@ -45,7 +46,7 @@ JURORS: dict[JurorId, Juror] = {
     ),
     "kind": Juror(
         name="Boris",
-        persona="Kind-hearted, an entrepreneur. Supportive, but asks about the people the product will help.",
+        persona="Kind-hearted and easily impressed. Supportive, asks simple questions out of curiosity.",
         openai_voice="ash",
         voice_style="Speak English warmly and kindly, with a light smile, unhurried.",
         stability=0.45,
@@ -53,7 +54,7 @@ JURORS: dict[JurorId, Juror] = {
     ),
     "skeptic": Juror(
         name="Gleb",
-        persona="A sceptic, an investor. Doubts everything and looks for the weak spot of the idea.",
+        persona="A bit of a doubter who does not know the subject. Asks one naive 'but what if' question.",
         openai_voice="onyx",
         voice_style="Speak English with doubt and light irony, pause before the key word.",
         stability=0.35,
@@ -78,6 +79,68 @@ class DraftQuestions(BaseModel):
 class AnswerAssessment(BaseModel):
     score: int = Field(ge=0, le=100)
     comment: str
+
+
+Difficulty = Literal["easy", "medium", "hard"]
+
+# Уровень сложности выбирает игрок: чем выше, тем глубже вопросы и строже оценка ответа.
+QUESTION_LEVELS: dict[str, dict[str, str]] = {
+    "easy": {
+        "intro": "They are ordinary, not very sharp listeners — not experts, not investors. They ask easy questions that anyone could answer on the spot.",
+        "rules": (
+            "- Keep every question SIMPLE. Each one is about a single thing the speaker actually said, and can be answered "
+            'in one or two sentences from personal experience or opinion. Good: "Why do you like it so much?", '
+            '"When did you first try it?", "Would you recommend it to a friend?".\n'
+            "- Never ask for numbers, prices, budgets, deadlines, metrics, proof, statistics or plans. No trick questions."
+        ),
+        "length": "A question is ONE short sentence of at most 15 words with simple words",
+    },
+    "medium": {
+        "intro": "They are attentive listeners who followed the pitch closely. They ask fair questions that make the speaker explain one thing a little deeper.",
+        "rules": (
+            "- Each question picks one thing the speaker said or clearly left out and asks for a reason, an example or a "
+            'comparison: "Why does that matter to you?", "What would you do if it went wrong?", "How is it different from…?". '
+            "A one-word answer must not be enough.\n"
+            "- Do not demand numbers, budgets or business plans."
+        ),
+        "length": "A question is ONE sentence of at most 22 words",
+    },
+    "hard": {
+        "intro": "They are demanding, sharp jury members who test whether the speaker has really thought the idea through.",
+        "rules": (
+            "- Each question goes for a weak spot: something the speaker claimed without support, skipped, or got wrong. "
+            "Ask for specifics — a concrete example, a number, an answer to an obvious objection, or what happens if it fails.\n"
+            "- Be direct and a little uncomfortable, but keep it answerable in 30 seconds."
+        ),
+        "length": "A question is one or two short sentences",
+    },
+}
+ANSWER_LEVELS: dict[str, str] = {
+    "easy": (
+        "You are an easy-going listener, not an examiner. Give a `score` from 0 to 100:\n"
+        "- 85–100 — the speaker answered the question in their own words, even briefly. One clear sentence with a reason or an example is already a great answer.\n"
+        "- 65–84 — they answered, but vaguely or after wandering a little.\n"
+        "- 40–64 — they talked about the topic but did not really answer the question.\n"
+        "- 0–39 — no answer, silence, or something unrelated.\n\n"
+        "Do not ask for numbers, facts or proof, and do not lower the score for a short or simple answer."
+    ),
+    "medium": (
+        "You are a fair but attentive listener. Give a `score` from 0 to 100:\n"
+        "- 85–100 — a direct answer backed by a reason or an example.\n"
+        "- 65–84 — a direct answer with no real support, or support that arrives after wandering.\n"
+        "- 40–64 — the speaker talks around the question.\n"
+        "- 0–39 — no answer, silence, or something unrelated.\n\n"
+        "Numbers are not required, but a bare yes/no or a single unsupported sentence cannot score above 70."
+    ),
+    "hard": (
+        "You are a demanding examiner. Give a `score` from 0 to 100:\n"
+        "- 85–100 — the answer comes in the first sentence, is supported by a concrete fact, number or example, and nothing is off topic.\n"
+        "- 65–84 — a direct answer, but the support is vague or generic.\n"
+        "- 40–64 — a partial answer, or one that avoids the hard part of the question.\n"
+        "- 0–39 — a dodge, silence, or something unrelated.\n\n"
+        "A short unsupported answer cannot score above 55. Filler, restarts and wandering lower the score."
+    ),
+}
 
 
 def voice_for(juror_id: JurorId) -> Voice:
@@ -159,7 +222,8 @@ AUDIENCE_FALLBACK_QUESTIONS: dict[Audience, list[DraftQuestion]] = {
 }
 
 
-async def _draft(pitch: Pitch, transcript: str) -> DraftQuestions:
+async def _draft(pitch: Pitch, transcript: str, difficulty: str = "easy") -> DraftQuestions:
+    level = QUESTION_LEVELS.get(difficulty, QUESTION_LEVELS["easy"])
     try:
         return await llm.generate(
             "jury_questions",
@@ -172,6 +236,9 @@ async def _draft(pitch: Pitch, transcript: str) -> DraftQuestions:
             transcript=transcript or "(the speaker said nothing)",
             jurors="\n".join(f"- `{jid}` — {j.name}. {j.persona}" for jid, j in JURORS.items()),
             quirk_rule=_quirk_rule(pitch),
+            level_intro=level["intro"],
+            level_rules=level["rules"],
+            level_length=level["length"],
         )
     except (OpenAIError, genai_errors.APIError) as e:
         logger.warning("_draft: сбой LLM (%s), запасные вопросы для аудитории %s", e, pitch.audience)
@@ -204,7 +271,7 @@ async def _voice(round_id: str, question_id: str, juror: JurorId, text: str) -> 
     await asyncio.to_thread(path.write_bytes, mp3)
 
 
-async def run_jury_questions(round_id: str) -> JuryQuestionsResponse:
+async def run_jury_questions(round_id: str, difficulty: str | None = None) -> JuryQuestionsResponse:
     # повторный вызов (переподключение, показ) отдаёт уже готовые вопросы без новых затрат
     if cached := await asyncio.to_thread(game_api.get_ai_result, round_id, "jury_questions"):
         return JuryQuestionsResponse.model_validate(cached)
@@ -215,7 +282,8 @@ async def run_jury_questions(round_id: str) -> JuryQuestionsResponse:
     delivery = await asyncio.to_thread(game_api.get_ai_result, round_id, "delivery")
     if delivery is None:
         raise RoundStateError("Send the pitch for review (delivery) first")
-    draft = one_per_juror(await _draft(pitch, delivery["transcript"]), pitch)
+    # уровень задан раундом; параметр запроса нужен только чтобы переопределить его
+    draft = one_per_juror(await _draft(pitch, delivery["transcript"], difficulty or pitch.difficulty), pitch)
 
     questions = [
         JuryQuestion(id=f"q{i}", juror=q.juror, text=q.text, audio_url=_audio_url(round_id, f"q{i}"))
@@ -229,7 +297,9 @@ async def run_jury_questions(round_id: str) -> JuryQuestionsResponse:
     return response
 
 
-async def run_jury_answer(round_id: str, question_id: str, audio: bytes) -> JuryAnswerResponse:
+async def run_jury_answer(
+    round_id: str, question_id: str, audio: bytes, difficulty: str | None = None
+) -> JuryAnswerResponse:
     saved = await asyncio.to_thread(game_api.get_ai_result, round_id, "jury_questions")
     if saved is None:
         raise RoundStateError("Request the jury questions first")
@@ -253,6 +323,7 @@ async def run_jury_answer(round_id: str, question_id: str, audio: bytes) -> Jury
             audience=pitch.audience_ru,
             question=question.text,
             answer=answer,
+            level_scoring=ANSWER_LEVELS.get(difficulty or pitch.difficulty, ANSWER_LEVELS["easy"]),
         )
         result = JuryAnswerResponse(score=assessment.score, comment=assessment.comment)
 

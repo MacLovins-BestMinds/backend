@@ -1,7 +1,7 @@
 import logging
 from typing import Generator
 from sqlmodel import SQLModel, Session, create_engine
-from sqlalchemy import text
+from sqlalchemy import inspect, text
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -50,8 +50,34 @@ def create_db_engine():
 engine = create_db_engine()
 
 
+# Колонки, добавленные после первого релиза: create_all их в существующую таблицу не дописывает.
+_ADDED_COLUMNS = {
+    "cases": {"level": "VARCHAR NOT NULL DEFAULT 'easy'"},
+    "rounds": {"difficulty": "VARCHAR NOT NULL DEFAULT 'easy'"},
+    "users": {
+        "email_verified": "BOOLEAN NOT NULL DEFAULT FALSE",
+        "verify_code": "VARCHAR",
+        "verify_expires": "TIMESTAMP",
+    },
+}
+
+
+def _add_missing_columns() -> None:
+    inspector = inspect(engine)
+    with engine.begin() as conn:
+        for table, columns in _ADDED_COLUMNS.items():
+            if not inspector.has_table(table):
+                continue
+            present = {c["name"] for c in inspector.get_columns(table)}
+            for name, ddl in columns.items():
+                if name not in present:
+                    conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {name} {ddl}"))
+                    logger.info("БД: в таблицу %s добавлена колонка %s", table, name)
+
+
 def init_db() -> None:
     SQLModel.metadata.create_all(engine)
+    _add_missing_columns()
 
 
 def get_session() -> Generator[Session, None, None]:

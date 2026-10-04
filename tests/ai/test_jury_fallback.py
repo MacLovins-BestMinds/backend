@@ -26,3 +26,22 @@ def test_one_question_per_juror_in_table_order():
     assert [q.juror for q in questions] == ["strict", "kind", "skeptic"]
     assert questions[0].text == "What does it cost?" and questions[2].text == "Why you?"
     assert questions[1].text  # добрый промолчал — взят его заготовленный вопрос
+
+
+def test_every_difficulty_has_question_rules_and_answer_scoring() -> None:
+    from app.ai import llm
+    from app.ai.jury import ANSWER_LEVELS, QUESTION_LEVELS
+
+    assert set(QUESTION_LEVELS) == set(ANSWER_LEVELS) == {"easy", "medium", "hard"}
+    for level, rules in QUESTION_LEVELS.items():
+        prompt = llm.load_prompt("jury_questions").substitute(
+            title="t", brief="b", audience="a", audience_focus="f", own_text="", transcript="x", jurors="-", quirk_rule="-",
+            level_intro=rules["intro"], level_rules=rules["rules"], level_length=rules["length"],
+        )  # fmt: skip
+        assert rules["intro"] in prompt and "$" not in prompt
+        answer = llm.load_prompt("jury_answer").substitute(
+            juror_name="n", juror_persona="p", title="t", audience="a", question="q", answer="x", level_scoring=ANSWER_LEVELS[level]
+        )
+        assert ANSWER_LEVELS[level] in answer
+    # лёгкий уровень не требует цифр, тяжёлый — требует конкретики
+    assert "Never ask for numbers" in QUESTION_LEVELS["easy"]["rules"] and "a number" in QUESTION_LEVELS["hard"]["rules"]

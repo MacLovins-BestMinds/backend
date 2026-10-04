@@ -28,11 +28,13 @@ from app.ai.audio import AudioConversionError
 from app.ai.clients import MissingKeyError
 from app.ai.config import get_settings
 from app.ai.delivery import run_delivery
+from app.ai.delivery_metrics import PaceMode
 from app.ai.health import HealthResponse, run_health
-from app.ai.jury import RoundStateError, run_jury_answer, run_jury_questions
+from app.ai.jury import Difficulty, RoundStateError, run_jury_answer, run_jury_questions
 from app.ai.live import PCM_BYTES_PER_SEC, run_live
 from app.ai.pitch import RoundNotFoundError
 from app.ai.refine import run_refine
+from app.ai.slides import FitSlide, FitSlidesResponse, SlidesError, assemble, FitSlidesDraft, run_fit_slides
 from app.ai.schemas import (
     DeliveryResponse,
     GazePoint,
@@ -113,6 +115,38 @@ async def refine(body: RefineRequest, use_mock: UseMock) -> RefineResponse:
         return await run_refine(body)
 
 
+MAX_SLIDES_MB = 20
+
+
+@router.post("/fit-slides")
+async def fit_slides(
+    file: Annotated[UploadFile, File(description="презентация: PDF или PPTX")],
+    use_mock: UseMock,
+    title: Annotated[str, Form()] = "",
+    text: Annotated[str, Form(description="текст или тезисы питча — их раскладываем по слайдам")] = "",
+    audience: Annotated[str, Form()] = "public",
+) -> FitSlidesResponse:
+    """Подогнать питч под презентацию: что говорить на каждом слайде. Слайд про демо → «Demo time.»."""
+    if use_mock:
+        return assemble(
+            FitSlidesDraft(
+                slides=[
+                    FitSlide(n=1, title="The problem", kind="talk", text="Older people miss their medicine every day."),
+                    FitSlide(n=2, title="Demo", kind="demo", text=""),
+                    FitSlide(n=3, title="What we ask", kind="talk", text="We are looking for pharmacy chains as partners."),
+                ]
+            )
+        )
+    data = await file.read()
+    if len(data) > MAX_SLIDES_MB * 1024 * 1024:
+        raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, f"The file is larger than {MAX_SLIDES_MB} MB")
+    with ai_errors("fit_slides", "-"):
+        try:
+            return await run_fit_slides(file.filename or "", data, title, text, audience)
+        except SlidesError as e:
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(e)) from e
+
+
 @router.post("/rounds/{round_id}/delivery")
 async def delivery(
     round_id: RoundId,
@@ -120,21 +154,22 @@ async def delivery(
     gaze: Annotated[list[GazePoint], Depends(parse_gaze)],
     use_mock: UseMock,
     notes: Annotated[str, Form(description="заметки с подготовки, необязательно")] = "",
+    pace: Annotated[PaceMode, Form(description="темп, который выбрал игрок: slow | normal | fast")] = "normal",
 ) -> DeliveryResponse:
     if use_mock:
         return mocks.delivery()
     data = await read_audio(audio)
     with ai_errors("delivery", round_id):
-        return await run_delivery(round_id, data, gaze, notes)
+        return await run_delivery(round_id, data, gaze, notes, pace)
 
 
 @router.post("/rounds/{round_id}/jury/questions")
-async def jury_questions(round_id: RoundId, use_mock: UseMock) -> JuryQuestionsResponse:
+async def jury_questions(round_id: RoundId, use_mock: UseMock, difficulty: Difficulty | None = None) -> JuryQuestionsResponse:
     """2–3 вопроса жюри с mp3-озвучкой. Требует выполненного delivery; повторный вызов отдаёт те же вопросы."""
     if use_mock:
         return mocks.jury_questions(round_id)
     with ai_errors("jury_questions", round_id):
-        return await run_jury_questions(round_id)
+        return await run_jury_questions(round_id, difficulty)
 
 
 @router.post("/rounds/{round_id}/jury/answer")
@@ -143,24 +178,25 @@ async def jury_answer(
     question_id: Annotated[str, Form()],
     audio: Annotated[UploadFile, File(description="ответ на вопрос, m4a")],
     use_mock: UseMock,
+    difficulty: Annotated[Difficulty | None, Form(description="переопределить уровень раунда: easy | medium | hard")] = None,
 ) -> JuryAnswerResponse:
     if use_mock:
         return mocks.jury_answer()
     data = await read_audio(audio)
     with ai_errors("jury_answer", round_id):
         try:
-            return await run_jury_answer(round_id, question_id, data)
+            return await run_jury_answer(round_id, question_id, data, difficulty)
         except KeyError as e:
             raise HTTPException(status.HTTP_404_NOT_FOUND, f"Question {question_id} not found") from e
 
 
 @router.websocket("/live")
-async def live(websocket: WebSocket, round_id: str, mock: bool = False) -> None:
+async def live(websocket: WebSocket, round_id: str, mock: bool = False, pace: str = "normal") -> None:
     """Приложение шлёт бинарные куски PCM 16 кГц по 250 мс, сервер отвечает событиями filler/long_pause/pace."""
     if mock or get_settings().ai_mock:
         await _live_mock(websocket)
     else:
-        await run_live(websocket, round_id)
+        await run_live(websocket, round_id, pace)
 
 
 async def _live_mock(websocket: WebSocket) -> None:

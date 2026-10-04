@@ -31,6 +31,7 @@ class Pitch:
     is_warmup: bool = False
     min_sec: int = 60
     max_sec: int = 180
+    difficulty: str = "easy"  # уровень раунда: от него зависят строгость разбора и жюри
 
     @property
     def audience_ru(self) -> str:
@@ -39,6 +40,10 @@ class Pitch:
     @property
     def is_own(self) -> bool:
         return self.own_text is not None
+
+
+# минимальная длительность питча по уровням — как LEVEL_TIMING игрового движка
+MIN_SEC_BY_LEVEL = {"easy": 60, "medium": 60, "hard": 90}
 
 
 class RoundNotFoundError(LookupError):
@@ -72,16 +77,25 @@ def resolve_pitch(round_id: str) -> Pitch:
         raise RoundNotFoundError(f"Round {round_id} not found")
     if rnd.get("mode") == "warmup":
         return WARMUP
+    difficulty = rnd.get("difficulty") or "easy"
+    min_sec = MIN_SEC_BY_LEVEL.get(difficulty, 60)
     if own := rnd.get("own"):
         return Pitch(
             title=own["title"],
             brief="The player's own pitch",
             audience=_normalize_audience(own["audience"]),
             own_text=own["text"],
+            difficulty=difficulty,
+            min_sec=min_sec,
         )
     case = game_api.get_case(rnd["case_id"]) if rnd.get("case_id") else None
     if case is None:
         raise RoundNotFoundError(f"Round {round_id} has no topic")
     return Pitch(
-        title=case["title"], brief=case["brief"], audience=_normalize_audience(case["audience"]), quirk=case["quirk"]
+        title=case["title"],
+        brief=case["brief"],
+        audience=_normalize_audience(case["audience"]),
+        quirk=case["quirk"],
+        difficulty=difficulty,
+        min_sec=min_sec,
     )

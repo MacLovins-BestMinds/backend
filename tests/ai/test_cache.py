@@ -24,7 +24,7 @@ def test_same_prompt_hits_disk_cache(tmp_path, monkeypatch) -> None:
     monkeypatch.setattr(llm, "gemini_client", lambda: fake)
 
     async def twice() -> list[Answer]:
-        kw = {"juror_name": "Глеб", "juror_persona": "", "title": "t", "audience": "a", "question": "q", "answer": "x"}
+        kw = {"juror_name": "Глеб", "juror_persona": "", "title": "t", "audience": "a", "question": "q", "answer": "x", "level_scoring": "-"}
         return [await llm.generate("jury_answer", Answer, **kw) for _ in range(2)]
 
     try:

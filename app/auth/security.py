@@ -37,6 +37,12 @@ def decode_access_token(token: str) -> Optional[Dict[str, Any]]:
         return None
 
 
+def google_client_id() -> Optional[str]:
+    """Client ID для входа через Google; None — не настроен (пусто или заглушка из примера .env)."""
+    value = (settings.GOOGLE_CLIENT_ID or "").strip()
+    return value if value and not value.startswith("your-") else None
+
+
 def verify_google_token(id_token_str: str) -> Dict[str, Any]:
     """
     Верифицирует Google ID Token.
@@ -52,7 +58,8 @@ def verify_google_token(id_token_str: str) -> Dict[str, Any]:
             "picture": "https://lh3.googleusercontent.com/a/default-user"
         }
 
-    if not settings.GOOGLE_CLIENT_ID:
+    client_id = google_client_id()
+    if not client_id:
         raise ValueError("Google sign-in is not configured: set GOOGLE_CLIENT_ID")
 
     try:
@@ -60,9 +67,7 @@ def verify_google_token(id_token_str: str) -> Dict[str, Any]:
         from google.auth.transport import requests
 
         request = requests.Request()
-        id_info = id_token.verify_oauth2_token(
-            id_token_str, request, settings.GOOGLE_CLIENT_ID
-        )
+        id_info = id_token.verify_oauth2_token(id_token_str, request, client_id)
         return id_info
     except Exception as e:
         raise ValueError(f"Invalid Google token: {str(e)}")

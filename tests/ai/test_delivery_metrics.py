@@ -113,3 +113,15 @@ def test_swearing_is_marked_and_costs_delivery_points() -> None:
 def test_innocent_words_are_not_swearing() -> None:
     words = _spoken("The government made a sukiyaki assessment in Scunthorpe, f*** that").words
     assert [w for _, w in find_profanity(words)] == ["f***"]
+
+
+def test_chosen_pace_decides_what_counts_as_too_slow() -> None:
+    assert pace_score(90, "slow") == 100  # спокойный темп: за медленную речь не ругаем
+    assert pace_score(90, "normal") < 30 and pace_score(90, "fast") == 0
+    assert pace_score(190, "fast") == 100 and pace_score(200, "slow") == 0
+    # 60 слов за 40 секунд речи — 90 слов в минуту
+    words = [Word(f"word{i}", i * 0.66, i * 0.66 + 0.4) for i in range(70)]
+    slow = analyze(Transcript(" ".join(w.text for w in words), words, duration=60), [], 60, 180, pace="slow")
+    fast = analyze(Transcript(" ".join(w.text for w in words), words, duration=60), [], 60, 180, pace="fast")
+    assert [e for e in slow.events if e.type == "pace"] == []
+    assert all("too slow" in e.text for e in fast.events if e.type == "pace") and any(e.type == "pace" for e in fast.events)

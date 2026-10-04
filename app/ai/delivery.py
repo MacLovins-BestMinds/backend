@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field
 
 from app.ai import game_api, llm, pronunciation
 from app.ai.audio import to_wav16k
-from app.ai.delivery_metrics import analyze, filler_candidates
+from app.ai.delivery_metrics import PaceMode, analyze, filler_candidates, word_spans
 from app.ai.pitch import Pitch, resolve_pitch
 from app.ai.schemas import (
     ContentScore,
@@ -22,6 +22,7 @@ from app.ai.schemas import (
     Metrics,
     PronunciationAssessment,
     Scores,
+    WordMark,
 )
 from app.ai.stt import Transcript, transcribe
 
@@ -60,6 +61,25 @@ async def judge_fillers(transcript: Transcript) -> dict[int, bool] | None:
         return None
     chosen = set(verdict.fillers)
     return {i: n in chosen for n, (i, _, _) in enumerate(candidates, 1)}
+
+
+# Строгость разбора содержания по уровню раунда
+CONTENT_LEVELS = {
+    "easy": (
+        "EASY. This is a beginner's practice talk on an everyday topic, not a business pitch. A clear main point, "
+        "a couple of reasons or a small personal story and a closing line are enough for 80+ on structure and persuasion. "
+        '"Why us" and "call to action" may be as simple as "that is why I love it" or "try it". Be encouraging.'
+    ),
+    "medium": (
+        "MEDIUM. Expect a clear position, at least two reasons each backed by an example, an answer to one obvious "
+        "objection and a conclusion. An opinion with no support cannot score above 70 on persuasion."
+    ),
+    "hard": (
+        "HARD. Judge like a demanding coach. Expect an accurate explanation of the idea, a concrete example or number, "
+        "an answer to the strongest objection and a real call to action. Vague, generic or inaccurate talk cannot score "
+        "above 60 on any criterion."
+    ),
+}
 
 
 class ContentAssessment(BaseModel):
@@ -115,6 +135,7 @@ async def assess_content(pitch: Pitch, transcript: str, metrics: Metrics, notes:
         extra_criteria="- `audience_fit` — does the speaker talk in this audience's language and about what matters to it." if own else "",
         transcript=transcript,
         metrics=_metrics_summary(metrics),
+        level_rules=CONTENT_LEVELS.get(pitch.difficulty, CONTENT_LEVELS["easy"]),
     )
 
 
@@ -129,13 +150,15 @@ def with_pronunciation(score: DeliveryScore, pron: PronunciationAssessment | Non
     return score.model_copy(update={"total": total, "pronunciation": pron.overall_score})
 
 
-async def run_delivery(round_id: str, audio: bytes, gaze: Sequence[GazePoint], notes: str = "") -> DeliveryResponse:
+async def run_delivery(
+    round_id: str, audio: bytes, gaze: Sequence[GazePoint], notes: str = "", pace: PaceMode = "normal"
+) -> DeliveryResponse:
     pitch = await asyncio.to_thread(resolve_pitch, round_id)
     wav = await to_wav16k(audio)
     # произношение (Azure) оценивается параллельно с распознаванием и оценкой содержания; сбой → None
     pronunciation_task = asyncio.create_task(pronunciation.assess(wav))
     transcript = await transcribe(wav)
-    analysis = analyze(transcript, gaze, pitch.min_sec, pitch.max_sec, await judge_fillers(transcript))
+    analysis = analyze(transcript, gaze, pitch.min_sec, pitch.max_sec, await judge_fillers(transcript), pace)
     # без LLM честной оценки содержания нет: ошибка уходит клиенту (502), повтор берёт распознавание из кэша
     try:
         content = await assess_content(pitch, transcript.text, analysis.metrics, notes)
@@ -148,6 +171,11 @@ async def run_delivery(round_id: str, audio: bytes, gaze: Sequence[GazePoint], n
     content_total = round(sum(c.score for c in content.criteria) / len(content.criteria)) if content.criteria else 0
     response = DeliveryResponse(
         transcript=transcript.text,
+        words=[
+            WordMark(start=a, end=b, t=round(w.start, 2), t_end=round(w.end, 2))
+            for w, (a, b) in zip(transcript.words, word_spans(transcript), strict=True)
+            if b > a
+        ],
         scores=Scores(content=ContentScore(total=content_total, criteria=content.criteria), delivery=delivery_score),
         metrics=analysis.metrics,
         events=analysis.events,

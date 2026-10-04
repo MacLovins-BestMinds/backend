@@ -200,6 +200,7 @@ def get_round(round_id: str, session: Optional[Session] = None) -> Optional[Dict
         "mode": r.mode,
         "case_id": r.case_id,
         "status": r.status,
+        "difficulty": r.difficulty or "easy",
         "own": own,
         "own_title": r.own_title,
         "own_text": r.own_text,
@@ -264,12 +265,18 @@ def get_or_create_user(session: Session, user_identifier: str) -> User:
     return user
 
 
-def _active_cases(session: Session) -> List[Case]:
-    """Темы из текущего topics.json (старые остаются в базе ради истории раундов)."""
+# Уровень сложности раунда: время на подготовку и рамки длительности питча (секунды)
+LEVEL_TIMING = {"easy": (300, 60, 180), "medium": (240, 60, 180), "hard": (180, 90, 180)}
+
+
+def _active_cases(session: Session, level: Optional[str] = None) -> List[Case]:
+    """Темы из текущего topics.json (старые остаются в базе ради истории раундов); level — только этого уровня."""
     cases = [c for c in session.exec(select(Case)).all() if c.id in content.active_ids()]
     if not cases:
         seed_cases_from_json(session)
         cases = [c for c in session.exec(select(Case)).all() if c.id in content.active_ids()]
+    if level:
+        cases = [c for c in cases if content.level(c.id) == level] or cases
     return cases
 
 
@@ -281,11 +288,11 @@ def _public_case(case: Case) -> CasePublic:
     )
 
 
-def spin_case(session: Session) -> SpinResponse:
+def spin_case(session: Session, level: str = "easy") -> SpinResponse:
     """
-    Колесо тем: возвращает случайный кейс БЕЗ прикола.
+    Колесо тем: возвращает случайный кейс выбранного уровня БЕЗ прикола.
     """
-    cases = _active_cases(session)
+    cases = _active_cases(session, level)
     chosen = random.choice(cases)
     return SpinResponse(
         category=CategoryOut(id=chosen.category_id, title=chosen.category_title),
@@ -300,7 +307,8 @@ def get_daily_case(session: Session, target_date: Optional[str] = None) -> Daily
     if not target_date:
         target_date = date.today().isoformat()
 
-    cases_sorted = sorted(_active_cases(session), key=lambda c: c.id)
+    # тема дня одна на всех — берём из простых, чтобы она подходила любому уровню
+    cases_sorted = sorted(_active_cases(session, "easy"), key=lambda c: c.id)
     date_hash = int(hashlib.md5(target_date.encode("utf-8")).hexdigest(), 16)
     chosen = cases_sorted[date_hash % len(cases_sorted)]
 
@@ -336,9 +344,7 @@ def create_round(session: Session, req: RoundCreateRequest) -> RoundCreateRespon
         pitch_min_sec = 20
         pitch_max_sec = 45
     else:
-        prep_sec = 300
-        pitch_min_sec = 60
-        pitch_max_sec = 180
+        prep_sec, pitch_min_sec, pitch_max_sec = LEVEL_TIMING[req.difficulty]
 
     own_title = req.own.title if req.own else None
     own_text = req.own.text if req.own else None
@@ -349,7 +355,7 @@ def create_round(session: Session, req: RoundCreateRequest) -> RoundCreateRespon
         daily_info = get_daily_case(session)
         case_id = daily_info.case.id
     elif req.mode == "training" and not case_id:
-        spin_info = spin_case(session)
+        spin_info = spin_case(session, req.difficulty)
         case_id = spin_info.case.id
 
     round_obj = Round(
@@ -360,6 +366,7 @@ def create_round(session: Session, req: RoundCreateRequest) -> RoundCreateRespon
         own_title=own_title,
         own_text=own_text,
         own_audience=own_audience,
+        difficulty=req.difficulty,
         status="created"
     )
     session.add(round_obj)
@@ -577,6 +584,7 @@ def _history_round(session: Session, rnd: Round, sc: RoundScore, titles: dict[st
     return HistoryRound(
         id=rnd.id,
         mode=rnd.mode,
+        difficulty=rnd.difficulty or "easy",
         title=title,
         created_at=rnd.finished_at or rnd.created_at,
         total=sc.total_score,
@@ -779,6 +787,7 @@ def seed_cases_from_json(session: Session) -> None:
             existing.brief = item["brief"]
             existing.audience = item["audience"]
             existing.trick = trick
+            existing.level = item.get("level", "easy")
             session.add(existing)
         else:
             new_case = Case(
@@ -789,6 +798,7 @@ def seed_cases_from_json(session: Session) -> None:
                 brief=item["brief"],
                 audience=item["audience"],
                 trick=trick,
+                level=item.get("level", "easy"),
                 created_at=now_utc()
             )
             session.add(new_case)

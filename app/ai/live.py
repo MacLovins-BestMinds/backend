@@ -23,7 +23,7 @@ from websockets.exceptions import WebSocketException
 from app.ai import llm
 from app.ai.clients import MissingKeyError, require
 from app.ai.config import AiSettings, get_settings
-from app.ai.delivery_metrics import PACE_RANGE_WPM, PACE_WINDOW_SEC, find_fillers, find_profanity
+from app.ai.delivery_metrics import PACE_RANGE_WPM, PACE_RANGES, PACE_WINDOW_SEC, find_fillers, find_profanity
 from app.ai.pitch import Pitch, resolve_pitch
 from app.ai.schemas import ContentEvent, FillerEvent, LiveEvent, LongPauseEvent, PaceEvent, ProfanityEvent
 from app.ai.stt import Word
@@ -74,6 +74,7 @@ class LiveAnalyzer:
     segment_swears_sent: int = 0  # ругань текущей фразы, уже отправленная по промежуточному тексту
     filler_times: deque[float] = field(default_factory=deque)
     word_times: deque[float] = field(default_factory=deque)
+    pace_range: tuple[int, int] = PACE_RANGE_WPM  # коридор темпа, который выбрал игрок
     committed: list[str] = field(default_factory=list)  # слова зафиксированных фраз за весь раунд
     checked_words: int = 0  # сколько слов уже оценено по содержанию
     last_check_t: float = 0.0
@@ -169,9 +170,9 @@ class LiveAnalyzer:
             self.word_times.popleft()
         if now - self.first_word_t >= PACE_WINDOW_SEC and now - self.last_pace_t >= PACE_COOLDOWN_SEC:
             wpm = round(len(self.word_times) * 60 / PACE_WINDOW_SEC)
-            if not PACE_RANGE_WPM[0] <= wpm <= PACE_RANGE_WPM[1]:
+            if not self.pace_range[0] <= wpm <= self.pace_range[1]:
                 self.last_pace_t = now
-                verdict = "fast" if wpm > PACE_RANGE_WPM[1] else "slow"
+                verdict = "fast" if wpm > self.pace_range[1] else "slow"
                 events.append(PaceEvent(t=round(now, 2), wpm=wpm, verdict=verdict))
         return events
 
@@ -366,7 +367,7 @@ async def _close(websocket: WebSocket, reason: str) -> None:
         pass  # уже закрыт
 
 
-async def run_live(websocket: WebSocket, round_id: str) -> None:
+async def run_live(websocket: WebSocket, round_id: str, pace: str = "normal") -> None:
     settings = get_settings()
     try:
         stream = make_stream(settings)
@@ -376,6 +377,7 @@ async def run_live(websocket: WebSocket, round_id: str) -> None:
         return
     await websocket.accept()
     analyzer = get_session(round_id)
+    analyzer.pace_range = PACE_RANGES.get(pace, PACE_RANGE_WPM)
     analyzer.begin_stream()
     try:
         pitch: Pitch | None = await asyncio.to_thread(resolve_pitch, round_id)

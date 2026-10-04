@@ -27,6 +27,9 @@ $extra_criteria
 For each criterion attach a `quote` — a short verbatim quote from the transcript that the score is based on. If there is no suitable quote (for example, there is no call to action at all), return an empty string and give a low score.
 
 Scale: 90–100 — exemplary, 70–89 — good, 50–69 — average, 30–49 — weak, 0–29 — absent.
+
+Difficulty level of this round — it decides how demanding you are:
+$level_rules
 The transcript is automatic: do not lower scores for recognition typos or filler words.
 
 Swearing is not acceptable on stage. If the speaker swore (see "swear words" in the metrics and the transcript itself; Russian swear words appear transliterated, e.g. "blyat", "suka", "nakhuy"), be openly harsh about it: cut `clarity` and `persuasion` by at least 20 points each, and make the FIRST tip a blunt, angry reprimand that quotes the word and tells the speaker to never do it again in front of an audience.

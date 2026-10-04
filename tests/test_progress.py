@@ -73,3 +73,99 @@ def test_guest_nickname_can_be_secured_with_a_password() -> None:
         assert client.post("/api/auth/register", json={"nick": nick, "password": "other456"}).status_code == 400
         assert client.post("/api/auth/login", json={"nick": nick, "password": "secret123"}).status_code == 200
         assert client.post("/api/auth/login", json={"nick": nick, "password": "wrong"}).status_code == 401
+
+
+def test_email_signup_needs_the_code_before_sign_in(monkeypatch) -> None:
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "EMAIL_VERIFICATION", True)
+    email = f"{uuid.uuid4().hex[:8]}@example.com"
+    nick = f"mail_{uuid.uuid4().hex[:8]}"
+    with TestClient(app) as client:
+        signup = client.post("/api/auth/signup", json={"email": email.upper(), "nick": nick, "password": "secret123"})
+        assert signup.status_code == 201
+        code = signup.json()["dev_code"]  # почта в тестах не настроена — код приходит в ответе
+        assert (signup.json()["email"], signup.json()["sent"], signup.json()["access_token"]) == (email, False, None) and len(code) == 6
+
+        login = {"nick": email, "password": "secret123"}
+        assert client.post("/api/auth/login", json=login).status_code == 403  # почта ещё не подтверждена
+        wrong = "000000" if code != "000000" else "111111"
+        assert client.post("/api/auth/verify", json={"email": email, "code": wrong}).status_code == 400
+        verified = client.post("/api/auth/verify", json={"email": email, "code": code})
+        assert verified.status_code == 200 and verified.json()["user"]["nick"] == nick
+        assert client.post("/api/auth/login", json=login).status_code == 200
+        # та же почта второй раз — нельзя; чужой ник — нельзя
+        assert client.post("/api/auth/signup", json={"email": email, "nick": "other", "password": "secret123"}).status_code == 400
+        taken = client.post("/api/auth/signup", json={"email": f"x{email}", "nick": nick, "password": "another1"})
+        assert taken.status_code == 400 and "taken" in taken.json()["detail"]
+
+
+def test_email_signup_keeps_the_history_of_a_guest_nickname(monkeypatch) -> None:
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "EMAIL_VERIFICATION", True)
+    nick = f"old_{uuid.uuid4().hex[:8]}"
+    email = f"{uuid.uuid4().hex[:8]}@example.com"
+    with TestClient(app) as client:
+        guest_id = client.post("/api/game/auth", json={"nick": nick}).json()["user_id"]
+        code = client.post("/api/auth/signup", json={"email": email, "nick": nick, "password": "secret123"}).json()["dev_code"]
+        user = client.post("/api/auth/verify", json={"email": email, "code": code}).json()["user"]
+        assert user["user_id"] == guest_id
+
+
+def test_google_button_is_offered_only_with_a_real_client_id(monkeypatch) -> None:
+    from app.core.config import settings
+
+    with TestClient(app) as client:
+        monkeypatch.setattr(settings, "GOOGLE_CLIENT_ID", "your-google-client-id.apps.googleusercontent.com")
+        assert client.get("/api/auth/config").json() == {"google_client_id": None}  # заглушка из примера
+        monkeypatch.setattr(settings, "GOOGLE_CLIENT_ID", "123-abc.apps.googleusercontent.com")
+        assert client.get("/api/auth/config").json() == {"google_client_id": "123-abc.apps.googleusercontent.com"}
+
+
+def test_google_sign_in_finishes_an_unconfirmed_email_signup(monkeypatch) -> None:
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "AUTH_MOCK_GOOGLE", True)
+    monkeypatch.setattr(settings, "EMAIL_VERIFICATION", True)
+    tag = uuid.uuid4().hex[:8]
+    email = f"speaker_{tag}@gmail.com"  # такую почту отдаёт тестовый токен mock_<tag>
+    with TestClient(app) as client:
+        client.post("/api/auth/signup", json={"email": email, "nick": f"g_{tag}", "password": "secret123"})
+        google = client.post("/api/auth/google", json={"id_token": f"mock_{tag}"})
+        assert google.status_code == 200 and google.json()["user"]["nick"] == f"g_{tag}"
+        # почта подтверждена Google — вход по паролю теперь тоже работает
+        assert client.post("/api/auth/login", json={"nick": email, "password": "secret123"}).status_code == 200
+
+
+def test_signup_without_verification_signs_in_at_once() -> None:
+    email = f"{uuid.uuid4().hex[:8]}@example.com"
+    nick = f"quick_{uuid.uuid4().hex[:8]}"
+    with TestClient(app) as client:
+        signup = client.post("/api/auth/signup", json={"email": email, "nick": nick, "password": "secret123"}).json()
+        assert signup["access_token"] and signup["user"]["nick"] == nick and signup["dev_code"] is None
+        headers = {"Authorization": f"Bearer {signup['access_token']}"}
+        assert client.get("/api/game/progress", headers=headers).json()["nick"] == nick
+        assert client.post("/api/auth/login", json={"nick": email, "password": "secret123"}).status_code == 200
+
+
+def test_difficulty_sets_topic_level_timing_and_stays_with_the_round() -> None:
+    from app.ai.pitch import resolve_pitch
+    from app.game import content
+
+    with TestClient(app) as client:
+        headers = _signup(client, f"level_{uuid.uuid4().hex[:8]}")
+        for level, timing in {"easy": (300, 60), "medium": (240, 60), "hard": (180, 90)}.items():
+            topics = {client.get(f"/api/game/spin?difficulty={level}").json()["case"]["id"] for _ in range(8)}
+            assert {content.level(t) for t in topics} == {level}  # колесо даёт темы только своего уровня
+            body = {"user_id": "x", "mode": "training", "case_id": next(iter(topics)), "difficulty": level}
+            created = client.post("/api/game/rounds", json=body, headers=headers).json()
+            assert (created["prep_sec"], created["pitch_min_sec"]) == timing
+            pitch = resolve_pitch(created["round_id"])
+            assert (pitch.difficulty, pitch.min_sec) == (level, timing[1])  # жюри и разбор узнают уровень из раунда
+
+        service.save_ai_result(created["round_id"], "delivery", {"transcript": "…", "scores": {"content": {"total": 70}, "delivery": {"total": 70}}})
+        client.post(f"/api/game/rounds/{created['round_id']}/finish")
+        assert client.get("/api/game/progress", headers=headers).json()["history"][0]["difficulty"] == "hard"
+        # тема дня одна на всех — из простых
+        assert content.level(client.get("/api/game/daily").json()["case"]["id"]) == "easy"

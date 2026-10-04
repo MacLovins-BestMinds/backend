@@ -16,7 +16,11 @@ class User(SQLModel, table=True):
     password_hash: Optional[str] = Field(default=None, nullable=True)
     google_id: Optional[str] = Field(default=None, index=True, nullable=True)
     avatar_url: Optional[str] = Field(default=None, nullable=True)
-    auth_provider: str = Field(default="guest")  # "local" | "google" | "guest"
+    auth_provider: str = Field(default="guest")  # "email" | "local" | "google" | "guest"
+    # вход по почте: аккаунт работает только после подтверждения кода из письма
+    email_verified: bool = Field(default=False)
+    verify_code: Optional[str] = Field(default=None, nullable=True)
+    verify_expires: Optional[datetime] = Field(default=None, nullable=True)
     created_at: datetime = Field(default_factory=now_utc)
 
 
@@ -30,6 +34,7 @@ class Case(SQLModel, table=True):
     brief: str
     audience: str
     trick: str  # Прикол кейса — секретный угол для жюри, НИКОГДА не отдавать фронту!
+    level: str = Field(default="easy", index=True)  # уровень сложности темы: easy | medium | hard
     created_at: datetime = Field(default_factory=now_utc)
 
 
@@ -44,6 +49,7 @@ class Round(SQLModel, table=True):
     own_text: Optional[str] = None
     own_audience: Optional[str] = None
     status: str = Field(default="created", index=True)  # created, pitching, jury, finished
+    difficulty: str = Field(default="easy")  # уровень сложности всего раунда: easy | medium | hard
     created_at: datetime = Field(default_factory=now_utc)
     finished_at: Optional[datetime] = None
 

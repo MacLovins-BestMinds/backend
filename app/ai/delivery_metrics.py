@@ -4,6 +4,7 @@ import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from itertools import pairwise
+from typing import Literal
 
 from app.ai.schemas import DeliveryScore, GazePoint, Metrics, TimelineEvent
 from app.ai.stt import Transcript, Word, to_latin
@@ -53,6 +54,15 @@ LONG_PAUSE_SEC = 3.0
 GAZE_OFF_SEC = 3.0
 PACE_WINDOW_SEC = 20.0  # окно по чистому времени речи
 PACE_RANGE_WPM = (100, 180)
+# Игрок сам выбирает, каким темпом хочет говорить. Спокойный: за медленную речь не ругаем вообще.
+# Быстрый: медленная речь — уже ошибка, зал скучает.
+PaceMode = Literal["slow", "normal", "fast"]
+PACE_RANGES: dict[str, tuple[int, int]] = {"slow": (0, 170), "normal": PACE_RANGE_WPM, "fast": (140, 220)}
+_PACE_CURVES: dict[str, list[tuple[float, float]]] = {
+    "slow": [(0, 100), (150, 100), (200, 0)],
+    "normal": [(80, 0), (120, 100), (160, 100), (200, 0)],
+    "fast": [(110, 0), (150, 100), (200, 100), (240, 0)],
+}
 SPEECH_GAP_SEC = 1.0  # паузы длиннее не входят во время речи: паузы не должны штрафоваться ещё и через темп
 
 WEIGHTS = {"fillers": 0.30, "pace": 0.20, "gaze": 0.20, "pauses": 0.15, "timing": 0.15}
@@ -281,8 +291,10 @@ def gaze_on_ratio(gaze: Sequence[GazePoint], duration: float) -> float | None:
     return round(on / duration, 3)
 
 
-def pace_alerts(words: Sequence[Word], filler_starts: set[float]) -> list[tuple[float, int]]:
-    """Темп по окнам 20 с чистого времени речи (длинные паузы вырезаны) вне диапазона 100–180 слов в минуту."""
+def pace_alerts(
+    words: Sequence[Word], filler_starts: set[float], limits: tuple[int, int] = PACE_RANGE_WPM
+) -> list[tuple[float, int]]:
+    """Темп по окнам 20 с чистого времени речи (длинные паузы вырезаны) вне коридора limits (слов в минуту)."""
     if not words:
         return []
     alerts = []
@@ -296,7 +308,7 @@ def pace_alerts(words: Sequence[Word], filler_starts: set[float]) -> list[tuple[
             speech_t += (prev.end - prev.start) + (0.0 if gap > SPEECH_GAP_SEC else gap)
         if speech_t - window_start_speech >= PACE_WINDOW_SEC:
             wpm = round(count * 60 / (speech_t - window_start_speech))
-            if not PACE_RANGE_WPM[0] <= wpm <= PACE_RANGE_WPM[1]:
+            if not limits[0] <= wpm <= limits[1]:
                 alerts.append((round(window_start_real, 2), wpm))
             window_start_real, window_start_speech, count = cur.start, speech_t, 0
         if cur.start not in filler_starts:
@@ -311,8 +323,8 @@ def fillers_score(per_min: float) -> int:
     return round(_interp(per_min, [(1, 100), (5, 40), (12, 0)]))
 
 
-def pace_score(wpm: float) -> int:
-    return round(_interp(wpm, [(80, 0), (120, 100), (160, 100), (200, 0)]))
+def pace_score(wpm: float, mode: str = "normal") -> int:
+    return round(_interp(wpm, _PACE_CURVES[mode]))
 
 
 def pauses_score(long_pauses: int) -> int:
@@ -333,6 +345,7 @@ def analyze(
     min_sec: float,
     max_sec: float,
     filler_verdicts: Mapping[int, bool] | None = None,
+    pace: str = "normal",
 ) -> DeliveryAnalysis:
     words = transcript.words
     duration = transcript.duration
@@ -372,7 +385,7 @@ def analyze(
 
     parts = {
         "fillers": fillers_score(fillers_per_min),
-        "pace": pace_score(wpm),
+        "pace": pace_score(wpm, pace),
         "gaze": gaze_score(ratio) if ratio is not None else None,
         "pauses": pauses_score(len(long_pauses)),
         "timing": timing_score(duration, min_sec, max_sec),
@@ -405,8 +418,8 @@ def analyze(
         for start, end, on in spans
         if not on and end - start > GAZE_OFF_SEC
     ]
-    for t, window_wpm in pace_alerts(words, filler_starts):
-        verdict = "too fast" if window_wpm > PACE_RANGE_WPM[1] else "too slow"
+    for t, window_wpm in pace_alerts(words, filler_starts, PACE_RANGES[pace]):
+        verdict = "too fast" if window_wpm > PACE_RANGES[pace][1] else "too slow"
         events.append(TimelineEvent(type="pace", t=t, text=f"Pace {window_wpm} words/min — {verdict}", **before_word(t)))
     events.sort(key=lambda e: e.t)
 

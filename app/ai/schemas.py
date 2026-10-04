@@ -172,8 +172,18 @@ class PronunciationAssessment(BaseModel):
     tips: list[str] = Field(default_factory=list)
 
 
+class WordMark(BaseModel):
+    """Слово расшифровки: где оно стоит в transcript (символы) и когда звучит в записи (секунды)."""
+
+    start: int
+    end: int
+    t: float
+    t_end: float
+
+
 class DeliveryResponse(BaseModel):
     transcript: str
+    words: list[WordMark] = Field(default_factory=list, description="слова со временем — приложение подсвечивает текущее")
     scores: Scores
     metrics: Metrics
     events: list[TimelineEvent]

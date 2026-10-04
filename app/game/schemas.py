@@ -39,9 +39,13 @@ class OwnPitchInput(BaseModel):
     audience: str
 
 
+Difficulty = Literal["easy", "medium", "hard"]
+
+
 class RoundCreateRequest(BaseModel):
     user_id: str
     mode: Literal["training", "daily", "own", "warmup"]
+    difficulty: Difficulty = "easy"  # уровень всего раунда: тема, время, строгость разбора, жюри и зала
     case_id: Optional[str] = None
     own: Optional[OwnPitchInput] = None
 
@@ -87,6 +91,7 @@ class HistoryRound(BaseModel):
 
     id: str
     mode: str
+    difficulty: str = "easy"
     title: str
     created_at: datetime
     total: float

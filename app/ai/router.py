@@ -30,7 +30,7 @@ from app.ai.config import get_settings
 from app.ai.delivery import run_delivery
 from app.ai.delivery_metrics import PaceMode
 from app.ai.health import HealthResponse, run_health
-from app.ai.jury import Difficulty, RoundStateError, run_jury_answer, run_jury_questions
+from app.ai.jury import Difficulty, RoundStateError, run_jury_answer, run_jury_questions, run_jury_skip
 from app.ai.live import PCM_BYTES_PER_SEC, run_live
 from app.ai.pitch import RoundNotFoundError
 from app.ai.refine import run_refine
@@ -196,6 +196,18 @@ async def jury_answer(
     with ai_errors("jury_answer", round_id):
         try:
             return await run_jury_answer(round_id, question_id, data, difficulty)
+        except KeyError as e:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, f"Question {question_id} not found") from e
+
+
+@router.post("/rounds/{round_id}/jury/skip")
+async def jury_skip(round_id: RoundId, question_id: Annotated[str, Form()], use_mock: UseMock) -> JuryAnswerResponse:
+    """Пропустить вопрос жюри: ответ засчитывается с 0 баллов."""
+    if use_mock:
+        return JuryAnswerResponse(score=0, comment="Skipped — no points for this question.")
+    with ai_errors("jury_skip", round_id):
+        try:
+            return await run_jury_skip(round_id, question_id)
         except KeyError as e:
             raise HTTPException(status.HTTP_404_NOT_FOUND, f"Question {question_id} not found") from e
 

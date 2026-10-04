@@ -297,16 +297,20 @@ async def run_jury_questions(round_id: str, difficulty: str | None = None) -> Ju
     return response
 
 
-async def run_jury_answer(
-    round_id: str, question_id: str, audio: bytes, difficulty: str | None = None
-) -> JuryAnswerResponse:
+async def _find_question(round_id: str, question_id: str) -> JuryQuestion:
     saved = await asyncio.to_thread(game_api.get_ai_result, round_id, "jury_questions")
     if saved is None:
         raise RoundStateError("Request the jury questions first")
     question = next((q for q in JuryQuestionsResponse.model_validate(saved).questions if q.id == question_id), None)
     if question is None:
         raise KeyError(question_id)
+    return question
 
+
+async def run_jury_answer(
+    round_id: str, question_id: str, audio: bytes, difficulty: str | None = None
+) -> JuryAnswerResponse:
+    question = await _find_question(round_id, question_id)
     answer = (await transcribe(await to_wav16k(audio))).text
     if not answer:
         result = JuryAnswerResponse(score=0, comment="We didn't hear an answer.")
@@ -328,5 +332,14 @@ async def run_jury_answer(
         result = JuryAnswerResponse(score=assessment.score, comment=assessment.comment)
 
     payload = {"question_id": question_id, "answer": answer, **result.model_dump(mode="json")}
+    await asyncio.to_thread(game_api.save_ai_result, round_id, "jury_answer", payload)
+    return result
+
+
+async def run_jury_skip(round_id: str, question_id: str) -> JuryAnswerResponse:
+    """Игрок пропустил вопрос: 0 баллов, иначе трудные вопросы выгодно пропускать — балл жюри это среднее ответов."""
+    await _find_question(round_id, question_id)
+    result = JuryAnswerResponse(score=0, comment="Skipped — no points for this question.")
+    payload = {"question_id": question_id, "answer": "", "skipped": True, **result.model_dump(mode="json")}
     await asyncio.to_thread(game_api.save_ai_result, round_id, "jury_answer", payload)
     return result

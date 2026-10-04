@@ -145,13 +145,15 @@ class ProgressResponse(BaseModel):
 
 
 class RoundReview(BaseModel):
-    """Разбор сыгранного раунда из истории (без записи: звук и видео на сервере не хранятся)."""
+    """Разбор сыгранного раунда из истории. Звук раунда хранится (audio_url), видео — нет."""
 
     round: HistoryRound
     result: RoundFinishResponse
     delivery: Optional[dict] = None
     jury_questions: List[dict] = []
     jury_answers: List[dict] = []
+    # /static/recordings/<round_id>.<ext>; None — записи нет (раунды до хранения записей, моки)
+    audio_url: Optional[str] = None
 
 
 class LeaderboardEntry(BaseModel):

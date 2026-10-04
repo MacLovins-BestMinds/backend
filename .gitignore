@@ -16,3 +16,6 @@ backups/
 static/jury/
 .ai_cache/
 node_modules/
+
+# записи выступлений пользователей (POST delivery) — не в git
+static/recordings/

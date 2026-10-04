@@ -11,6 +11,7 @@ from app.core.config import settings
 from app.core.db import engine
 from app.game.models import User, Case, Round, AiResult, RoundScore, now_utc
 from app.game import content
+from app.recordings import recording_url
 from app.game.schemas import (
     SpinResponse,
     DailyResponse,
@@ -749,6 +750,7 @@ def get_round_review(session: Session, user: User, round_id: str) -> RoundReview
         delivery=_delivery_payload(session, round_id),
         jury_questions=questions,
         jury_answers=sorted(answers.values(), key=lambda a: order.index(a["question_id"]) if a["question_id"] in order else 99),
+        audio_url=recording_url(round_id),
     )
 
 

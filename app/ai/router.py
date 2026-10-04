@@ -34,6 +34,7 @@ from app.ai.jury import Difficulty, RoundStateError, run_jury_answer, run_jury_q
 from app.ai.live import PCM_BYTES_PER_SEC, run_live
 from app.ai.pitch import RoundNotFoundError
 from app.ai.refine import run_refine
+from app.recordings import save_recording
 from app.ai.slides import FitSlide, FitSlidesResponse, SlidesError, assemble, FitSlidesDraft, run_fit_slides
 from app.ai.schemas import (
     DeliveryResponse,
@@ -160,7 +161,10 @@ async def delivery(
         return mocks.delivery()
     data = await read_audio(audio)
     with ai_errors("delivery", round_id):
-        return await run_delivery(round_id, data, gaze, notes, pace)
+        result = await run_delivery(round_id, data, gaze, notes, pace)
+    # звук остаётся на сервере, чтобы раунд из истории можно было переслушать
+    save_recording(round_id, audio.filename, data)
+    return result
 
 
 @router.post("/rounds/{round_id}/jury/questions")

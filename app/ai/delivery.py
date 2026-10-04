@@ -27,7 +27,7 @@ from app.ai.schemas import (
     Scores,
     WordMark,
 )
-from app.ai.stt import Transcript, speech_lang, transcribe
+from app.ai.stt import Transcript, Word, speech_lang, transcribe
 from app.core.lang import default_lang, language_name, pick
 
 logger = logging.getLogger(__name__)
@@ -170,6 +170,15 @@ def with_pronunciation(score: DeliveryScore, pron: PronunciationAssessment | Non
     return score.model_copy(update={"total": total, "pronunciation": pron.overall_score})
 
 
+def char_times(word: Word, length: int) -> list[float] | None:
+    """Время каждой буквы слова ровно под его место в transcript (без пробелов вокруг токена), иначе None."""
+    if not word.chars:
+        return None
+    lead = len(word.text) - len(word.text.lstrip())
+    times = word.chars[lead : lead + length]
+    return [round(t, 2) for t in times] if len(times) == length else None
+
+
 async def run_delivery(
     round_id: str,
     audio: bytes,
@@ -212,7 +221,7 @@ async def run_delivery(
     response = DeliveryResponse(
         transcript=transcript.text,
         words=[
-            WordMark(start=a, end=b, t=round(w.start, 2), t_end=round(w.end, 2))
+            WordMark(start=a, end=b, t=round(w.start, 2), t_end=round(w.end, 2), c=char_times(w, b - a))
             for w, (a, b) in zip(transcript.words, word_spans(transcript), strict=True)
             if b > a
         ],

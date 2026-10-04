@@ -19,11 +19,11 @@ def send_code(email: str, nick: str, code: str) -> bool:
         logger.warning("Почта не настроена (SMTP_HOST, SMTP_FROM): код подтверждения для %s — %s", email, code)
         return False
     message = EmailMessage()
-    message["Subject"] = f"{code} — your Stage Zero code"
+    message["Subject"] = f"{code} — your Stager code"
     message["From"] = settings.SMTP_FROM
     message["To"] = email
     message.set_content(
-        f"Hi {nick},\n\nYour Stage Zero confirmation code is {code}.\n"
+        f"Hi {nick},\n\nYour Stager confirmation code is {code}.\n"
         f"It works for {settings.EMAIL_CODE_TTL_MIN} minutes.\n\nIf you did not sign up, ignore this email."
     )
     try:

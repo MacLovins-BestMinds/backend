@@ -1,11 +1,12 @@
 """Метрики и оценка подачи кодом — правила из docs/tz («Оценка и звание»)."""
 
 import re
-from collections.abc import Mapping, Sequence
+from collections.abc import Collection, Mapping, Sequence
 from dataclasses import dataclass
 from itertools import pairwise
 from typing import Literal
 
+from app.ai.prosody import Prosody
 from app.ai.schemas import DeliveryScore, GazePoint, Metrics, TimelineEvent
 from app.ai.stt import Transcript, Word
 from app.core.lang import pick
@@ -14,8 +15,9 @@ from app.core.lang import pick
 # Однозначные — паразиты всегда («um», «ну», «păi»); их не спутать со словом другого языка, поэтому они считаются
 # в речи на любом языке. Двусмысленные («like», «deci», «знаете») бывают и обычными словами: паразитами они
 # считаются только в «паразитной» позиции (см. _filler_position) или по решению LLM, и только для языка речи.
-_EN_FILLERS = {"um", "uh", "er", "erm", "ah", "hmm"}
-_RU_FILLERS = {"ну", "вот", "короче", "типа", "значит", "блин", "собственно", "кстати", "э", "эм"}
+_EN_FILLERS = {"um", "uh", "er", "erm", "ehm", "ah", "hmm"}
+# «вот», «значит», «кстати» бывают обычными словами («вот почему», «это значит») — они ниже, в двусмысленных
+_RU_FILLERS = {"ну", "короче", "типа", "блин", "собственно", "э", "эм"}
 _RU_PHRASES = {("как", "бы"), ("это", "самое"), ("в", "общем"), ("так", "сказать"), ("в", "принципе")}
 _RO_FILLERS = {"păi", "pai", "ă", "ăă", "îî"}
 _RO_PHRASES = {("cum", "să", "zic"), ("cum", "să", "spun"), ("cum", "sa", "zic"), ("cum", "sa", "spun")}
@@ -39,20 +41,25 @@ class FillerSet:
 FILLER_SETS: dict[str, FillerSet] = {
     # английские слова, которые бывают и паразитами, и нормальными словами («I like it», «Do you know why…»)
     "en": FillerSet(
-        discourse=frozenset({"like", "so", "well", "actually", "basically", "literally", "right", "okay"}),
-        discourse_phrases=frozenset({("you", "know"), ("i", "mean")}),
+        discourse=frozenset({"like", "so", "well", "actually", "basically", "literally", "right", "okay", "anyway", "anyways"}),
+        discourse_phrases=frozenset({("you", "know"), ("i", "mean"), ("you", "see"), ("or", "something"), ("and", "stuff")}),
         hedges=frozenset({("kind", "of"), ("sort", "of")}),
     ),
     "ru": FillerSet(
-        discourse=frozenset({"знаете", "понимаете", "слушайте", "скажем", "допустим"}),
-        discourse_phrases=frozenset({("как", "говорится")}),
+        discourse=frozenset(
+            {"знаете", "понимаете", "слушайте", "скажем", "допустим", "вот", "значит", "кстати", "просто", "вообще"}
+        ),
+        discourse_phrases=frozenset({("как", "говорится"), ("то", "есть")}),
     ),
     "ro": FillerSet(
         discourse=frozenset(
             {"deci", "adică", "adica", "gen", "practic", "efectiv", "bine", "na", "uite", "așa", "asa", "știi",
              "stii", "cumva"}
         ),  # fmt: skip
-        discourse_phrases=frozenset({("știi", "ce"), ("stii", "ce"), ("mă", "rog"), ("ma", "rog"), ("să", "zicem")}),
+        discourse_phrases=frozenset(
+            {("știi", "ce"), ("stii", "ce"), ("mă", "rog"), ("ma", "rog"), ("să", "zicem"), ("în", "fine"), ("in", "fine"),
+             ("cum", "ar", "veni")}
+        ),  # fmt: skip
     ),
 }
 # живой поток: язык речи заранее неизвестен — двусмысленные слова всех языков (их там всё равно не отмечают сразу)
@@ -69,7 +76,10 @@ def filler_set(lang: str | None) -> FillerSet:
 
 
 # звуки-заминки: «um», «e-e-e», русское «э-э», «ммм», румынское «ăăă», «îîî»
-_HESITATION = re.compile(r"(u+[hm]+|e+r+m*|a+h+|h+m+|m+|e{2,}|a{2,}|y{2,}|э+м*|м+|а{2,}|а+м+|ы+|ă+m*|â+m*|î+m*)")
+_HESITATION = re.compile(r"(u+[hm]+|e+r+m*|e+h+m*|a+h+|h+m+|m+|e{2,}|a{2,}|y{2,}|э+м*|м+|а{2,}|а+м+|ы+|ă+m*|â+m*|î+m*)")
+# запинка внутри слова: «th-th-the», «p-p-product», «я-я-я»; дефисные слова с настоящим повтором — не запинка
+_STUTTER = re.compile(r"^(\w{1,3})(?:-\1)+(?:-?\w*)$", re.IGNORECASE)
+_STUTTER_OK = frozenset({"so-so", "bye-bye", "no-no", "ha-ha", "еле-еле", "вот-вот", "так-так", "да-да", "нет-нет"})
 # слова, которые повторяют нарочно («very, very good») или по грамматике («that that», «had had»)
 _REPEAT_OK = frozenset(
     {"very", "really", "so", "much", "many", "long", "no", "yes", "bye", "ha", "that", "had", "is",
@@ -108,6 +118,7 @@ _CLAUSE_END = (*_SENTENCE_END, ",", ";", ":", "—", "–")
 
 HESITATION_SEC = 1.0  # посреди фразы от 1 до 3 с — запинка, от 3 с — длинная пауза (штраф)
 LONG_PAUSE_SEC = 3.0
+LONG_BREAK_SEC = 6.0  # пауза между фразами: до 6 с — нормальная, дольше — потеря нити, зал скучает (штраф)
 GAZE_OFF_SEC = 3.0
 PACE_WINDOW_SEC = 20.0  # окно по чистому времени речи
 PACE_RANGE_WPM = (100, 180)
@@ -120,9 +131,27 @@ _PACE_CURVES: dict[str, list[tuple[float, float]]] = {
     "normal": [(80, 0), (120, 100), (160, 100), (200, 0)],
     "fast": [(110, 0), (150, 100), (200, 100), (240, 0)],
 }
+# Коридоры темпа заданы для английского. Русские и румынские слова длиннее (больше слогов на слово), поэтому та же
+# скорость речи даёт меньше слов в минуту: русская речь на 120 слов/мин звучит как английская на 150.
+PACE_LANG_FACTOR: dict[str, float] = {"en": 1.0, "ru": 0.8, "ro": 0.9}
 SPEECH_GAP_SEC = 1.0  # паузы длиннее не входят во время речи: паузы не должны штрафоваться ещё и через темп
 
 WEIGHTS = {"fillers": 0.30, "pace": 0.20, "gaze": 0.20, "pauses": 0.15, "timing": 0.15}
+
+# Неуверенная речь бьёт по подаче напрямую, как ругань: первые два смягчения («мне кажется», «I think») — норма,
+# дальше по 2 балла; извинение на сцене, вялое начало и слабый финал — по 3; всего не больше WEAK_MAX.
+WEAK_FREE_HEDGES, WEAK_HEDGE_COST, WEAK_OTHER_COST, WEAK_MAX = 2, 2, 3, 12
+WEAK_OPENING_WORDS = 15  # вялое начало ищется в первых словах
+WEAK_CLOSING_WORDS = 8  # слабый финал — в последних
+# Голос: монотонная речь и затухание к концу фраз тоже снимают баллы подачи (считает app/ai/prosody.py)
+MONOTONE_COST, FADE_FREE, FADE_COST, PROSODY_MAX = 5, 2, 1, 10
+
+
+def pace_range(mode: str = "normal", lang: str = "en") -> tuple[int, int]:
+    """Коридор темпа (слов в минуту) для выбранного темпа и языка речи."""
+    lo, hi = PACE_RANGES.get(mode, PACE_RANGE_WPM)
+    k = PACE_LANG_FACTOR.get(lang, 1.0)
+    return round(lo * k), round(hi * k)
 
 
 @dataclass(frozen=True, slots=True)
@@ -133,8 +162,8 @@ class DeliveryAnalysis:
 
 
 def _norm(word: str) -> str:
-    # ё → е; румынские ş/ţ с седилью (их выдают старые раскладки) → ș/ț с запятой
-    return word.lower().strip(_STRIP).replace("ё", "е").replace("ş", "ș").replace("ţ", "ț")
+    # ё → е; румынские ş/ţ с седилью (их выдают старые раскладки) → ș/ț с запятой; типографский апостроф → прямой
+    return word.lower().strip(_STRIP).replace("ё", "е").replace("ş", "ș").replace("ţ", "ț").replace("’", "'")
 
 
 def _is_hesitation(word: str) -> bool:
@@ -149,6 +178,103 @@ def _interp(x: float, points: Sequence[tuple[float, float]]) -> float:
         if x <= x1:
             return y0 + (y1 - y0) * (x - x0) / (x1 - x0)
     return points[-1][1]
+
+
+WeakKind = Literal["hedge", "apology", "weak_close", "flat_opening"]
+
+
+def _grams(*phrases: str) -> frozenset[tuple[str, ...]]:
+    return frozenset(tuple(_norm(w) for w in p.split()) for p in phrases)
+
+
+@dataclass(frozen=True, slots=True)
+class WeakSet:
+    """Фразы неуверенной речи одного языка — то, что тренеры просят убрать первым делом."""
+
+    hedges: frozenset[tuple[str, ...]]  # смягчения: «мне кажется», «I think», «poate»
+    apologies: frozenset[tuple[str, ...]]  # извинения и оправдания: «sorry», «я волнуюсь», «scuze»
+    closers: frozenset[tuple[str, ...]]  # вялый финал: «that's it», «вот как-то так», «asta e tot»
+    openers: frozenset[tuple[str, ...]]  # вялое начало: «my topic is», «сегодня я расскажу», «tema mea este»
+
+
+WEAK_SETS: dict[str, WeakSet] = {
+    "en": WeakSet(
+        hedges=_grams(
+            "i think", "i guess", "i suppose", "maybe", "perhaps", "probably", "hopefully", "i'm not sure", "i am not sure",
+            "i don't know", "i feel like", "a little bit", "something like that", "i would say", "i'd say",
+        ),  # fmt: skip
+        apologies=_grams(
+            "sorry", "i'm sorry", "i am sorry", "excuse me", "i apologize", "i apologise", "forgive me", "bear with me",
+            "i'm nervous", "i am nervous", "i'm a bit nervous", "i'm so nervous", "i'm not a good speaker",
+            "i haven't prepared", "i didn't prepare", "i'm not prepared", "i am not prepared",
+        ),  # fmt: skip
+        closers=_grams(
+            "that's it", "that is it", "that's all", "that is all", "i'm done", "i am done", "that's about it", "so yeah",
+            "yeah so", "and yeah", "i guess that's it", "that's basically it", "i think that's it", "okay that's it",
+            "the end",
+        ),  # fmt: skip
+        openers=_grams(
+            "my topic is", "the topic is", "my topic today", "the topic of my", "today i will talk about",
+            "today i'm going to talk about", "today i am going to talk about", "i'm going to talk about",
+            "i am going to talk about", "i will talk about", "i want to talk about", "i would like to talk about",
+            "i'd like to talk about", "i want to tell you about", "i was asked to", "i got the topic",
+            "i'll be talking about", "i will be talking about", "let me tell you about", "i'm here to talk about",
+        ),  # fmt: skip
+    ),
+    "ru": WeakSet(
+        hedges=_grams(
+            "мне кажется", "наверное", "наверно", "возможно", "может быть", "я думаю", "вроде", "вроде бы", "я не знаю",
+            "не знаю", "скорее всего", "я не уверен", "я не уверена", "не уверен", "не уверена", "кажется", "видимо",
+            "похоже", "как-то так",
+        ),  # fmt: skip
+        apologies=_grams(
+            "извините", "извиняюсь", "простите", "прошу прощения", "сорри", "я волнуюсь", "я нервничаю", "я очень волнуюсь",
+            "я не готовился", "я не готовилась", "я не подготовился", "я не подготовилась", "я плохо говорю",
+            "я не умею выступать", "я не оратор",
+        ),  # fmt: skip
+        closers=_grams(
+            "вот как-то так", "как-то так", "ну вот", "вот и всё", "в общем всё", "это всё", "у меня всё", "на этом всё",
+            "ну всё", "наверное всё", "вроде всё", "короче всё", "вот так", "ну вот как-то так", "всё",
+        ),  # fmt: skip
+        openers=_grams(
+            "моя тема", "тема моего", "тема моя", "тема у меня", "сегодня я расскажу", "сегодня я хочу рассказать",
+            "сегодня я хотел бы", "сегодня я хотела бы", "я хотел бы рассказать", "я хотела бы рассказать",
+            "я хочу рассказать", "хочу рассказать вам", "я расскажу вам", "я расскажу о", "я расскажу про",
+            "мне дали тему", "мне выпала тема", "мне досталась тема", "мне попалась тема", "я буду говорить о",
+            "я буду рассказывать", "сейчас я расскажу", "хочу поговорить о", "давайте поговорим о",
+        ),  # fmt: skip
+    ),
+    "ro": WeakSet(
+        hedges=_grams(
+            "cred că", "cred ca", "mi se pare", "poate", "poate că", "poate ca", "probabil", "nu știu", "nu stiu",
+            "nu sunt sigur", "nu sunt sigură", "nu sunt sigura", "parcă", "parca", "sau ceva", "ceva de genul", "oarecum",
+            "într-un fel", "intr-un fel", "presupun", "bănuiesc", "banuiesc", "zic eu",
+        ),  # fmt: skip
+        apologies=_grams(
+            "scuze", "scuzați", "scuzati", "scuzați-mă", "scuzati-ma", "îmi pare rău", "imi pare rau", "iertați-mă",
+            "iertati-ma", "sunt emoționat", "sunt emotionat", "sunt emoționată", "sunt emotionata", "am emoții", "am emotii",
+            "nu m-am pregătit", "nu m-am pregatit", "nu sunt un bun vorbitor",
+        ),  # fmt: skip
+        closers=_grams(
+            "asta e tot", "asta a fost tot", "asta este tot", "cam asta e", "cam asta ar fi", "asta e", "asta ar fi",
+            "asta este", "atât", "atat", "cam atât", "cam atat", "am terminat", "și gata", "si gata", "gata", "cam așa",
+            "cam asa", "deci da", "da deci", "și da", "si da",
+        ),  # fmt: skip
+        openers=_grams(
+            "tema mea este", "tema mea e", "tema mea", "tema este", "azi voi vorbi despre", "astăzi voi vorbi despre",
+            "astazi voi vorbi despre", "voi vorbi despre", "o să vorbesc despre", "o sa vorbesc despre",
+            "vreau să vă vorbesc despre", "vreau sa va vorbesc despre", "vreau să vorbesc despre", "vreau sa vorbesc despre",
+            "aș vrea să vorbesc despre", "as vrea sa vorbesc despre", "aș vrea să vă povestesc", "as vrea sa va povestesc",
+            "mi s-a dat tema", "mi-a picat tema", "am primit tema", "o să vă povestesc", "o sa va povestesc",
+            "vă voi povesti", "va voi povesti", "am să vă vorbesc", "am sa va vorbesc",
+        ),  # fmt: skip
+    ),
+}
+WEAK_MAX_LEN = 6
+
+
+def weak_set(lang: str | None) -> WeakSet:
+    return WEAK_SETS.get(lang or "", WEAK_SETS["en"])
 
 
 # --- детекторы ---
@@ -273,6 +399,77 @@ def find_profanity(words: Sequence[Word]) -> list[tuple[int, str]]:
     return found
 
 
+def find_weak_phrases(
+    words: Sequence[Word], lang: str | None = "en", skip: Collection[int] = ()
+) -> list[tuple[int, int, WeakKind, str]]:
+    """Неуверенная речь: (номер первого слова, сколько слов, вид, фраза). skip — слова, уже занятые другой отметкой.
+
+    Смягчения («мне кажется», «I think», «poate») и извинения («sorry», «я волнуюсь») ищутся по всему тексту,
+    вялое начало («my topic is», «сегодня я расскажу») — только в первых WEAK_OPENING_WORDS словах, слабый финал
+    («that's it», «вот как-то так», «asta e tot») — только в последних WEAK_CLOSING_WORDS; финал из одного слова
+    («всё», «atât», «gata») — только если это самое последнее слово.
+    """
+    ws = weak_set(lang)
+    norm = [_norm(w.text) for w in words]
+    n = len(norm)
+    found: list[tuple[int, int, WeakKind, str]] = []
+    i = 0
+    while i < n:
+        hit: tuple[int, WeakKind] | None = None
+        for size in range(min(WEAK_MAX_LEN, n - i), 0, -1):
+            gram = tuple(norm[i : i + size])
+            if not all(gram) or any(k in skip for k in range(i, i + size)):
+                continue
+            if i < WEAK_OPENING_WORDS and gram in ws.openers:
+                hit = (size, "flat_opening")
+            elif i >= n - WEAK_CLOSING_WORDS and gram in ws.closers and (size > 1 or i == n - 1):
+                hit = (size, "weak_close")
+            elif gram in ws.apologies:
+                hit = (size, "apology")
+            elif gram in ws.hedges:
+                hit = (size, "hedge")
+            if hit:
+                break
+        if hit:
+            size, kind = hit
+            found.append((i, size, kind, " ".join(norm[i : i + size])))
+            i += size
+        else:
+            i += 1
+    return found
+
+
+def weak_phrases_cost(kinds: Sequence[str]) -> int:
+    """Сколько баллов подачи снимает неуверенная речь: смягчения сверх WEAK_FREE_HEDGES и всё остальное."""
+    hedges = sum(k == "hedge" for k in kinds)
+    other = len(kinds) - hedges
+    return min(WEAK_MAX, WEAK_HEDGE_COST * max(0, hedges - WEAK_FREE_HEDGES) + WEAK_OTHER_COST * other)
+
+
+def find_stumbles(words: Sequence[Word]) -> list[tuple[int, int]]:
+    """Запинки: (номер первого слова, сколько слов).
+
+    Оборванное слово, начатое заново («pro- product», «we- we have»), и заикание внутри слова («th-th-the»,
+    «я-я-я»). Звуки-заминки («e-e-e») — паразиты, здесь не считаются.
+    """
+    found: list[tuple[int, int]] = []
+    i = 0
+    while i < len(words):
+        raw = words[i].text.strip().strip("\"'«»()")
+        norm = _norm(raw)
+        if raw.endswith(("-", "—", "–")) and i + 1 < len(words):
+            stem = norm.replace("-", "")
+            nxt = _norm(words[i + 1].text).replace("-", "")
+            if stem and nxt.startswith(stem) and not _is_hesitation(stem):
+                found.append((i, 2))
+                i += 2
+                continue
+        if "-" in norm and norm not in _STUTTER_OK and _STUTTER.match(norm) and not _is_hesitation(norm.replace("-", "")):
+            found.append((i, 1))
+        i += 1
+    return found
+
+
 def _parallel(words: Sequence[Word], norm: Sequence[str], i: int, n: int, lo: int) -> bool:
     """Повтор через другие слова в начале или в конце соседних частей фразы — параллельная конструкция, приём,
     а не ошибка: «если я ругаюсь, им это не нравится, если я молчу, им это не нравится».
@@ -351,13 +548,16 @@ def find_gaps(words: Sequence[Word], min_sec: float, max_sec: float = float("inf
 
 
 def classify_pauses(words: Sequence[Word]) -> dict[str, list[tuple[float, float]]]:
-    """Только плохие паузы — посреди фразы: запинка или длинная пауза. Пауза после конца фразы не отмечается."""
-    result: dict[str, list[tuple[float, float]]] = {"hesitation": [], "long": []}
+    """Только плохие паузы. Посреди фразы: запинка (от 1 с) или длинная пауза (от 3 с). После конца фразы пауза
+    естественна и не отмечается — пока не затянется дольше LONG_BREAK_SEC: это уже потеря нити («break»)."""
+    result: dict[str, list[tuple[float, float]]] = {"hesitation": [], "long": [], "break": []}
     for prev, cur in pairwise(words):
         gap = round(cur.start - prev.end, 2)
         if gap < HESITATION_SEC:
             continue
         if _ends(prev.text, _SENTENCE_END):
+            if gap >= LONG_BREAK_SEC:
+                result["break"].append((prev.end, gap))
             continue
         if gap >= LONG_PAUSE_SEC:
             result["long"].append((prev.end, gap))
@@ -428,8 +628,9 @@ def fillers_score(per_min: float) -> int:
     return round(_interp(per_min, [(1, 100), (5, 40), (12, 0)]))
 
 
-def pace_score(wpm: float, mode: str = "normal") -> int:
-    return round(_interp(wpm, _PACE_CURVES[mode]))
+def pace_score(wpm: float, mode: str = "normal", lang: str = "en") -> int:
+    """Кривые заданы для английского; для других языков темп приводится к английскому эквиваленту."""
+    return round(_interp(wpm / PACE_LANG_FACTOR.get(lang, 1.0), _PACE_CURVES[mode]))
 
 
 def pauses_score(long_pauses: int) -> int:
@@ -448,33 +649,54 @@ def timing_score(duration: float, min_sec: float, max_sec: float) -> int:
 EVENT_TEXTS: dict[str, dict[str, str]] = {
     "en": {
         "repeat": "Repeated: «{phrase}»",
+        "stumble": "Stumble: «{phrase}»",
         "profanity": "Swearing: «{word}»",
         "long_pause": "Pause of {sec} s mid-phrase",
+        "long_break": "Pause of {sec} s between phrases",
         "hesitation": "Hesitation of {sec} s mid-phrase",
         "gaze_off": "Looking away for {sec} s",
         "pace": "Pace {wpm} words/min — {verdict}",
         "fast": "too fast",
         "slow": "too slow",
+        "hedge": "Hedging: «{phrase}»",
+        "apology": "Apology on stage: «{phrase}»",
+        "weak_close": "Weak ending: «{phrase}»",
+        "flat_opening": "Flat opening: «{phrase}»",
+        "fade": "The voice fades at the end of the phrase (−{db} dB)",
     },
     "ru": {
         "repeat": "Повтор: «{phrase}»",
+        "stumble": "Запинка: «{phrase}»",
         "profanity": "Ругань: «{word}»",
         "long_pause": "Пауза {sec} с посреди фразы",
+        "long_break": "Пауза {sec} с между фразами",
         "hesitation": "Заминка {sec} с посреди фразы",
         "gaze_off": "Взгляд в сторону {sec} с",
         "pace": "Темп {wpm} слов/мин — {verdict}",
         "fast": "слишком быстро",
         "slow": "слишком медленно",
+        "hedge": "Неуверенность: «{phrase}»",
+        "apology": "Извинение на сцене: «{phrase}»",
+        "weak_close": "Слабый финал: «{phrase}»",
+        "flat_opening": "Вялое начало: «{phrase}»",
+        "fade": "Голос затухает к концу фразы (−{db} дБ)",
     },
     "ro": {
         "repeat": "Repetiție: «{phrase}»",
+        "stumble": "Poticnire: «{phrase}»",
         "profanity": "Înjurătură: «{word}»",
         "long_pause": "Pauză de {sec} s în mijlocul frazei",
+        "long_break": "Pauză de {sec} s între fraze",
         "hesitation": "Ezitare de {sec} s în mijlocul frazei",
         "gaze_off": "Privire în altă parte {sec} s",
         "pace": "Ritm {wpm} cuvinte/min — {verdict}",
         "fast": "prea rapid",
         "slow": "prea lent",
+        "hedge": "Nesiguranță: «{phrase}»",
+        "apology": "Scuze pe scenă: «{phrase}»",
+        "weak_close": "Final slab: «{phrase}»",
+        "flat_opening": "Început plat: «{phrase}»",
+        "fade": "Vocea se stinge la finalul frazei (−{db} dB)",
     },
 }
 
@@ -493,8 +715,10 @@ def analyze(
     filler_verdicts: Mapping[int, bool] | None = None,
     pace: str = "normal",
     lang: str = "en",
+    prosody: Prosody | None = None,
 ) -> DeliveryAnalysis:
-    """lang — язык речи: от него зависят паразиты и язык подписей маркеров."""
+    """lang — язык речи: от него зависят паразиты, коридор темпа и язык подписей маркеров.
+    prosody — голос по записи (app/ai/prosody.py): затухание фраз и монотонность; None — не измерялся."""
     words = transcript.words
     duration = transcript.duration
     speech_min = speech_minutes(words)
@@ -526,7 +750,7 @@ def analyze(
         return {"start": spans_in_text[i][0], "end": spans_in_text[i + n - 1][1]}
 
     pauses = classify_pauses(words)
-    long_pauses = pauses["long"]
+    long_pauses = pauses["long"] + pauses["break"]
     spans = _gaze_spans(gaze, duration)
     ratio = gaze_on_ratio(gaze, duration)
     content_words = len(words) - sum(len(f.split()) for _, f in fillers)
@@ -535,7 +759,7 @@ def analyze(
 
     parts = {
         "fillers": fillers_score(fillers_per_min),
-        "pace": pace_score(wpm, pace),
+        "pace": pace_score(wpm, pace, lang),
         "gaze": gaze_score(ratio) if ratio is not None else None,
         "pauses": pauses_score(len(long_pauses)),
         "timing": timing_score(duration, min_sec, max_sec),
@@ -545,15 +769,27 @@ def analyze(
     total = round(sum(parts[k] * w for k, w in measured.items()) / sum(measured.values()))
 
     events = [TimelineEvent(type="filler", t=words[i].start, text=f"«{hit}»", **over_words(i, n)) for i, n, hit in hits]
-    filler_words = {i + k for i, n, _ in hits for k in range(n)}
+    taken = {i + k for i, n, _ in hits for k in range(n)}  # слова, уже отмеченные: одно место — одна отметка
+    stumbles = [(i, n) for i, n in find_stumbles(words) if taken.isdisjoint(range(i, i + n))]
+    for i, n in stumbles:
+        taken.update(range(i, i + n))
+        phrase = " ".join(w.text.strip() for w in words[i : i + n])
+        events.append(TimelineEvent(type="stumble", t=words[i].start, text=texts["stumble"].format(phrase=phrase), **over_words(i, n)))
     for i, n in find_repeats(words):
-        if filler_words.isdisjoint(range(i, i + n)):  # «um, um» уже отмечено как паразит
+        if taken.isdisjoint(range(i, i + n)):  # «um, um» уже отмечено как паразит, «we- we» — как запинка
+            taken.update(range(i, i + n))
             phrase = " ".join(_norm(w.text) for w in words[i : i + n])
             events.append(
                 TimelineEvent(type="repeat", t=words[i].start, text=texts["repeat"].format(phrase=phrase), **over_words(i, n))
             )
+    weak = find_weak_phrases(words, lang, skip=taken)
+    total -= weak_phrases_cost([kind for _, _, kind, _ in weak])  # неуверенная речь бьёт по подаче напрямую
+    events += [
+        TimelineEvent(type="weak_phrase", t=words[i].start, text=texts[kind].format(phrase=phrase), **over_words(i, n))
+        for i, n, kind, phrase in weak
+    ]
     swears = find_profanity(words)
-    total = max(0, total - min(PROFANITY_MAX, PROFANITY_COST * len(swears)))  # ругань бьёт по подаче напрямую
+    total -= min(PROFANITY_MAX, PROFANITY_COST * len(swears))  # и ругань тоже
     events += [
         TimelineEvent(type="profanity", t=words[i].start, text=texts["profanity"].format(word=word), **over_words(i, 1))
         for i, word in swears
@@ -562,7 +798,13 @@ def analyze(
         TimelineEvent(
             type="long_pause", t=t, text=texts["long_pause"].format(sec=_seconds(d, 1, lang)), **after_word(t)
         )
-        for t, d in long_pauses
+        for t, d in pauses["long"]
+    ]
+    events += [
+        TimelineEvent(
+            type="long_pause", t=t, text=texts["long_break"].format(sec=_seconds(d, 1, lang)), **after_word(t)
+        )
+        for t, d in pauses["break"]
     ]
     events += [
         TimelineEvent(
@@ -580,11 +822,21 @@ def analyze(
         for start, end, on in spans
         if not on and end - start > GAZE_OFF_SEC
     ]
-    for t, window_wpm in pace_alerts(words, filler_starts, PACE_RANGES[pace]):
-        verdict = texts["fast"] if window_wpm > PACE_RANGES[pace][1] else texts["slow"]
+    limits = pace_range(pace, lang)
+    for t, window_wpm in pace_alerts(words, filler_starts, limits):
+        verdict = texts["fast"] if window_wpm > limits[1] else texts["slow"]
         events.append(
             TimelineEvent(type="pace", t=t, text=texts["pace"].format(wpm=window_wpm, verdict=verdict), **before_word(t))
         )
+    if prosody is not None:
+        # голос: затухание к концу фразы — отметка на последнем слове; монотонность — в метриках и в баллах
+        events += [
+            TimelineEvent(type="energy", t=words[i].start, text=texts["fade"].format(db=_seconds(drop, 0, lang)), **over_words(i, 1))
+            for i, drop in prosody.fades
+        ]
+        voice_cost = (MONOTONE_COST if prosody.monotone else 0) + FADE_COST * max(0, len(prosody.fades) - FADE_FREE)
+        total -= min(PROSODY_MAX, voice_cost)
+    total = max(0, total)
     events.sort(key=lambda e: e.t)
 
     return DeliveryAnalysis(
@@ -597,6 +849,11 @@ def analyze(
             long_pauses=len(long_pauses),
             profanity=len(swears),
             gaze_on_ratio=ratio,
+            stumbles=len(stumbles),
+            weak_phrases=len(weak),
+            pitch_variation=prosody.pitch_variation if prosody else None,
+            monotone=prosody.monotone if prosody else None,
+            fades=len(prosody.fades) if prosody else 0,
         ),
         score=DeliveryScore(total=total, **parts),
         events=events,

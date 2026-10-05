@@ -86,6 +86,9 @@ class AiSettings(BaseSettings):
     better_version_max_chars: int = Field(default=3500, ge=100)  # длиннее — unavailable (кредиты ElevenLabs)
     better_version_min_speech_sec: float = Field(default=10.0, ge=1.0)  # меньше речи — голос не склонировать
 
+    # Голос по записи (app/ai/prosody.py): монотонность и затухание к концу фраз, кодом через numpy
+    prosody_enabled: bool = True
+
     static_dir: str = "static"
     ai_cache: bool = True
     ai_cache_dir: str = ".ai_cache"

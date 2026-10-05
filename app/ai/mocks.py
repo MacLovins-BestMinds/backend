@@ -32,8 +32,8 @@ _TRANSCRIPT = (
     "Imagine it's eight in the morning and your grandmother can't remember if she took her blood pressure pill. "
     "Um, this happens every day to millions of older people. "
     "We built a smart pill box: it beeps, lights up and notifies the family "
-    "if the box isn't opened on time. A pilot in three pharmacies, two hundred families in a month. "
-    "We're looking for pharmacy chains as partners — let's talk after the pitch."
+    "if the box isn't opened on time. A pilot in three pha- pharmacies, two hundred families in a month. "
+    "I think we're looking for pharmacy chains as partners — let's talk after the pitch. So yeah."
 )
 
 
@@ -93,11 +93,20 @@ def delivery() -> DeliveryResponse:
             fillers_per_min=1.9,
             long_pauses=1,
             gaze_on_ratio=0.64,
+            stumbles=1,
+            weak_phrases=2,
+            pitch_variation=2.6,
+            monotone=False,
+            fades=1,
         ),
         events=[
             TimelineEvent(type="filler", t=8.2, text="«um»", **_at("Um")),
             TimelineEvent(type="gaze_off", t=31.0, text="Looking away for 4 s"),
             TimelineEvent(type="long_pause", t=52.4, text="Pause of 3.6 s mid-phrase", **_at("notifies the family", point=True)),
+            TimelineEvent(type="energy", t=58.0, text="The voice fades at the end of the phrase (−11 dB)", **_at("time.")),
+            TimelineEvent(type="stumble", t=61.5, text="Stumble: «pha- pharmacies»", **_at("pha- pharmacies")),
+            TimelineEvent(type="weak_phrase", t=70.0, text="Hedging: «i think»", **_at("I think")),
+            TimelineEvent(type="weak_phrase", t=84.0, text="Weak ending: «so yeah»", **_at("So yeah")),
         ],
         tips=[
             "Open with a number: how many doses older people miss.",

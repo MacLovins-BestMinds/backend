@@ -133,13 +133,20 @@ class Metrics(BaseModel):
     long_pauses: int
     profanity: int = Field(0, description="сколько раз прозвучала ругань")
     gaze_on_ratio: float | None = Field(None, ge=0, le=1, description="null — взгляд не измерялся")
+    stumbles: int = Field(0, description="запинки: оборванные и начатые заново слова («pro- product», «th-th-the»)")
+    weak_phrases: int = Field(0, description="неуверенная речь: смягчения, извинения, вялое начало и слабый финал")
+    pitch_variation: float | None = Field(None, description="разброс высоты голоса по словам, полутоны; null — не измерялся")
+    monotone: bool | None = Field(None, description="голос монотонный; null — слов мало или голос не измерялся")
+    fades: int = Field(0, description="сколько фраз затухли к концу (последнее слово заметно тише)")
 
 
 class TimelineEvent(BaseModel):
     """Маркер на таймлайне разбора."""
 
     # good_pause больше не выдаётся (паузу «после фразы» нельзя отличить от смеха или заминки), тип оставлен для старых записей
-    type: Literal["filler", "repeat", "profanity", "long_pause", "hesitation", "pace", "gaze_off", "good_pause"]
+    type: Literal[
+        "filler", "repeat", "stumble", "weak_phrase", "profanity", "long_pause", "hesitation", "pace", "gaze_off", "energy", "good_pause"
+    ]  # fmt: skip
     t: float
     text: str
     start: int | None = Field(None, description="позиция в transcript (символы): начало отмеченного места")

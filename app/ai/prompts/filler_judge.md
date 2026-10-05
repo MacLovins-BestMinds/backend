@@ -13,7 +13,7 @@ The same word is NOT a filler when it does a job in the sentence:
 
 The same logic applies in other languages:
 - Romanian: "deci" as a consequence ("plouă, deci stăm acasă") — not a filler; "Deci, ăă, tema mea…" only to start talking — filler. "bine" as an adverb or an answer ("merge bine") — not a filler; "Bine, și apoi…" as padding — filler. "gen" meaning "kind, genre" — not a filler; "era, gen, super" — filler. "adică" introducing a real explanation — not a filler; as empty padding — filler. "practic", "efectiv" changing the meaning — not fillers; as padding — fillers. "știi", "știi ce", "mă rog", "să zicem", "uite", "na", "așa", "cumva" as padding — fillers.
-- Russian: "знаете", "понимаете", "слушайте" as real verbs ("вы знаете ответ") — not fillers; as padding ("это, знаете, важно") — fillers. "скажем", "допустим", "как говорится" as padding — fillers.
+- Russian: "знаете", "понимаете", "слушайте" as real verbs ("вы знаете ответ") — not fillers; as padding ("это, знаете, важно") — fillers. "скажем", "допустим", "как говорится" as padding — fillers. "вот" pointing at something ("вот почему", "вот это", "вот так") — not a filler; "вот" starting or ending a phrase for no reason ("Вот, и поэтому…", "…продукт, вот.") — filler. "значит" as a verb ("это значит, что…") — not a filler; "значит" as a connector to buy time ("Значит, э, мы…") — filler. "кстати" introducing a real aside — not a filler; "кстати" as padding — filler. "то есть" introducing a real clarification — not a filler; as padding — filler. "просто", "вообще" changing the meaning ("это просто", "вообще не работает") — not fillers; as padding ("мы, просто, вообще, сделали") — fillers.
 
 Transcript:
 """

@@ -22,7 +22,13 @@ def _play(client: TestClient, headers: dict[str, str], content: int, delivery: i
             "transcript": "My favourite food is pizza.",
             "scores": {"content": {"total": content}, "delivery": {"total": delivery}},
             "metrics": {"duration_sec": 90, "wpm": 150, "fillers_per_min": fillers, "long_pauses": 1, "gaze_on_ratio": None},
-            "events": [{"type": "repeat", "t": 3, "text": "Repeated: «pizza»"}, {"type": "filler", "t": 5, "text": "«um»"}],
+            "events": [
+                {"type": "repeat", "t": 3, "text": "Repeated: «pizza»"},
+                {"type": "filler", "t": 5, "text": "«um»"},
+                {"type": "weak_phrase", "t": 1, "text": "Hedging: «i think»"},
+                {"type": "weak_phrase", "t": 2, "text": "Hedging: «maybe»"},
+                {"type": "weak_phrase", "t": 7, "text": "Weak ending: «that's it»"},
+            ],
         },
     )
     service.save_ai_result(rid, "jury_questions", {"questions": [{"id": "q1", "juror": "strict", "text": "Why pizza?"}]})
@@ -41,13 +47,14 @@ def test_progress_lists_every_round_with_speech_habits() -> None:
         assert data["rounds_total"] == 2 and data["streak_days"] == 1
         assert [r["id"] for r in data["history"]] == [second, first]  # новые сверху
         newest = data["history"][0]
-        assert (newest["title"], newest["repeats"], newest["wpm"]) == ("My Favourite Food", 1, 150)
+        assert (newest["title"], newest["repeats"], newest["weak_phrases"], newest["wpm"]) == ("My Favourite Food", 1, 3, 150)
         assert data["best"] == 0.4 * 90 + 0.4 * 60 + 0.2 * 70
         # раунды на 58 и 74 → среднее 66, это «Pitcher»; до «Orator» (75) не хватает 9
         assert (data["rank"]["title"], data["next_rank"]) == ("Pitcher", {"title": "Orator", "points_needed": 9.0})
         habits = {h["key"]: h for h in data["habits"]}
         assert habits["fillers_per_min"]["value"] == 4.5 and habits["fillers_per_min"]["better"] == "lower"
-        assert any(i["title"] == "Filler words" for i in data["insights"])
+        assert habits["weak_phrases"]["value"] == 3 and habits["weak_phrases"]["title"] == "Hedging and apologies"
+        assert {i["title"] for i in data["insights"]} >= {"Filler words", "Hedging and apologies"}
 
 
 def test_progress_and_review_need_the_owner() -> None:

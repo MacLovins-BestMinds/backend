@@ -305,17 +305,18 @@ async def live(
     mock: bool = False,
     pace: str = "normal",
     max_sec: int | None = None,
-    lang: str | None = None,  # noqa: ARG001 — см. описание
+    lang: str | None = None,
 ) -> None:
     """Приложение шлёт бинарные куски PCM 16 кГц по 250 мс, сервер отвечает событиями filler/long_pause/pace.
 
-    lang — язык интерфейса; принимается для совместимости, но на распознавание и подсказки не влияет:
-    Scribe определяет язык речи сам, подсказки зала — на языке, на котором игрок говорит.
+    lang — язык интерфейса. На распознавание и подсказки не влияет (Scribe определяет язык речи сам, подсказки
+    зала — на языке, на котором игрок говорит); нужен только как догадка о языке речи для коридора темпа, пока
+    разбора этого раунда ещё не было: русская речь даёт меньше слов в минуту, чем английская.
     """
     if mock or get_settings().ai_mock:
         await _live_mock(websocket)
     else:
-        await run_live(websocket, round_id, pace, max_sec)
+        await run_live(websocket, round_id, pace, max_sec, lang)
 
 
 async def _live_mock(websocket: WebSocket) -> None:

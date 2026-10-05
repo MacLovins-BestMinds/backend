@@ -27,11 +27,11 @@ from app.ai import llm
 from app.ai.clients import MissingKeyError, require
 from app.ai.config import AiSettings, get_settings
 from app.ai.limits import release_live_slot, try_live_slot
-from app.ai.delivery_metrics import PACE_RANGE_WPM, PACE_RANGES, PACE_WINDOW_SEC, find_fillers, find_profanity
+from app.ai.delivery_metrics import PACE_RANGE_WPM, PACE_WINDOW_SEC, find_fillers, find_profanity, pace_range
 from app.ai.pitch import Pitch, known_speech_lang, resolve_pitch
 from app.ai.schemas import ContentEvent, FillerEvent, LiveEvent, LongPauseEvent, PaceEvent, ProfanityEvent
 from app.ai.stt import Word
-from app.core.lang import default_lang
+from app.core.lang import default_lang, normalize_lang
 
 logger = logging.getLogger(__name__)
 
@@ -388,14 +388,20 @@ async def _close(websocket: WebSocket, reason: str, code: int = status.WS_1011_I
         pass  # уже закрыт
 
 
-async def run_live(websocket: WebSocket, round_id: str, pace: str = "normal", max_sec: int | None = None) -> None:
-    """max_sec — длина питча, которую выбрал игрок: по ней ограничено время, пока поток держит слот ElevenLabs."""
+async def run_live(
+    websocket: WebSocket, round_id: str, pace: str = "normal", max_sec: int | None = None, ui_lang: str | None = None
+) -> None:
+    """max_sec — длина питча, которую выбрал игрок: по ней ограничено время, пока поток держит слот ElevenLabs.
+    ui_lang — язык интерфейса: догадка о языке речи для коридора темпа, пока разбора этого раунда ещё не было."""
     settings = get_settings()
     try:
         pitch: Pitch | None = await asyncio.to_thread(resolve_pitch, round_id)
         speech = await asyncio.to_thread(known_speech_lang, round_id)
     except Exception:
         pitch, speech = None, None  # тема неизвестна (тестовый раунд) — работаем без оценки содержания
+    # коридор темпа зависит от языка: русские и румынские слова длиннее. Язык речи известен из прошлого разбора
+    # раунда; иначе считаем, что игрок говорит на языке интерфейса
+    lang = speech or normalize_lang(ui_lang) or default_lang()
     try:
         stream = make_stream(settings, speech or default_lang())
     except MissingKeyError as e:
@@ -411,7 +417,7 @@ async def run_live(websocket: WebSocket, round_id: str, pace: str = "normal", ma
         await _close(websocket, "live slots busy", status.WS_1013_TRY_AGAIN_LATER)
         return
     try:
-        await _run_stream(websocket, round_id, pace, max_sec, stream, settings, pitch)
+        await _run_stream(websocket, round_id, pace, max_sec, stream, settings, pitch, lang)
     finally:
         if holds_slot:
             release_live_slot()
@@ -425,9 +431,10 @@ async def _run_stream(
     stream: SttStream,
     settings: AiSettings,
     pitch: Pitch | None,
+    lang: str = "en",
 ) -> None:
     analyzer = get_session(round_id)
-    analyzer.pace_range = PACE_RANGES.get(pace, PACE_RANGE_WPM)
+    analyzer.pace_range = pace_range(pace, lang)
     analyzer.begin_stream()
     limit = min(max_sec or (pitch.max_sec if pitch else LIVE_LIMIT_MAX_SEC), LIVE_LIMIT_MAX_SEC) + LIVE_LIMIT_SLACK_SEC
     try:

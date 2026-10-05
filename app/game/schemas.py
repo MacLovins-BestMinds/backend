@@ -109,6 +109,7 @@ class HistoryRound(BaseModel):
     fillers_per_min: Optional[float] = None
     long_pauses: Optional[int] = None
     repeats: Optional[int] = None
+    weak_phrases: Optional[int] = None  # смягчения, извинения, вялое начало и слабый финал — из событий разбора
     gaze_on_ratio: Optional[float] = None
 
 

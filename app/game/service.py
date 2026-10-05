@@ -621,6 +621,7 @@ SKILL_TITLES: dict[str, dict[str, tuple[str, str]]] = {
         "wpm": ("Pace", "words/min"),
         "long_pauses": ("Long pauses", "per pitch"),
         "repeats": ("Repeats", "per pitch"),
+        "weak_phrases": ("Hedging and apologies", "per pitch"),
     },
     "ru": {
         "content": ("Содержание", ""),
@@ -630,6 +631,7 @@ SKILL_TITLES: dict[str, dict[str, tuple[str, str]]] = {
         "wpm": ("Темп", "слов/мин"),
         "long_pauses": ("Длинные паузы", "за питч"),
         "repeats": ("Повторы", "за питч"),
+        "weak_phrases": ("Неуверенные фразы", "за питч"),
     },
     "ro": {
         "content": ("Conținut", ""),
@@ -639,6 +641,7 @@ SKILL_TITLES: dict[str, dict[str, tuple[str, str]]] = {
         "wpm": ("Ritm", "cuvinte/min"),
         "long_pauses": ("Pauze lungi", "pe pitch"),
         "repeats": ("Repetări", "pe pitch"),
+        "weak_phrases": ("Fraze nesigure", "pe pitch"),
     },
 }
 # советы прогресса: key → (заголовок, текст); в тексте — подстановки str.format
@@ -653,6 +656,7 @@ INSIGHT_TEXTS: dict[str, dict[str, tuple[str, str]]] = {
         "slow": ("You speak too slowly", "{value} words per minute; aim for 120–160. Prepare your first two sentences so you start with energy."),
         "pauses": ("Long pauses mid-phrase", "About {value} per pitch. Finish the sentence first, then think about the next one."),
         "repeats": ("Repeated phrases", "About {value} per pitch. If you lose the thread, say the next point instead of restarting the sentence."),
+        "weak_phrases": ("Hedging and apologies", "About {value} per pitch: \"I think\", \"maybe\", \"sorry\", \"that's it\". State it as a fact and finish with a clear last line — the room believes a speaker who believes themselves."),
         "improving": ("You are improving", "Your last three rounds average {recent}, your first three — {first}."),
     },
     "ru": {
@@ -665,6 +669,7 @@ INSIGHT_TEXTS: dict[str, dict[str, tuple[str, str]]] = {
         "slow": ("Ты говоришь слишком медленно", "{value} слов в минуту; целься в 120–160. Подготовь первые два предложения, чтобы начать энергично."),
         "pauses": ("Длинные паузы посреди фразы", "Около {value} за питч. Сначала договори предложение, потом думай о следующем."),
         "repeats": ("Повторы фраз", "Около {value} за питч. Если потерял нить, переходи к следующей мысли, а не начинай предложение заново."),
+        "weak_phrases": ("Неуверенные фразы", "Около {value} за питч: «мне кажется», «наверное», «извините», «вот как-то так». Говори утверждением и заканчивай чёткой последней фразой — зал верит тому, кто верит себе."),
         "improving": ("Ты растёшь", "Последние три раунда — в среднем {recent}, первые три — {first}."),
     },
     "ro": {
@@ -677,6 +682,7 @@ INSIGHT_TEXTS: dict[str, dict[str, tuple[str, str]]] = {
         "slow": ("Vorbești prea încet", "{value} cuvinte pe minut; țintește 120–160. Pregătește primele două propoziții ca să pornești cu energie."),
         "pauses": ("Pauze lungi în mijlocul frazei", "Cam {value} pe pitch. Termină întâi propoziția, apoi gândește-te la următoarea."),
         "repeats": ("Fraze repetate", "Cam {value} pe pitch. Dacă pierzi firul, spune următoarea idee în loc să reiei propoziția."),
+        "weak_phrases": ("Fraze nesigure", "Cam {value} pe pitch: „cred că”, „poate”, „scuze”, „cam asta e”. Afirmă ca pe un fapt și încheie cu o frază clară — sala îl crede pe cel care se crede pe sine."),
         "improving": ("Progresezi", "Ultimele trei runde au media {recent}, primele trei — {first}."),
     },
 }
@@ -741,6 +747,7 @@ def _history_round(
         fillers_per_min=metrics.get("fillers_per_min"),
         long_pauses=metrics.get("long_pauses"),
         repeats=sum(1 for e in events if e.get("type") == "repeat") if payload else None,
+        weak_phrases=sum(1 for e in events if e.get("type") == "weak_phrase") if payload else None,
         gaze_on_ratio=metrics.get("gaze_on_ratio"),
     )
 
@@ -814,6 +821,9 @@ def _insights(
     repeats = by_key.get("repeats")
     if repeats and repeats.value is not None and repeats.value >= 3:
         out.append(insight("focus", "repeats", value=_num(repeats.value, 0, lang)))
+    weak = by_key.get("weak_phrases")
+    if weak and weak.value is not None and weak.value >= 3:
+        out.append(insight("focus", "weak_phrases", value=_num(weak.value, 0, lang)))
 
     if len(rounds) >= 3:
         recent, first = _mean([r.total for r in rounds[:3]]), _mean([r.total for r in rounds[-3:]])
@@ -851,6 +861,7 @@ def get_progress(session: Session, user: User, lang: str = "en") -> ProgressResp
         _trend("wpm", history, better="range", lang=lang),
         _trend("long_pauses", history, better="lower", lang=lang),
         _trend("repeats", history, better="lower", lang=lang),
+        _trend("weak_phrases", history, better="lower", lang=lang),
     ]
     return ProgressResponse(
         nick=user.nick,

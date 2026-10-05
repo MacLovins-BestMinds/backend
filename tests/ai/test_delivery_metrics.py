@@ -1,4 +1,4 @@
-from app.ai.delivery_metrics import analyze, find_profanity, fillers_score, find_fillers, gaze_on_ratio, pace_score, timing_score
+from app.ai.delivery_metrics import WEAK_MAX, analyze, find_profanity, fillers_score, find_fillers, gaze_on_ratio, pace_range, pace_score, timing_score
 from app.ai.schemas import GazePoint
 from app.ai.stt import Transcript, Word
 
@@ -26,8 +26,11 @@ def test_english_fillers_by_context() -> None:
 
 
 def test_fillers_include_bigrams_and_hesitations() -> None:
-    found = find_fillers(_words("Ну,", "это", "как", "бы", "ээээ", "продукт", "Вот."))
+    # «вот» — двусмысленное: без вердикта LLM считается паразитом только вставкой («…продукт, вот.»)
+    found = find_fillers(_words("Ну,", "это", "как", "бы", "ээээ", "продукт,", "Вот."), lang="ru")
     assert [w for _, w in found] == ["ну", "как бы", "ээээ", "вот"]
+    # «вот почему», «это значит» — обычные слова, а не паразиты
+    assert find_fillers(_words("Вот", "почему", "это", "значит", "многое."), lang="ru") == []
 
 
 def test_gaze_ratio_uses_change_points() -> None:
@@ -137,3 +140,89 @@ def test_parallel_constructions_are_not_repeats_but_false_starts_are() -> None:
     restart = "Если он сейчас-- вот какая-то тема, если он сейчас начнёт говорить, все проснутся."
     result = analyze(_spoken(restart), gaze=[], min_sec=60, max_sec=180, lang="ru")
     assert [restart[e.start : e.end] for e in result.events if e.type == "repeat"] == ["если он сейчас"]
+
+
+def test_hedging_apologies_flat_opening_and_weak_ending_cost_delivery_points() -> None:
+    text = (
+        "So my topic is pizza. Sorry, I'm a bit nervous. I think pizza is probably the best food, maybe. "
+        "Perhaps it is because my grandmother made it every Sunday and we all gathered. Yeah so, that's it."
+    )
+    result = analyze(_spoken(text), gaze=[], min_sec=60, max_sec=180)
+    weak = [(e.text.split(":")[0], text[e.start : e.end].strip(",.")) for e in result.events if e.type == "weak_phrase"]
+    assert weak == [
+        ("Flat opening", "my topic is"),
+        ("Apology on stage", "Sorry"),
+        ("Apology on stage", "I'm a bit nervous"),
+        ("Hedging", "I think"),
+        ("Hedging", "probably"),
+        ("Hedging", "maybe"),
+        ("Hedging", "Perhaps"),
+        ("Weak ending", "Yeah so"),
+        ("Weak ending", "that's it"),
+    ]
+    assert result.metrics.weak_phrases == 9
+    tail = "My grandmother made it every Sunday and we all gathered around the table. Try it."
+    two_hedges = analyze(_spoken("I love pizza. I think it is probably the best food. " + tail), gaze=[], min_sec=60, max_sec=180)
+    no_hedges = analyze(_spoken("I love pizza. It is the best food, full stop. " + tail), gaze=[], min_sec=60, max_sec=180)
+    assert two_hedges.metrics.weak_phrases == 2 and two_hedges.score.total == no_hedges.score.total  # два смягчения — норма
+    # вялое начало, два извинения и два слабых финала — по 3, два смягчения сверх нормы — по 2: 19, но не больше потолка
+    assert result.score.total == two_hedges.score.total - WEAK_MAX
+
+
+def test_weak_phrases_in_russian_and_romanian_follow_the_speech_language() -> None:
+    ru = "Моя тема — пицца. Мне кажется, она, наверное, вкусная. Я волнуюсь. Вот как-то так."
+    found = analyze(_spoken(ru), gaze=[], min_sec=60, max_sec=180, lang="ru")
+    assert [ru[e.start : e.end].strip(",.") for e in found.events if e.type == "weak_phrase"] == ["Моя тема", "Мне кажется", "наверное", "Я волнуюсь", "Вот как-то так"]
+    assert [e.text.split(":")[0] for e in found.events if e.type == "weak_phrase"] == ["Вялое начало", "Неуверенность", "Неуверенность", "Извинение на сцене", "Слабый финал"]
+    ro = "Tema mea este pizza. Cred că e cea mai bună mâncare, poate. Scuze, am emoții. Cam asta e."
+    found = analyze(_spoken(ro), gaze=[], min_sec=60, max_sec=180, lang="ro")
+    assert [ro[e.start : e.end].strip(",.") for e in found.events if e.type == "weak_phrase"] == ["Tema mea este", "Cred că", "poate", "Scuze", "am emoții", "Cam asta e"]
+    # английские фразы в русской речи не ищутся: списки зависят от языка речи
+    assert [e for e in analyze(_spoken("I think это вкусно"), gaze=[], min_sec=60, max_sec=180, lang="ru").events if e.type == "weak_phrase"] == []
+
+
+def test_typographic_apostrophes_do_not_hide_weak_phrases() -> None:
+    text = "We help farmers sell more. I’m not sure it works, but that’s it."
+    found = analyze(_spoken(text), gaze=[], min_sec=60, max_sec=180)
+    assert [e.text for e in found.events if e.type == "weak_phrase"] == ["Hedging: «i'm not sure»", "Weak ending: «that's it»"]
+
+
+def test_single_word_weak_ending_only_at_the_very_end() -> None:
+    text = "Всё это важно для всех. Мы сделали продукт и запустили его. Всё."
+    found = analyze(_spoken(text), gaze=[], min_sec=60, max_sec=180, lang="ru")
+    assert [text[e.start : e.end] for e in found.events if e.type == "weak_phrase"] == ["Всё."]
+    assert found.events[-1].start == len(text) - 4  # последнее «Всё.», а не первое
+
+
+def test_stumbles_are_cut_off_words_restarted_not_hesitation_sounds() -> None:
+    text = "We built a pro- product for pha- pharmacies, th-th-the best one, and we- we love it, e-e-e, yes."
+    result = analyze(_spoken(text), gaze=[], min_sec=60, max_sec=180)
+    stumbles = [text[e.start : e.end].strip(",") for e in result.events if e.type == "stumble"]
+    assert stumbles == ["pro- product", "pha- pharmacies", "th-th-the", "we- we"]
+    assert result.metrics.stumbles == 4
+    assert [text[e.start : e.end].strip(",") for e in result.events if e.type == "filler"] == ["e-e-e"]
+    assert [e for e in result.events if e.type == "repeat"] == []  # «we- we» — запинка, а не повтор
+    # дефисные слова и нарочный повтор — не запинка
+    calm = analyze(_spoken("A well-known so-so plan, very very good."), gaze=[], min_sec=60, max_sec=180)
+    assert [e for e in calm.events if e.type == "stumble"] == []
+
+
+def test_long_pause_between_phrases_counts_only_when_it_drags() -> None:
+    words = [Word("Итак.", 0.0, 0.5), Word("Дальше", 4.0, 4.4), Word("идём.", 4.5, 5.0), Word("Потом", 12.0, 12.4)]
+    result = analyze(Transcript("Итак. Дальше идём. Потом", words, duration=70), gaze=[], min_sec=60, max_sec=180, lang="ru")
+    assert [(e.type, e.text) for e in result.events] == [("long_pause", "Пауза 7,0 с между фразами")]
+    assert result.metrics.long_pauses == 1 and result.score.pauses == 90
+
+
+def test_pace_corridor_depends_on_the_speech_language() -> None:
+    # 120 слов в минуту: для английского — норма, для русского — тоже (русские слова длиннее)
+    words = [Word(f"слово{i}", i * 0.5, i * 0.5 + 0.4) for i in range(120)]
+    text = " ".join(w.text for w in words)
+    assert analyze(Transcript(text, words, duration=60), [], 60, 180, lang="ru").score.pace == 100
+    # 100 слов в минуту: по-английски медленно, по-русски — ещё в коридоре
+    slow = [Word(f"слово{i}", i * 0.6, i * 0.6 + 0.4) for i in range(100)]
+    slow_text = " ".join(w.text for w in slow)
+    en = analyze(Transcript(slow_text, slow, duration=60), [], 60, 180, lang="en")
+    ru = analyze(Transcript(slow_text, slow, duration=60), [], 60, 180, lang="ru")
+    assert en.score.pace < ru.score.pace == 100
+    assert pace_range("normal", "ru") == (80, 144) and pace_range("fast", "ro") == (126, 198)

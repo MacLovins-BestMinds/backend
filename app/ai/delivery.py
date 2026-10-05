@@ -12,8 +12,9 @@ from dataclasses import replace
 
 from pydantic import BaseModel, Field
 
-from app.ai import game_api, llm, pronunciation
+from app.ai import game_api, llm, pronunciation, prosody
 from app.ai.audio import to_wav16k
+from app.ai.config import get_settings
 from app.ai.delivery_metrics import PaceMode, analyze, filler_candidates, word_spans
 from app.ai.pitch import Pitch, known_speech_lang, resolve_pitch
 from app.ai.schemas import (
@@ -103,11 +104,22 @@ class ContentAssessment(BaseModel):
 
 
 def _metrics_summary(m: Metrics) -> str:
+    if m.monotone:
+        voice = "- voice: monotone, the pitch barely changes from word to word"
+    elif m.pitch_variation is not None:
+        voice = f"- voice: lively, the pitch varies by {m.pitch_variation} semitones"
+    else:
+        voice = "- voice: not measured"
+    if m.fades:
+        voice += f"; the voice fades at the end of {m.fades} phrase(s)"
     return (
         f"- duration: {m.duration_sec:.0f} s, pace: {m.wpm} words/min\n"
         f"- filler words: {m.fillers} ({m.fillers_per_min} per minute)\n"
+        f"- stumbles (words cut off and restarted): {m.stumbles}\n"
+        f"- hedging, apologies, a flat opening or a weak ending: {m.weak_phrases}\n"
         f"- pauses longer than 3 s: {m.long_pauses}\n"
         f"- swear words: {m.profanity}\n"
+        f"{voice}\n"
         + (
             f"- eye contact with the audience: {m.gaze_on_ratio:.0%} of the time"
             if m.gaze_on_ratio is not None
@@ -207,7 +219,9 @@ async def run_delivery(
         elif speech == "en" and pronunciation_task is None:
             pronunciation_task = asyncio.create_task(pronunciation.assess(wav))
         verdicts = await judge_fillers(transcript, speech)
-        analysis = analyze(transcript, gaze, pitch.min_sec, pitch.max_sec, verdicts, pace, speech)
+        # голос (монотонность, затухание фраз) — кодом по WAV и таймкодам слов, на любом языке
+        voice = await asyncio.to_thread(prosody.analyze_prosody, wav, transcript.words) if get_settings().prosody_enabled else None
+        analysis = analyze(transcript, gaze, pitch.min_sec, pitch.max_sec, verdicts, pace, speech, voice)
         # без LLM честной оценки содержания нет: ошибка уходит клиенту (502), повтор берёт распознавание из кэша
         content = await assess_content(pitch, transcript.text, analysis.metrics, notes, speech)
     except BaseException:

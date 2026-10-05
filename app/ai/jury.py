@@ -37,19 +37,20 @@ class Juror:
     style: float
 
 
-# Черновые характеры; финальные даёт универсал (docs/tz/universal.md)
+# Черновые характеры; финальные даёт универсал (docs/tz/universal.md). Пол — как на рисунках жюри и у голосов:
+# в русском и румынском от него зависят формы («я бы хотел» / «хотела»)
 JURORS: dict[JurorId, Juror] = {
     "strict": Juror(
-        name="Marina",
-        persona="Strict and a bit grumpy, but not an expert in anything. Speaks dryly and asks plain, short questions.",
+        name="Boris",
+        persona="A man. Strict and a bit grumpy, but not an expert in anything. Speaks dryly and asks plain, short questions.",
         openai_voice="coral",
         voice_style="Speak English in a strict, dry, precise tone, medium pace, no smile in the voice.",
         stability=0.75,
         style=0.1,
     ),
     "kind": Juror(
-        name="Boris",
-        persona="Kind-hearted and easily impressed. Supportive, asks simple questions out of curiosity.",
+        name="Marina",
+        persona="A woman. Kind-hearted and easily impressed. Supportive, asks simple questions out of curiosity.",
         openai_voice="ash",
         voice_style="Speak English warmly and kindly, with a light smile, unhurried.",
         stability=0.45,
@@ -57,7 +58,7 @@ JURORS: dict[JurorId, Juror] = {
     ),
     "skeptic": Juror(
         name="Gleb",
-        persona="A bit of a doubter who does not know the subject. Asks one naive 'but what if' question.",
+        persona="A man. A bit of a doubter who does not know the subject. Asks one naive 'but what if' question.",
         openai_voice="onyx",
         voice_style="Speak English with doubt and light irony, pause before the key word.",
         stability=0.35,
@@ -182,17 +183,19 @@ ANSWER_LEVELS: dict[str, str] = {
 
 
 def voice_for(juror_id: JurorId, lang: str = "en") -> Voice:
-    """Голос ElevenLabs: свой у члена жюри (ELEVENLABS_VOICE_ID_<ID>) или общий ELEVENLABS_VOICE_ID.
+    """Голос ElevenLabs по языку речи: носитель языка (ELEVENLABS_VOICE_ID_<ID>_<LANG>, есть у ru и ro),
+    иначе свой голос члена жюри (ELEVENLABS_VOICE_ID_<ID>), иначе общий ELEVENLABS_VOICE_ID.
 
     lang — язык речи: для OpenAI TTS он попадает в инструкцию тона («Speak Russian in a strict…»).
     """
     s = get_settings()
     j = JURORS[juror_id]
+    native_voice_id = getattr(s, f"elevenlabs_voice_id_{juror_id}_{normalize_lang(lang)}", "")
     own_voice_id = getattr(s, f"elevenlabs_voice_id_{juror_id}")
     return Voice(
         openai_voice=j.openai_voice,
         openai_instructions=j.voice_style.replace("English", language_name(lang)),
-        elevenlabs_voice_id=own_voice_id or s.elevenlabs_voice_id,
+        elevenlabs_voice_id=native_voice_id or own_voice_id or s.elevenlabs_voice_id,
         stability=j.stability,
         style=j.style,
     )

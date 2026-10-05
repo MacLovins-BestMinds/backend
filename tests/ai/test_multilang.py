@@ -384,6 +384,23 @@ def test_jury_questions_and_voices_use_the_speech_language(settings_env) -> None
     assert {lang for _, _, lang in voiced} == {default_lang()}
 
 
+def test_jury_speaks_with_native_voices_in_russian_and_romanian(settings_env) -> None:
+    settings_env.setenv("ELEVENLABS_VOICE_ID", "shared")
+    settings_env.setenv("ELEVENLABS_VOICE_ID_STRICT", "")
+    settings_env.setenv("ELEVENLABS_VOICE_ID_SKEPTIC", "")
+    settings_env.setenv("ELEVENLABS_VOICE_ID_KIND", "kind_en")
+    settings_env.setenv("ELEVENLABS_VOICE_ID_SKEPTIC_RO", "")  # пустой — голоса для всех языков
+    get_settings.cache_clear()
+
+    assert jury.voice_for("strict", "ru").elevenlabs_voice_id == "9AjtU6o19uipv7QL8dLL"
+    assert jury.voice_for("kind", "ro").elevenlabs_voice_id == "QtObtrglHRaER8xlDZsr"
+    assert jury.voice_for("kind", "en").elevenlabs_voice_id == "kind_en"
+    assert jury.voice_for("strict", "en").elevenlabs_voice_id == "shared"
+    assert jury.voice_for("skeptic", "ro").elevenlabs_voice_id == "shared"
+    # пол из персоны доходит до модели: от него зависят формы в русском и румынском
+    assert jury.JURORS["kind"].persona.startswith("A woman.") and jury.JURORS["strict"].persona.startswith("A man.")
+
+
 def test_jury_answers_are_judged_in_the_language_of_the_answer(monkeypatch) -> None:
     pitch = Pitch(title="t", brief="b", audience=Audience.BUSINESS, ui_lang="ro")
     question = {"questions": [{"id": "q1", "juror": "strict", "text": "Сколько это стоит?", "audio_url": "/x.mp3"}]}

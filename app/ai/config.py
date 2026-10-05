@@ -25,6 +25,14 @@ class AiSettings(BaseSettings):
     elevenlabs_voice_id_strict: str = ""  # необязательно: свой голос для каждого члена жюри
     elevenlabs_voice_id_kind: str = ""
     elevenlabs_voice_id_skeptic: str = ""
+    # голоса носителей языка для речи на русском и румынском (общая библиотека ElevenLabs: озвучивают по ID,
+    # добавлять в аккаунт не нужно); пусто — голоса выше. Пол — как у жюри: строгий и скептик мужчины, добрая — женщина
+    elevenlabs_voice_id_strict_ru: str = "9AjtU6o19uipv7QL8dLL"
+    elevenlabs_voice_id_kind_ru: str = "IVMZOQsSkbMceEYv4PlA"
+    elevenlabs_voice_id_skeptic_ru: str = "aG9q1I1wTbfHh5sbpJnp"
+    elevenlabs_voice_id_strict_ro: str = "bjHFAqWDZEpJfypA5EkO"
+    elevenlabs_voice_id_kind_ro: str = "QtObtrglHRaER8xlDZsr"
+    elevenlabs_voice_id_skeptic_ro: str = "HPdbgrGubKiBta6Pq21b"
     openai_api_key: str = ""
     gemini_api_key: str = ""
     deepgram_api_key: str = ""

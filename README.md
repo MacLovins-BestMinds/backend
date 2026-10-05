@@ -23,7 +23,7 @@ cp .env.example .env      # заполнить ключи, см. ниже
 ### Где взять ключи
 
 - **`ELEVENLABS_API_KEY`** — https://elevenlabs.io/app/settings/api-keys (нужны права на Speech to Text и Text to Speech).
-- **`ELEVENLABS_VOICE_ID`** — https://elevenlabs.io/app/voice-library: выбрать голос, который хорошо говорит по-русски, добавить в My Voices и скопировать его ID (⋯ → Copy voice ID). Чтобы у трёх членов жюри были разные голоса, задайте `ELEVENLABS_VOICE_ID_STRICT`, `_KIND`, `_SKEPTIC`; незаданные берут общий `ELEVENLABS_VOICE_ID`.
+- **`ELEVENLABS_VOICE_ID`** — https://elevenlabs.io/app/voice-library: выбрать голос, который хорошо говорит по-русски, добавить в My Voices и скопировать его ID (⋯ → Copy voice ID). Чтобы у трёх членов жюри были разные голоса, задайте `ELEVENLABS_VOICE_ID_STRICT`, `_KIND`, `_SKEPTIC`; незаданные берут общий `ELEVENLABS_VOICE_ID`. Для речи на русском и румынском жюри по умолчанию говорит голосами носителей языка из общей библиотеки (`ELEVENLABS_VOICE_ID_<ЧЛЕН>_RU` / `_RO` в `app/ai/config.py`): по ID они работают без добавления в My Voices.
 - **`GEMINI_API_KEY`** — https://aistudio.google.com/apikey.
 
 Ключи живут только на сервере: приложение шлёт звук в наш бэкенд, а не напрямую в ElevenLabs.
